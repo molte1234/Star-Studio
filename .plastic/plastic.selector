@@ -1,0 +1,4 @@
+repository "Star Studio/Star Studio@1154426@cloud"
+  path "/"
+    br "/main"
+    co "/main"
