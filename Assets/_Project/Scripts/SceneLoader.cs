@@ -28,6 +28,12 @@ public class SceneLoader : MonoBehaviour
 
         // Activate target scene
         ActivateScene(sceneName);
+
+        // Why: Tell AudioManager to play appropriate music
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.OnSceneActivated(sceneName);
+        }
     }
 
     private void DeactivateAllScenes()
