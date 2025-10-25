@@ -150,6 +150,6 @@ public class BandSetupManager : MonoBehaviour
         GameManager.Instance.SetupNewGame(selectedBand, bandName);
 
         // Load MainGame scene additively
-        SceneLoader.LoadScene("MainGame");
+        SceneLoader.Instance.LoadScene("MainGame");
     }
 }

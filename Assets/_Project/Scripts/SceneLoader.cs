@@ -3,52 +3,73 @@ using UnityEngine.SceneManagement;
 
 public class SceneLoader : MonoBehaviour
 {
-    private static string currentSceneName = "MainMenu"; // Track current active scene
+    // Why: Singleton so any script can call SceneLoader.Instance.LoadScene()
+    public static SceneLoader Instance;
 
-    public static void LoadScene(string sceneName)
+    private void Awake()
     {
-        // Why: Unload previous scene, load new scene additively
-        if (!string.IsNullOrEmpty(currentSceneName) && currentSceneName != "Bootstrap")
+        if (Instance == null)
         {
-            SceneManager.UnloadSceneAsync(currentSceneName);
+            Instance = this;
         }
-
-        SceneManager.LoadScene(sceneName, LoadSceneMode.Additive);
-        currentSceneName = sceneName;
-
-        // Why: Play appropriate music for each scene
-        PlaySceneMusic(sceneName);
-
-        Debug.Log($"🎬 Loaded scene: {sceneName}");
-    }
-
-    private static void PlaySceneMusic(string sceneName)
-    {
-        // Why: Change music based on which scene we loaded
-        if (AudioManager.Instance == null) return;
-
-        switch (sceneName)
+        else
         {
-            case "MainMenu":
-                if (AudioManager.Instance.menuMusic != null)
-                    AudioManager.Instance.PlayMusic(AudioManager.Instance.menuMusic);
-                break;
-
-            case "GameSetup":
-                if (AudioManager.Instance.setupMusic != null)
-                    AudioManager.Instance.PlayMusic(AudioManager.Instance.setupMusic);
-                break;
-
-            case "MainGame":
-                if (AudioManager.Instance.gameMusic != null)
-                    AudioManager.Instance.PlayMusic(AudioManager.Instance.gameMusic);
-                break;
+            Destroy(gameObject);
         }
     }
 
-    public static void QuitGame()
+    public void LoadScene(string sceneName)
     {
-        Debug.Log("👋 Quitting game...");
-        Application.Quit();
+        // Why: Since all scenes are already loaded, we just activate/deactivate
+        Debug.Log($"🔄 Switching to scene: {sceneName}");
+
+        // Deactivate all game scenes
+        DeactivateAllScenes();
+
+        // Activate target scene
+        ActivateScene(sceneName);
     }
+
+    private void DeactivateAllScenes()
+    {
+        // Why: Turn off all game scenes except Bootstrap
+        DeactivateScene("MainMenu");
+        DeactivateScene("GameSetup");
+        DeactivateScene("MainGame");
+    }
+
+    private void ActivateScene(string sceneName)
+    {
+        Scene scene = SceneManager.GetSceneByName(sceneName);
+        if (!scene.isLoaded)
+        {
+            Debug.LogError($"❌ Scene '{sceneName}' is not loaded!");
+            return;
+        }
+
+        // Why: Enable all root objects
+        foreach (GameObject rootObject in scene.GetRootGameObjects())
+        {
+            rootObject.SetActive(true);
+        }
+
+        Debug.Log($"🟢 Activated: {sceneName}");
+    }
+
+    private void DeactivateScene(string sceneName)
+    {
+        Scene scene = SceneManager.GetSceneByName(sceneName);
+        if (!scene.isLoaded) return;
+
+        // Why: Disable all root objects
+        foreach (GameObject rootObject in scene.GetRootGameObjects())
+        {
+            rootObject.SetActive(false);
+        }
+    }
+
+    // Why: Convenience methods for buttons
+    public void LoadMainMenu() => LoadScene("MainMenu");
+    public void LoadGameSetup() => LoadScene("GameSetup");
+    public void LoadMainGame() => LoadScene("MainGame");
 }
