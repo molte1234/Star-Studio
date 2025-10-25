@@ -12,16 +12,18 @@ public class Bootstrap : MonoBehaviour
 
     [Header("Scene Names")]
     public string mainMenuScene = "MainMenu";
-    public string gameSetupScene = "GameSetup";
-    public string mainGameScene = "MainGame";
+    public string setupScene = "Setup";
+    public string gameScene = "Game";
+
+    private string activeSceneName;
 
     private void Awake()
     {
         // Why: Create persistent managers first
         CreatePersistentManagers();
 
-        // Why: Load all scenes upfront
-        StartCoroutine(LoadAllScenesUpfront());
+        // Why: Load missing scenes and set up active scene
+        StartCoroutine(LoadMissingScenesAndSetupActive());
     }
 
     private void CreatePersistentManagers()
@@ -60,59 +62,62 @@ public class Bootstrap : MonoBehaviour
         Debug.Log($"📋 Bootstrap: Loaded {allEvents.Length} events");
     }
 
-    private IEnumerator LoadAllScenesUpfront()
+    private IEnumerator LoadMissingScenesAndSetupActive()
     {
-        // Why: Detect what scene was already open in Editor
-        string startingScene = DetermineStartingScene();
+        // Why: Detect which scene should be active
+        activeSceneName = DetermineActiveScene();
+        Debug.Log($"🎬 Bootstrap: Active scene will be '{activeSceneName}'");
 
-        Debug.Log($"🎬 Bootstrap: Starting scene is '{startingScene}'");
+        // Why: Load scenes one by one, deactivating them immediately if they're not the active scene
+        yield return LoadAndSetupScene(mainMenuScene);
+        yield return LoadAndSetupScene(setupScene);
+        yield return LoadAndSetupScene(gameScene);
 
-        // Why: Load all game scenes additively
-        yield return LoadSceneIfNotLoaded(mainMenuScene);
-        yield return LoadSceneIfNotLoaded(gameSetupScene);
-        yield return LoadSceneIfNotLoaded(mainGameScene);
-
-        // Why: Deactivate all scenes initially
-        DeactivateScene(mainMenuScene);
-        DeactivateScene(gameSetupScene);
-        DeactivateScene(mainGameScene);
-
-        // Why: Activate only the starting scene
-        ActivateScene(startingScene);
-
-        Debug.Log("✅ Bootstrap: All scenes loaded and ready!");
+        Debug.Log($"✅ Bootstrap: Setup complete! '{activeSceneName}' is active");
     }
 
-    private string DetermineStartingScene()
+    private string DetermineActiveScene()
     {
-#if UNITY_EDITOR
-        // Why: In Editor, check what scene was already open
-        for (int i = 0; i < SceneManager.sceneCount; i++)
+        // Why: Check what scenes are already loaded to determine which one you're working on
+        bool mainMenuLoaded = SceneManager.GetSceneByName(mainMenuScene).isLoaded;
+        bool setupLoaded = SceneManager.GetSceneByName(setupScene).isLoaded;
+        bool gameLoaded = SceneManager.GetSceneByName(gameScene).isLoaded;
+
+        // Why: Return the first game scene that's already loaded (priority: Setup > Game > MainMenu)
+        if (setupLoaded)
         {
-            Scene scene = SceneManager.GetSceneAt(i);
-            if (scene.name == gameSetupScene)
-            {
-                Debug.Log("🔧 Editor Mode: Detected GameSetup scene already open");
-                return gameSetupScene;
-            }
-            if (scene.name == mainGameScene)
-            {
-                Debug.Log("🔧 Editor Mode: Detected MainGame scene already open");
-                return mainGameScene;
-            }
+            Debug.Log("🔧 Editor Mode: Setup scene already open");
+            return setupScene;
         }
-#endif
-        // Why: Default to MainMenu (or in builds, always MainMenu)
+        if (gameLoaded)
+        {
+            Debug.Log("🔧 Editor Mode: Game scene already open");
+            return gameScene;
+        }
+        if (mainMenuLoaded)
+        {
+            Debug.Log("🔧 Editor Mode: MainMenu scene already open");
+            return mainMenuScene;
+        }
+
+        // Why: Default to MainMenu if none are loaded yet
         return mainMenuScene;
     }
 
-    private IEnumerator LoadSceneIfNotLoaded(string sceneName)
+    private IEnumerator LoadAndSetupScene(string sceneName)
     {
         // Why: Check if scene is already loaded
         Scene scene = SceneManager.GetSceneByName(sceneName);
         if (scene.isLoaded)
         {
-            Debug.Log($"⏩ Scene '{sceneName}' already loaded, skipping");
+            Debug.Log($"⏩ Scene '{sceneName}' already loaded");
+
+            // Why: Still need to deactivate it if it's not the active scene
+            if (sceneName != activeSceneName)
+            {
+                DeactivateScene(sceneName);
+            }
+
             yield break;
         }
 
@@ -126,20 +131,16 @@ public class Bootstrap : MonoBehaviour
         }
 
         Debug.Log($"✅ Scene '{sceneName}' loaded");
-    }
 
-    private void ActivateScene(string sceneName)
-    {
-        Scene scene = SceneManager.GetSceneByName(sceneName);
-        if (!scene.isLoaded) return;
-
-        // Why: Enable all root objects in the scene
-        foreach (GameObject rootObject in scene.GetRootGameObjects())
+        // Why: Immediately deactivate it if it's not the active scene
+        if (sceneName != activeSceneName)
         {
-            rootObject.SetActive(true);
+            DeactivateScene(sceneName);
         }
-
-        Debug.Log($"🟢 Activated scene: {sceneName}");
+        else
+        {
+            Debug.Log($"🟢 '{sceneName}' is the active scene - keeping it visible");
+        }
     }
 
     private void DeactivateScene(string sceneName)

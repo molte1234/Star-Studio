@@ -119,6 +119,50 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &305268994
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 305268996}
+  - component: {fileID: 305268995}
+  m_Layer: 0
+  m_Name: SceneLoader
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &305268995
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 305268994}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 558a9760ea147b54894948a1ae0c0659, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SceneLoader
+--- !u!4 &305268996
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 305268994}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 740.5238, y: 495.99155, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1448045880
 GameObject:
   m_ObjectHideFlags: 0
@@ -227,8 +271,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3c019c1a35405f34c9e0d7e449a86a5d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Bootstrap
-  gameManagerPrefab: {fileID: 6155124735089322107, guid: 88580d3475d955041b9295a53c52bc86, type: 3}
-  audioManagerPrefab: {fileID: 5025445391780702569, guid: 11147f0e899bfec4cb2539a2f4f53009, type: 3}
+  gameRules: {fileID: 0}
+  allEvents: []
+  mainMenuScene: MainMenu
+  setupScene: Setup
+  gameScene: Game
 --- !u!4 &1492549415
 Transform:
   m_ObjectHideFlags: 0
@@ -250,3 +297,4 @@ SceneRoots:
   m_Roots:
   - {fileID: 1492549415}
   - {fileID: 1448045883}
+  - {fileID: 305268996}

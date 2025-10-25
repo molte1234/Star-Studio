@@ -34,8 +34,8 @@ public class SceneLoader : MonoBehaviour
     {
         // Why: Turn off all game scenes except Bootstrap
         DeactivateScene("MainMenu");
-        DeactivateScene("GameSetup");
-        DeactivateScene("MainGame");
+        DeactivateScene("Setup");
+        DeactivateScene("Game");
     }
 
     private void ActivateScene(string sceneName)
@@ -68,8 +68,8 @@ public class SceneLoader : MonoBehaviour
         }
     }
 
-    // Why: Convenience methods for buttons
+    // Why: Convenience methods for buttons and code
     public void LoadMainMenu() => LoadScene("MainMenu");
-    public void LoadGameSetup() => LoadScene("GameSetup");
-    public void LoadMainGame() => LoadScene("MainGame");
+    public void LoadSetup() => LoadScene("Setup");
+    public void LoadGame() => LoadScene("Game");
 }
