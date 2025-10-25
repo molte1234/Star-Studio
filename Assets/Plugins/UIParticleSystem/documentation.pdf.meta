@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 1858d8e2cd7963c4c9f4d21c46bf4ec5
+timeCreated: 1514892554
+licenseType: Store
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 108285
+  packageName: UI Particle System
+  packageVersion: 1.42
+  assetPath: Assets/Plugins/UIParticleSystem/documentation.pdf
+  uploadId: 792166

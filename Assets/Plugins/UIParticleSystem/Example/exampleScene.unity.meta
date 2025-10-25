@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 381726683a7863d418256bfe28bc85f9
+timeCreated: 1469287770
+licenseType: Store
+DefaultImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 108285
+  packageName: UI Particle System
+  packageVersion: 1.42
+  assetPath: Assets/Plugins/UIParticleSystem/Example/exampleScene.unity
+  uploadId: 792166

@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &5025445391780702569
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2466279691354865895}
+  - component: {fileID: -3546526013772036085}
+  m_Layer: 0
+  m_Name: AudioManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2466279691354865895
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5025445391780702569}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &-3546526013772036085
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5025445391780702569}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c22dbcc907280a1418d759cad2fbee72, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AudioManager
+  musicSource: {fileID: 0}
+  sfxSource: {fileID: 0}
+  menuMusic: {fileID: 8300000, guid: 35c80cd147354944bbdb2538682f49ca, type: 3}
+  setupMusic: {fileID: 8300000, guid: eebdd75c54a109849a35adf9f55bc8eb, type: 3}
+  gameMusic: {fileID: 8300000, guid: 48975bda8194b5846a2ca41fb1f880c7, type: 3}
+  buttonClick: {fileID: 8300000, guid: 4d262f8394320314fa535cf5ea3caff8, type: 3}
+  buttonHover: {fileID: 8300000, guid: 7cb71641b6ad9f94c8c202b67139055d, type: 3}
+  characterSelect: {fileID: 8300000, guid: c454f0066ef17b94daa5753983170042, type: 3}
+  bandComplete: {fileID: 8300000, guid: ecf9a9deb9896374dad7f408c1dbd172, type: 3}
+  musicVolume: 0.7
+  sfxVolume: 0.8

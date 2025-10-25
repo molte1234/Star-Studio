@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: e89a09c8771ad794d87c50376b613673
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 108285
+  packageName: UI Particle System
+  packageVersion: 1.42
+  assetPath: Assets/Plugins/UIParticleSystem/UniversalRP(URP)_UpgradeReadme.txt
+  uploadId: 792166

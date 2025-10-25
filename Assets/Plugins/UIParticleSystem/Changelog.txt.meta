@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 6f6dd10f55828e14fab29b787e8b5173
+timeCreated: 1513699412
+licenseType: Store
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 108285
+  packageName: UI Particle System
+  packageVersion: 1.42
+  assetPath: Assets/Plugins/UIParticleSystem/Changelog.txt
+  uploadId: 792166

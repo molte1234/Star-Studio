@@ -3,39 +3,59 @@ using UnityEngine.SceneManagement;
 
 public class Bootstrap : MonoBehaviour
 {
-    [Header("Persistent Managers")]
-    public GameObject gameManagerPrefab; // Optional: use prefab
+    [Header("Persistent Managers (Optional)")]
+    public GameObject gameManagerPrefab; // Optional: use prefab for GameManager
+    public GameObject audioManagerPrefab; // Drag AudioManager prefab here after creating it
 
     void Awake()
     {
-        // Why: Create persistent GameManager that lives forever
-        CreateGameManager();
+        // Why: Create managers in Bootstrap scene (they stay alive forever)
+        CreateManagers();
 
-        // Why: Immediately load the band setup scene
-        SceneManager.LoadScene("BandSetupScene");
+        // Why: Start menu music (if AudioManager has it assigned)
+        StartMenuMusic();
+
+        // Why: Load MainMenu scene ADDITIVELY (Bootstrap stays loaded)
+        SceneManager.LoadScene("MainMenu", LoadSceneMode.Additive);
     }
 
-    private void CreateGameManager()
+    private void CreateManagers()
     {
         // Why: Check if GameManager already exists (prevents duplicates)
         if (GameManager.Instance != null)
         {
-            return; // Already exists from previous run
+            return; // Already exists
         }
 
-        // Why: Create the persistent manager objects
-        GameObject managers = new GameObject("--- PERSISTENT MANAGERS ---");
+        // Why: No need for DontDestroyOnLoad - Bootstrap scene never unloads!
 
-        // Add GameManager
+        // ===== GameManager =====
         GameObject gmObject = new GameObject("GameManager");
-        gmObject.transform.SetParent(managers.transform);
         gmObject.AddComponent<GameManager>();
-
-        // Add EventManager to same object
         gmObject.AddComponent<EventManager>();
 
-        DontDestroyOnLoad(managers);
+        // ===== AudioManager =====
+        if (audioManagerPrefab != null)
+        {
+            Instantiate(audioManagerPrefab);
+            Debug.Log("✅ Bootstrap: Created AudioManager from prefab");
+        }
+        else
+        {
+            GameObject audioObject = new GameObject("AudioManager");
+            audioObject.AddComponent<AudioManager>();
+            Debug.Log("⚠️ Bootstrap: Created empty AudioManager (no prefab assigned)");
+        }
 
-        Debug.Log("✅ Bootstrap: Created persistent managers");
+        Debug.Log("✅ Bootstrap: All managers created in Bootstrap scene");
+    }
+
+    private void StartMenuMusic()
+    {
+        // Why: Play menu music if AudioManager has it assigned
+        if (AudioManager.Instance != null && AudioManager.Instance.menuMusic != null)
+        {
+            AudioManager.Instance.PlayMusic(AudioManager.Instance.menuMusic);
+        }
     }
 }

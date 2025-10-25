@@ -1,0 +1,11 @@
+fileFormatVersion: 2
+guid: 10fec45548a54d146bc0e66ef52dee6d
+NativeFormatImporter:
+  userData: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 108285
+  packageName: UI Particle System
+  packageVersion: 1.42
+  assetPath: Assets/Plugins/UIParticleSystem/Example/Materials/RainDrop.mat
+  uploadId: 792166

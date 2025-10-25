@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 2b6750c87f7d1044cae299aad63bbd0c
+timeCreated: 1514379605
+licenseType: Store
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 108285
+  packageName: UI Particle System
+  packageVersion: 1.42
+  assetPath: Assets/Plugins/UIParticleSystem/Shaders/UIDepthLib.cginc
+  uploadId: 792166

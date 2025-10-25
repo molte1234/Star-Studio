@@ -1,0 +1,11 @@
+fileFormatVersion: 2
+guid: 04aeacd4feab5994ebf2fb51392da9db
+NativeFormatImporter:
+  userData: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 108285
+  packageName: UI Particle System
+  packageVersion: 1.42
+  assetPath: Assets/Plugins/UIParticleSystem/Example/Materials/Ray.mat
+  uploadId: 792166

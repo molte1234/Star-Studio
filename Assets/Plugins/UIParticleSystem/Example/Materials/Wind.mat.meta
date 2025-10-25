@@ -1,0 +1,11 @@
+fileFormatVersion: 2
+guid: 4de0fb8d2e8cdc742a528f7d8289a61a
+NativeFormatImporter:
+  userData: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 108285
+  packageName: UI Particle System
+  packageVersion: 1.42
+  assetPath: Assets/Plugins/UIParticleSystem/Example/Materials/Wind.mat
+  uploadId: 792166

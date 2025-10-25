@@ -1,0 +1,11 @@
+fileFormatVersion: 2
+guid: 4fb4a380402385b47b9cae614655d42f
+NativeFormatImporter:
+  userData: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 108285
+  packageName: UI Particle System
+  packageVersion: 1.42
+  assetPath: Assets/Plugins/UIParticleSystem/Example/Materials/Trail.mat
+  uploadId: 792166

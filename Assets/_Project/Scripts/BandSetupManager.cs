@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using UnityEngine.SceneManagement;
 
 public class BandSetupManager : MonoBehaviour
 {
@@ -10,12 +9,12 @@ public class BandSetupManager : MonoBehaviour
     private int currentCharacterIndex = 0;
 
     [Header("Selected Band")]
-    public SlotData[] selectedBand = new SlotData[3]; // The 3 chosen members
-    private int nextEmptySlot = 0; // Which slot to fill next (0, 1, or 2)
+    public SlotData[] selectedBand = new SlotData[4]; // The 4 chosen members
+    private int nextEmptySlot = 0; // Which slot to fill next (0, 1, 2, or 3)
 
     [Header("UI References")]
     public CharacterViewer characterViewer;
-    public BandSlotDisplay[] bandSlotDisplays; // 3 slots
+    public BandSlotDisplay[] bandSlotDisplays; // 4 slots
     public Button addToBandButton;
     public Button startGameButton;
     public TMP_InputField bandNameInput;
@@ -55,14 +54,14 @@ public class BandSetupManager : MonoBehaviour
 
         // Why: Disable add button if character already in band or band is full
         bool alreadyInBand = IsCharacterInBand(character);
-        bool bandIsFull = (nextEmptySlot >= 3);
+        bool bandIsFull = (nextEmptySlot >= 4);
         addToBandButton.interactable = !alreadyInBand && !bandIsFull;
     }
 
     public void AddCurrentCharacterToBand()
     {
         // Why: Add the displayed character to the next empty band slot
-        if (nextEmptySlot >= 3) return; // Band is full
+        if (nextEmptySlot >= 4) return; // Band is full
 
         SlotData character = availableCharacters[currentCharacterIndex];
         if (IsCharacterInBand(character)) return; // Already added
@@ -71,10 +70,22 @@ public class BandSetupManager : MonoBehaviour
         bandSlotDisplays[nextEmptySlot].DisplayCharacter(character);
         nextEmptySlot++;
 
-        // Why: Enable start button when band is full (3 members)
-        if (nextEmptySlot >= 3)
+        // Why: Play character select sound effect
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayCharacterSelect();
+        }
+
+        // Why: Enable start button when band is full (4 members)
+        if (nextEmptySlot >= 4)
         {
             startGameButton.interactable = true;
+
+            // Why: Play band complete sound effect
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayBandComplete();
+            }
         }
 
         ShowCurrentCharacter(); // Update button states
@@ -86,11 +97,11 @@ public class BandSetupManager : MonoBehaviour
         if (slotIndex >= nextEmptySlot) return; // Slot is empty
 
         // Shift remaining characters left to fill the gap
-        for (int i = slotIndex; i < 2; i++)
+        for (int i = slotIndex; i < 3; i++)
         {
             selectedBand[i] = selectedBand[i + 1];
         }
-        selectedBand[2] = null;
+        selectedBand[3] = null;
 
         nextEmptySlot--;
 
@@ -102,8 +113,8 @@ public class BandSetupManager : MonoBehaviour
 
     private void RefreshBandSlotDisplays()
     {
-        // Why: Update all 3 slot displays after removal
-        for (int i = 0; i < 3; i++)
+        // Why: Update all 4 slot displays after removal
+        for (int i = 0; i < 4; i++)
         {
             if (i < nextEmptySlot)
             {
@@ -135,9 +146,10 @@ public class BandSetupManager : MonoBehaviour
             bandName = "The Unnamed Band"; // Default name
         }
 
-        // Pass data to GameManager (we'll make this next)
+        // Pass data to GameManager
         GameManager.Instance.SetupNewGame(selectedBand, bandName);
 
-        SceneManager.LoadScene("GameScene");
+        // Load MainGame scene additively
+        SceneLoader.LoadScene("MainGame");
     }
 }

@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 286a6e1fa306fef4aab536c399fa2e25
+timeCreated: 1514556181
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4343727234628468602
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 108285
+  packageName: UI Particle System
+  packageVersion: 1.42
+  assetPath: Assets/Plugins/UIParticleSystem/Example/Textures/PlayAndShopAtlas.spriteatlas
+  uploadId: 792166

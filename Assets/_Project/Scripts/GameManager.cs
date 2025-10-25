@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections.Generic;
 
 public class GameManager : MonoBehaviour
@@ -8,7 +8,7 @@ public class GameManager : MonoBehaviour
 
     [Header("Band Info")]
     public string bandName;
-    public SlotData[] slots = new SlotData[6]; // 3 main + 3 support/equipment
+    public SlotData[] slots = new SlotData[6]; // 4 main + 2 support/equipment
 
     [Header("Time")]
     public int currentQuarter = 0; // 0-79 (80 quarters = 20 years)
@@ -34,11 +34,11 @@ public class GameManager : MonoBehaviour
 
     void Awake()
     {
-        // Why: Singleton setup - this GameManager persists between scenes
+        // Why: Singleton setup
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);
+            // No need for DontDestroyOnLoad - Bootstrap scene never unloads!
         }
         else
         {
@@ -46,12 +46,34 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    void Start()
+    {
+        // Why: Connect to scene-specific managers when they exist
+        ConnectToSceneManagers();
+    }
+
+    private void ConnectToSceneManagers()
+    {
+        // Why: Find UI and Event managers in current scene (null-safe lazy connection)
+        if (uiManager == null)
+        {
+            uiManager = FindObjectOfType<UIManager>();
+        }
+
+        if (eventManager == null)
+        {
+            eventManager = GetComponent<EventManager>();
+        }
+
+        Debug.Log("🔗 GameManager: Connected to scene managers");
+    }
+
     public void SetupNewGame(SlotData[] selectedBand, string bandName)
     {
-        // Why: Called from BandSetupScene, initializes new game
+        // Why: Called from GameSetup scene, initializes new game
         this.bandName = bandName;
 
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 4; i++) // Support 4 band members
         {
             slots[i] = selectedBand[i];
         }
@@ -63,6 +85,8 @@ public class GameManager : MonoBehaviour
         unity = 100;
 
         CalculateBandStats();
+
+        Debug.Log($"🎸 New game started: {bandName}");
     }
 
     public void CalculateBandStats()
@@ -72,7 +96,7 @@ public class GameManager : MonoBehaviour
         performance = 0;
         charisma = 0;
 
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 4; i++) // Support 4 band members
         {
             if (slots[i] != null)
             {
@@ -112,7 +136,7 @@ public class GameManager : MonoBehaviour
     {
         // Why: Spend money to create music, gain creativity
         money -= rules.recordCost;
-        // Add recording logic here
+        // TODO: Add recording logic here
     }
 
     private void DoTour()
@@ -141,7 +165,7 @@ public class GameManager : MonoBehaviour
     private void DoRelease()
     {
         // Why: Release album, gain fans based on quality
-        // Add release logic here
+        // TODO: Add release logic here
     }
 
     public void AdvanceQuarter()
@@ -154,8 +178,18 @@ public class GameManager : MonoBehaviour
             currentYear++;
         }
 
-        uiManager.UpdateUI();
-        eventManager.CheckForEvents();
+        // Why: Null-safe - only update UI if we have a UIManager (we're in MainGame scene)
+        if (uiManager != null)
+        {
+            uiManager.UpdateUI();
+        }
+
+        // Why: Null-safe - only check events if we have an EventManager
+        if (eventManager != null)
+        {
+            eventManager.CheckForEvents();
+        }
+
         CheckGameOver();
     }
 
@@ -178,14 +212,14 @@ public class GameManager : MonoBehaviour
 
     private void GameOver(string reason)
     {
-        Debug.Log("Game Over: " + reason);
-        // Load EndScene
+        Debug.Log("💀 Game Over: " + reason);
+        // TODO: Load EndScene
     }
 
     private void GameWin()
     {
-        Debug.Log("You survived 20 years!");
-        // Load EndScene with victory
+        Debug.Log("🎉 You survived 20 years!");
+        // TODO: Load EndScene with victory
     }
 }
 
