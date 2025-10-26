@@ -35,3 +35,5 @@ MonoBehaviour:
     m_Color: {r: 1, g: 0.101960786, b: 0.101960786, a: 1}
   - m_Name: Frame
     m_Color: {r: 0.3726415, g: 0.7596308, b: 1, a: 1}
+  - m_Name: Disabled
+    m_Color: {r: 0.3207547, g: 0.3207547, b: 0.3207547, a: 1}

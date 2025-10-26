@@ -5,39 +5,44 @@ using TMPro;
 public class BandSetupManager : MonoBehaviour
 {
     [Header("Character Pool")]
-    public SlotData[] availableCharacters; // Drag 8-10 characters here in Inspector
+    public SlotData[] availableCharacters; // Drag characters/items here in Inspector
     private int currentCharacterIndex = 0;
 
     [Header("Selected Band")]
-    public SlotData[] selectedBand = new SlotData[4]; // The 4 chosen members
-    private int nextEmptySlot = 0; // Which slot to fill next (0, 1, 2, or 3)
+    public SlotData[] selectedBand = new SlotData[6]; // Why: 6 slots (characters + items)
+    private int nextEmptySlot = 0; // Which slot to fill next
 
     [Header("UI References")]
     public CharacterViewer characterViewer;
-    public BandSlotDisplay[] bandSlotDisplays; // 4 slots
+    public BandSlotDisplay[] bandSlotDisplays; // Why: Can be 3, 4, 6... whatever is visible
     public Button addToBandButton;
     public Button startGameButton;
     public TMP_InputField bandNameInput;
 
+    private int maxSlots; // Why: Calculated based on how many displays are connected
+
     void Start()
     {
-        // Show the first character
+        // Why: Max slots = however many displays are wired up (3, 4, or 6)
+        maxSlots = bandSlotDisplays != null ? bandSlotDisplays.Length : 6;
+
+        // Why: Show the first character
         ShowCurrentCharacter();
 
-        // Start button disabled until band is full
+        // Why: Start button disabled until at least 1 character/item added
         startGameButton.interactable = false;
     }
 
+    // Why: Called by UIController_Setup when NEXT button clicked
     public void ShowNextCharacter()
     {
-        // Why: Cycle forward through available characters
         currentCharacterIndex = (currentCharacterIndex + 1) % availableCharacters.Length;
         ShowCurrentCharacter();
     }
 
+    // Why: Called by UIController_Setup when PREV button clicked
     public void ShowPreviousCharacter()
     {
-        // Why: Cycle backward through available characters
         currentCharacterIndex--;
         if (currentCharacterIndex < 0)
         {
@@ -50,18 +55,21 @@ public class BandSetupManager : MonoBehaviour
     {
         // Why: Update the character viewer to show current selection
         SlotData character = availableCharacters[currentCharacterIndex];
-        characterViewer.DisplayCharacter(character);
-
-        // Why: Disable add button if character already in band or band is full
         bool alreadyInBand = IsCharacterInBand(character);
-        bool bandIsFull = (nextEmptySlot >= 4);
+
+        // Why: Pass both character data and "already hired" status
+        characterViewer.DisplayCharacter(character, alreadyInBand);
+
+        // Why: Disable add button if already in band or all visible slots are full
+        bool bandIsFull = (nextEmptySlot >= maxSlots);
         addToBandButton.interactable = !alreadyInBand && !bandIsFull;
     }
 
+    // Why: Called by UIController_Setup when ADD button clicked
     public void AddCurrentCharacterToBand()
     {
-        // Why: Add the displayed character to the next empty band slot
-        if (nextEmptySlot >= 4) return; // Band is full
+        // Why: Add the character/item to the next empty band slot
+        if (nextEmptySlot >= maxSlots) return; // All visible slots are full
 
         SlotData character = availableCharacters[currentCharacterIndex];
         if (IsCharacterInBand(character)) return; // Already added
@@ -76,45 +84,56 @@ public class BandSetupManager : MonoBehaviour
             AudioManager.Instance.PlayCharacterSelect();
         }
 
-        // Why: Enable start button when band is full (4 members)
-        if (nextEmptySlot >= 4)
+        // Why: Enable start button when at least 1 character/item is in the band
+        if (nextEmptySlot >= 1)
         {
             startGameButton.interactable = true;
+        }
 
-            // Why: Play band complete sound effect
-            if (AudioManager.Instance != null)
+        ShowCurrentCharacter(); // Update button states and hired stamp
+    }
+
+    // Why: Called by BandSlotDisplay when X button clicked
+    public void RemoveCharacterFromBand(SlotData characterToRemove)
+    {
+        // Why: Find which slot this character/item is in
+        int foundIndex = -1;
+        for (int i = 0; i < nextEmptySlot; i++)
+        {
+            if (selectedBand[i] == characterToRemove)
             {
-                AudioManager.Instance.PlayBandComplete();
+                foundIndex = i;
+                break;
             }
         }
 
-        ShowCurrentCharacter(); // Update button states
-    }
+        // Why: If not found, do nothing
+        if (foundIndex == -1) return;
 
-    public void RemoveFromBand(int slotIndex)
-    {
-        // Why: Player can click X to remove a character from band
-        if (slotIndex >= nextEmptySlot) return; // Slot is empty
-
-        // Shift remaining characters left to fill the gap
-        for (int i = slotIndex; i < 3; i++)
+        // Why: Shift all characters after this one to the left
+        for (int i = foundIndex; i < nextEmptySlot - 1; i++)
         {
             selectedBand[i] = selectedBand[i + 1];
         }
-        selectedBand[3] = null;
 
+        // Why: Clear the last slot
+        selectedBand[nextEmptySlot - 1] = null;
         nextEmptySlot--;
 
-        // Update all displays
+        // Why: Refresh all slot displays
         RefreshBandSlotDisplays();
-        startGameButton.interactable = false;
+
+        // Why: Disable start button if no characters left, otherwise keep it enabled
+        startGameButton.interactable = (nextEmptySlot >= 1);
+
+        // Why: Update character viewer (hired stamp should disappear)
         ShowCurrentCharacter();
     }
 
     private void RefreshBandSlotDisplays()
     {
-        // Why: Update all 4 slot displays after removal
-        for (int i = 0; i < 4; i++)
+        // Why: Update all visible slot displays (works with 3, 4, or 6 slots)
+        for (int i = 0; i < maxSlots; i++)
         {
             if (i < nextEmptySlot)
             {
@@ -129,7 +148,7 @@ public class BandSetupManager : MonoBehaviour
 
     private bool IsCharacterInBand(SlotData character)
     {
-        // Why: Check if character is already selected
+        // Why: Check if character/item is already selected
         for (int i = 0; i < nextEmptySlot; i++)
         {
             if (selectedBand[i] == character) return true;
@@ -137,8 +156,15 @@ public class BandSetupManager : MonoBehaviour
         return false;
     }
 
+    // Why: Called by UIController_Setup when START button clicked
     public void StartGame()
     {
+        // Why: Play game start sound effect (using band complete sound for now)
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayBandComplete();
+        }
+
         // Why: Save band selection to GameManager and load main game
         string bandName = bandNameInput.text;
         if (string.IsNullOrEmpty(bandName))
@@ -146,10 +172,10 @@ public class BandSetupManager : MonoBehaviour
             bandName = "The Unnamed Band"; // Default name
         }
 
-        // Pass data to GameManager
+        // Why: Pass data to GameManager (all 6 slots, some may be null)
         GameManager.Instance.SetupNewGame(selectedBand, bandName);
 
-        // Load MainGame scene additively
-        SceneLoader.Instance.LoadScene("MainGame");
+        // Why: Load Game scene
+        SceneLoader.Instance.LoadGame();
     }
 }

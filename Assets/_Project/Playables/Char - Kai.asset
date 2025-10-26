@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5b47e55145e30a141b2d1f8a9d3448dc, type: 3}
-  m_Name: Luna
+  m_Name: Char - Kai
   m_EditorClassIdentifier: Assembly-CSharp::SlotData
-  displayName: Luna
-  sprite: {fileID: 4125636645744980110, guid: cdd47aa9fed8d9e4ebbe89fb17052e4f, type: 3}
+  displayName: Kai
+  sprite: {fileID: 21300000, guid: d05c59b3c46358f4db45a6401924d185, type: 3}
   slotType: 0
-  technical: 1
-  performance: 3
-  charisma: 5
-  morale: 5
+  technical: 4
+  performance: 7
+  charisma: 1
+  morale: 2
   trait: 
-  hireCost: 100
+  hireCost: 50
