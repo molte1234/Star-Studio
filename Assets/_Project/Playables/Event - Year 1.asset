@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Event - Year 1
   m_EditorClassIdentifier: Assembly-CSharp::EventData
   requireYearQuarter: 1
-  triggerYear: 2
-  triggerQuarter: 1
+  triggerYear: 1
+  triggerQuarter: 2
   requireFlag: 0
   requiredFlag: 
   randomChance: 100
@@ -22,9 +22,10 @@ MonoBehaviour:
   statToCheck: 0
   comparison: 0
   statValue: 0
-  eventTitle: sfsfs
-  eventDescription: safsafasf
+  eventTitle: Welcome to the Music Industry!
+  eventDescription: Your band is just starting out. The road ahead is long, but dreams
+    are made of this!
   eventSprite: {fileID: 21300000, guid: dfc73ed3441914b488c055c1a882a158, type: 3}
-  eventMusic: {fileID: 8300000, guid: 561f9bf172eba4145b61803810f88bd6, type: 3}
+  eventMusic: {fileID: 8300000, guid: 00be41919826e7e4d8fa618ea4312043, type: 3}
   eventPopupSFX: {fileID: 0}
   choices: []

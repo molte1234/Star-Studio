@@ -10,6 +10,9 @@ public class GameManager : MonoBehaviour
     // Singleton pattern - only one GameManager exists
     public static GameManager Instance;
 
+    [Header("Game State")]
+    private bool isNewGame = false; // Why: Track if this is a fresh game start
+
     [Header("Band Info")]
     public string bandName;
     public SlotData[] slots = new SlotData[6]; // 3 main band members + 3 support/equipment slots
@@ -55,6 +58,7 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public void SetupNewGame(SlotData[] selectedBand, string bandName)
     {
+        // Why: Initialize game with selected band members
         this.bandName = bandName;
 
         // Copy all slots from setup (up to 6)
@@ -63,29 +67,45 @@ public class GameManager : MonoBehaviour
             slots[i] = selectedBand[i];
         }
 
-        // Reset game state
+        // Reset game state to starting values
         currentQuarter = 0;
         currentYear = 1;
-        money = rules.startingMoney;
-        fans = rules.startingFans;
-        unity = 100;
 
-        // Calculate initial band stats
-        CalculateBandStats();
+        // Use rules if available, otherwise use defaults
+        if (rules != null)
+        {
+            money = rules.startingMoney;
+            fans = rules.startingFans;
+        }
+        else
+        {
+            money = 500;
+            fans = 50;
+        }
+
+        unity = 100;
+        flags.Clear();
+
+        // Calculate initial band stats from members
+        RecalculateStats();
+
+        // ✅ Mark this as a new game so Game scene can check for starting events
+        isNewGame = true;
+
+        Debug.Log($"🎸 Band '{bandName}' is ready! Starting Year 1 Quarter 1");
     }
 
     /// <summary>
-    /// Sums up stats from all active band members
-    /// Call this whenever band composition changes
+    /// Sums up all band member stats
     /// </summary>
-    public void CalculateBandStats()
+    public void RecalculateStats()
     {
         technical = 0;
         performance = 0;
         charisma = 0;
 
-        // Sum stats from all filled slots
-        for (int i = 0; i < slots.Length; i++)
+        // Sum stats from first 3 slots (band members)
+        for (int i = 0; i < 3; i++)
         {
             if (slots[i] != null)
             {
@@ -97,11 +117,12 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Player clicked an action button - process the results
+    /// Main action processor - player chose one of 5 actions
     /// </summary>
-    public void DoAction(ActionType actionType)
+    public void DoAction(ActionType action)
     {
-        switch (actionType)
+        // Process the action
+        switch (action)
         {
             case ActionType.Record:
                 DoRecord();
@@ -120,8 +141,54 @@ public class GameManager : MonoBehaviour
                 break;
         }
 
-        // Why: Every action advances time by 1 quarter
+        // Why: After action, advance time by 1 quarter
         AdvanceQuarter();
+    }
+
+    /// <summary>
+    /// Called by EventManager when it first loads
+    /// Checks for Y1Q1 events if this is a new game
+    /// </summary>
+    public void OnGameSceneLoaded()
+    {
+        // Why: If this is a fresh game start, check for starting events (Y1 Q1)
+        if (isNewGame && eventManager != null)
+        {
+            Debug.Log("========================================");
+            Debug.Log("🎮 NEW GAME START - CHECKING FOR Y1 Q1 EVENTS");
+            Debug.Log($"   Current State: Year {currentYear}, Quarter {currentQuarter} (displays as Q{(currentQuarter % 4) + 1})");
+            Debug.Log($"   EventManager has {eventManager.allEvents.Count} events in database");
+            Debug.Log("========================================");
+
+            eventManager.CheckForEvents();
+            isNewGame = false; // Only check once
+        }
+        else if (!isNewGame)
+        {
+            Debug.Log("⚠️ OnGameSceneLoaded called but isNewGame is false - skipping Y1Q1 check");
+        }
+        else if (eventManager == null)
+        {
+            Debug.LogError("❌ OnGameSceneLoaded called but eventManager is null!");
+        }
+    }
+
+    /// <summary>
+    /// DEBUG: Manually trigger event check - useful for testing
+    /// Call this from Inspector or console to force an event check
+    /// </summary>
+    [ContextMenu("Force Check Events Now")]
+    public void DEBUG_ForceCheckEvents()
+    {
+        if (eventManager != null)
+        {
+            Debug.Log("🔧 DEBUG: Manual event check triggered");
+            eventManager.CheckForEvents();
+        }
+        else
+        {
+            Debug.LogError("❌ DEBUG: Cannot check events - EventManager is null!");
+        }
     }
 
     /// <summary>
@@ -145,10 +212,14 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        // Check for random events
+        // ✅ FIXED: Check for events (this was commented out!)
         if (eventManager != null)
         {
-            // eventManager.CheckForEvents();
+            eventManager.CheckForEvents();
+        }
+        else
+        {
+            Debug.LogWarning("⚠️ EventManager is null - cannot check for events!");
         }
 
         // Why: Update UI to show new quarter/year
@@ -226,13 +297,13 @@ public class GameManager : MonoBehaviour
 
         money -= cost;
 
-        // Tour success based on performance and charisma
-        int tourPower = (performance + charisma) / 2;
-        int fansGained = tourPower * 20;
-        int revenue = tourPower * 50;
-
-        fans += fansGained;
+        // Revenue from tour based on fanbase + performance skill
+        int revenue = (fans / 10) + (performance * 20);
         money += revenue;
+
+        // Fans gained from live exposure
+        int fansGained = performance * 5;
+        fans += fansGained;
 
         // Touring is exhausting
         unity -= 10;
@@ -243,38 +314,41 @@ public class GameManager : MonoBehaviour
 
     private void DoPractice()
     {
-        // Why: Practice is free and improves band skills
-        // Small stat increase
-        technical += 1;
-        performance += 1;
+        // Why: Practice improves skills but costs time
+        technical += 2;
+        performance += 2;
         charisma += 1;
 
-        // Cap stats at reasonable level
-        technical = Mathf.Min(technical, 30);
-        performance = Mathf.Min(performance, 30);
-        charisma = Mathf.Min(charisma, 30);
-
-        // Practice together builds unity
+        // Small unity gain from working together
         unity += 5;
         unity = Mathf.Clamp(unity, 0, 100);
 
-        Debug.Log($"🎸 PRACTICE: +1 to all stats, +5 unity");
+        Debug.Log("🎸 PRACTICE: +2 technical, +2 performance, +1 charisma, +5 unity");
     }
 
     private void DoRest()
     {
-        // Why: Rest is free and recovers unity
+        // Why: Resting recovers unity and prevents burnout
         unity += 20;
         unity = Mathf.Clamp(unity, 0, 100);
 
-        Debug.Log($"😴 REST: +20 unity");
+        // Small money cost (living expenses)
+        money -= 50;
+
+        Debug.Log("😴 REST: +20 unity, -$50 living expenses");
     }
 
     private void DoRelease()
     {
-        // Why: Releasing an album is expensive but can be very profitable
-        int cost = 500;
+        // Why: Release an album - big fanbase boost if you have enough tracks
+        // For prototype: simplified - just big fan gain based on skills
 
+        int skillLevel = (technical + performance + charisma) / 3;
+        int fansGained = skillLevel * 50;
+        fans += fansGained;
+
+        // Promotion costs
+        int cost = 400;
         if (money < cost)
         {
             Debug.Log("❌ RELEASE: Not enough money! Need $" + cost);
@@ -283,49 +357,21 @@ public class GameManager : MonoBehaviour
 
         money -= cost;
 
-        // Release success based on all stats
-        int bandPower = technical + performance + charisma;
-        int fansGained = bandPower * 15;
-        int revenue = bandPower * 100;
-
-        fans += fansGained;
-        money += revenue;
-
-        // Exciting to release! Small unity boost
-        unity += 10;
-        unity = Mathf.Clamp(unity, 0, 100);
-
-        Debug.Log($"💿 RELEASE: -${cost}, +${revenue}, +{fansGained} fans, +10 unity");
+        Debug.Log($"💿 RELEASE: -${cost}, +{fansGained} fans");
     }
 
-    /// <summary>
-    /// Calculates action success based on band stats
-    /// Returns a value 1-10 based on combined band power
-    /// </summary>
-    private int CalculateSuccess()
-    {
-        // Simple formula: average of all stats
-        int totalStats = technical + performance + charisma;
-        int averageSkill = totalStats / 3;
-
-        // Add some randomness (±2)
-        int randomBonus = Random.Range(-2, 3);
-        int result = averageSkill + randomBonus;
-
-        // Clamp to 1-10
-        return Mathf.Clamp(result, 1, 10);
-    }
+    // ============================================
+    // GAME END
+    // ============================================
 
     private void EndGame()
     {
-        Debug.Log("GAME OVER! 10 years complete!");
-        // TODO: Load end scene with final score
+        Debug.Log("🎉 GAME OVER - 10 years complete!");
+        // TODO: Load end scene with results
     }
 }
 
-/// <summary>
-/// Enum for the 5 action types
-/// </summary>
+// Why: Enum for the 5 action types
 public enum ActionType
 {
     Record,

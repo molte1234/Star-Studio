@@ -15,7 +15,7 @@ public class EventManager : MonoBehaviour
 
     [Header("References")]
     public UIController_Game uiController;
-    public EventPanel eventPanel; // NEW: Direct reference to EventPanel script
+    public EventPanel eventPanel; // Direct reference to EventPanel script
 
     private void Start()
     {
@@ -24,10 +24,26 @@ public class EventManager : MonoBehaviour
         {
             GameManager.Instance.eventManager = this;
             Debug.Log("✅ EventManager connected to GameManager");
+
+            // ✅ FIX: Use coroutine to check for starting events after scene fully loads
+            // This ensures all UI and systems are ready before showing events
+            StartCoroutine(CheckForStartingEventsDelayed());
         }
         else
         {
             Debug.LogError("❌ GameManager not found! Make sure Bootstrap scene is loaded first.");
+        }
+    }
+
+    private System.Collections.IEnumerator CheckForStartingEventsDelayed()
+    {
+        // Why: Wait one frame to ensure scene is fully loaded
+        yield return null;
+
+        // Check if this is a new game start (Y1 Q1 events)
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.OnGameSceneLoaded();
         }
     }
 
@@ -228,6 +244,11 @@ public class EventManager : MonoBehaviour
         GameManager.Instance.money += choice.moneyChange;
         GameManager.Instance.fans += choice.fansChange;
         GameManager.Instance.unity += choice.unityChange;
+
+        // Apply stat changes if any
+        GameManager.Instance.technical += choice.technicalChange;
+        GameManager.Instance.performance += choice.performanceChange;
+        GameManager.Instance.charisma += choice.charismaChange;
 
         // Add flags if any
         foreach (string flag in choice.flagsToAdd)

@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using DG.Tweening;
@@ -11,7 +11,7 @@ using DG.Tweening;
 public class EventPanel : MonoBehaviour
 {
     [Header("Main Panel")]
-    [Tooltip("The entire event panel GameObject")]
+    [Tooltip("The TOP-LEVEL event panel GameObject that darkens the whole screen (NOT the card panel)")]
     public GameObject panelRoot;
 
     [Header("Content References")]
@@ -102,9 +102,11 @@ public class EventPanel : MonoBehaviour
         // Why: Clean up any old buttons first
         ClearButtons();
 
+        // Why: If no choices provided, create a simple "OK" button to close the event
         if (choices == null || choices.Length == 0)
         {
-            Debug.LogWarning("EventPanel: No choices provided for this event!");
+            Debug.Log("EventPanel: No choices for this event - creating default OK button");
+            CreateOKButton();
             return;
         }
 
@@ -117,21 +119,80 @@ public class EventPanel : MonoBehaviour
             GameObject buttonObj = Instantiate(choiceButtonPrefab, buttonContainer);
             spawnedButtons[i] = buttonObj;
 
-            // Set button text
+            // Set button text - searches children for TextMeshProUGUI
             TextMeshProUGUI buttonText = buttonObj.GetComponentInChildren<TextMeshProUGUI>();
             if (buttonText != null)
             {
                 buttonText.text = choices[i].choiceText;
             }
+            else
+            {
+                Debug.LogWarning($"Choice button {i} has no TextMeshProUGUI in children!");
+            }
 
-            // Hook up button click
-            Button button = buttonObj.GetComponent<Button>();
+            // Hook up button click - searches children for Button component
+            Button button = buttonObj.GetComponentInChildren<Button>();
             if (button != null)
             {
                 int choiceIndex = i; // Capture index for closure
                 button.onClick.RemoveAllListeners();
                 button.onClick.AddListener(() => OnChoiceClicked(choiceIndex));
             }
+            else
+            {
+                Debug.LogError($"Choice button {i} has no Button component in children! Check prefab structure.");
+            }
+        }
+    }
+
+    private void CreateOKButton()
+    {
+        // Why: Create a single "OK" button that just closes the event
+        spawnedButtons = new GameObject[1];
+
+        GameObject buttonObj = Instantiate(choiceButtonPrefab, buttonContainer);
+        spawnedButtons[0] = buttonObj;
+
+        // Set button text to "OK"
+        TextMeshProUGUI buttonText = buttonObj.GetComponentInChildren<TextMeshProUGUI>();
+        if (buttonText != null)
+        {
+            buttonText.text = "OK";
+        }
+
+        // Hook up button to just close the panel
+        Button button = buttonObj.GetComponentInChildren<Button>();
+        if (button != null)
+        {
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(() => OnOKClicked());
+        }
+    }
+
+    private void OnOKClicked()
+    {
+        // Why: Player clicked OK on an event with no choices - just close the panel
+        Debug.Log("EventPanel: OK button clicked - closing event");
+
+        // Play button click sound
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayButtonClick();
+        }
+
+        // ✅ FIX: Resume regular music (fade out event music)
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.ResumeMusic();
+        }
+
+        // Hide the panel
+        HideEvent();
+
+        // ✅ FIX: Refresh UI after closing
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.ForceRefreshUI();
         }
     }
 

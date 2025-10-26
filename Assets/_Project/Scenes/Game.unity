@@ -966,108 +966,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StatBar
   fillImage: {fileID: 988316280}
---- !u!1001 &355468374
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 2100028304}
-    m_Modifications:
-    - target: {fileID: 715689682565329819, guid: 0d873f3ce395ac744a21b78b3bdc0d84, type: 3}
-      propertyPath: m_Name
-      value: Choice Button
-      objectReference: {fileID: 0}
-    - target: {fileID: 3841718783727518970, guid: 0d873f3ce395ac744a21b78b3bdc0d84, type: 3}
-      propertyPath: m_Pivot.x
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 3841718783727518970, guid: 0d873f3ce395ac744a21b78b3bdc0d84, type: 3}
-      propertyPath: m_Pivot.y
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 3841718783727518970, guid: 0d873f3ce395ac744a21b78b3bdc0d84, type: 3}
-      propertyPath: m_AnchorMax.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3841718783727518970, guid: 0d873f3ce395ac744a21b78b3bdc0d84, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3841718783727518970, guid: 0d873f3ce395ac744a21b78b3bdc0d84, type: 3}
-      propertyPath: m_AnchorMin.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3841718783727518970, guid: 0d873f3ce395ac744a21b78b3bdc0d84, type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3841718783727518970, guid: 0d873f3ce395ac744a21b78b3bdc0d84, type: 3}
-      propertyPath: m_SizeDelta.x
-      value: 308.48828
-      objectReference: {fileID: 0}
-    - target: {fileID: 3841718783727518970, guid: 0d873f3ce395ac744a21b78b3bdc0d84, type: 3}
-      propertyPath: m_SizeDelta.y
-      value: 106.38385
-      objectReference: {fileID: 0}
-    - target: {fileID: 3841718783727518970, guid: 0d873f3ce395ac744a21b78b3bdc0d84, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3841718783727518970, guid: 0d873f3ce395ac744a21b78b3bdc0d84, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3841718783727518970, guid: 0d873f3ce395ac744a21b78b3bdc0d84, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3841718783727518970, guid: 0d873f3ce395ac744a21b78b3bdc0d84, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3841718783727518970, guid: 0d873f3ce395ac744a21b78b3bdc0d84, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3841718783727518970, guid: 0d873f3ce395ac744a21b78b3bdc0d84, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3841718783727518970, guid: 0d873f3ce395ac744a21b78b3bdc0d84, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3841718783727518970, guid: 0d873f3ce395ac744a21b78b3bdc0d84, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3841718783727518970, guid: 0d873f3ce395ac744a21b78b3bdc0d84, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3841718783727518970, guid: 0d873f3ce395ac744a21b78b3bdc0d84, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3841718783727518970, guid: 0d873f3ce395ac744a21b78b3bdc0d84, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3841718783727518970, guid: 0d873f3ce395ac744a21b78b3bdc0d84, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 0d873f3ce395ac744a21b78b3bdc0d84, type: 3}
---- !u!224 &355468375 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 3841718783727518970, guid: 0d873f3ce395ac744a21b78b3bdc0d84, type: 3}
-  m_PrefabInstance: {fileID: 355468374}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &366457513
 GameObject:
   m_ObjectHideFlags: 0
@@ -1686,6 +1584,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EventManager
   allEvents:
   - {fileID: 11400000, guid: b3fc66e675aa7674aa4f94a789a9db40, type: 2}
+  - {fileID: 11400000, guid: 1d224d5399a23cb43aa0efacb35939e8, type: 2}
   uiController: {fileID: 1236340057}
   eventPanel: {fileID: 2115616643}
 --- !u!4 &475990453
@@ -2214,7 +2113,7 @@ GameObject:
   - component: {fileID: 761460914}
   - component: {fileID: 761460913}
   m_Layer: 5
-  m_Name: Mask - Background (1)
+  m_Name: Mask - Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2439,7 +2338,7 @@ GameObject:
   - component: {fileID: 795004420}
   - component: {fileID: 795004419}
   m_Layer: 5
-  m_Name: Card- Event
+  m_Name: PanelCard - Event
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6489,8 +6388,7 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 355468375}
+  m_Children: []
   m_Father: {fileID: 795004418}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -6614,7 +6512,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.28675684, g: 0.28675684, b: 0.33962262, a: 0.90588236}
+  m_Color: {r: 0.14509805, g: 0.14509805, b: 0.14509805, a: 0.92156863}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -6651,12 +6549,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 84a9533f5b9c12c4c917008604f0ee80, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EventPanel
-  panelRoot: {fileID: 795004417}
+  panelRoot: {fileID: 2115616639}
   titleText: {fileID: 926108646}
   eventImage: {fileID: 1489577056}
   descriptionText: {fileID: 320246680}
   buttonContainer: {fileID: 2100028304}
-  choiceButtonPrefab: {fileID: 0}
+  choiceButtonPrefab: {fileID: 715689682565329819, guid: 0d873f3ce395ac744a21b78b3bdc0d84, type: 3}
   popupDuration: 0.5
   popupEase: 27
 --- !u!1 &2116616142
