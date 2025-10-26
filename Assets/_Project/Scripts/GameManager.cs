@@ -39,11 +39,10 @@ public class GameManager : MonoBehaviour
 
     void Awake()
     {
-        // Why: Singleton setup - this GameManager persists between scenes
+        // Why: Singleton setup - GameManager lives in Bootstrap scene
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);
         }
         else
         {

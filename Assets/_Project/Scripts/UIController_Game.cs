@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 using TMPro;
 
 /// <summary>
@@ -25,16 +24,6 @@ public class UIController_Game : MonoBehaviour
     [Header("Band Display")]
     public Image[] bandMemberPortraits; // Array of 3 portrait images
 
-    [Header("Action Buttons")]
-    public Button recordButton;
-    public Button tourButton;
-    public Button practiceButton;
-    public Button restButton;
-    public Button releaseButton;
-    public Button nextQuarterButton;
-    public Button mainMenuButton;
-    public Button pauseButton;
-
     [Header("Event Popup - For Later")]
     public GameObject eventPopupPanel;
     public TextMeshProUGUI eventTitleText;
@@ -43,16 +32,6 @@ public class UIController_Game : MonoBehaviour
 
     void Start()
     {
-        // Why: Wire up all button clicks to their respective handlers
-        recordButton.onClick.AddListener(OnRecordClicked);
-        tourButton.onClick.AddListener(OnTourClicked);
-        practiceButton.onClick.AddListener(OnPracticeClicked);
-        restButton.onClick.AddListener(OnRestClicked);
-        releaseButton.onClick.AddListener(OnReleaseClicked);
-        nextQuarterButton.onClick.AddListener(OnNextQuarterClicked);
-        mainMenuButton.onClick.AddListener(OnMainMenuClicked);
-        pauseButton.onClick.AddListener(OnPauseClicked);
-
         // Hide event popup at start
         if (eventPopupPanel != null)
         {
@@ -115,48 +94,48 @@ public class UIController_Game : MonoBehaviour
     }
 
     // ============================================
-    // ACTION BUTTON HANDLERS
+    // ACTION BUTTON HANDLERS (Called from Inspector)
     // ============================================
 
-    private void OnRecordClicked()
+    public void OnRecordClicked()
     {
         // Why: Player clicked RECORD, tell GameManager to process it
         GameManager.Instance.DoAction(ActionType.Record);
     }
 
-    private void OnTourClicked()
+    public void OnTourClicked()
     {
         GameManager.Instance.DoAction(ActionType.Tour);
     }
 
-    private void OnPracticeClicked()
+    public void OnPracticeClicked()
     {
         GameManager.Instance.DoAction(ActionType.Practice);
     }
 
-    private void OnRestClicked()
+    public void OnRestClicked()
     {
         GameManager.Instance.DoAction(ActionType.Rest);
     }
 
-    private void OnReleaseClicked()
+    public void OnReleaseClicked()
     {
         GameManager.Instance.DoAction(ActionType.Release);
     }
 
-    private void OnNextQuarterClicked()
+    public void OnNextQuarterClicked()
     {
         // Why: Advance to next quarter
         GameManager.Instance.AdvanceQuarter();
     }
 
-    private void OnMainMenuClicked()
+    public void OnMainMenuClicked()
     {
         // Why: Player wants to return to main menu
-        SceneManager.LoadScene("MainMenu");
+        SceneLoader.Instance.LoadMainMenu();
     }
 
-    private void OnPauseClicked()
+    public void OnPauseClicked()
     {
         // Why: Player wants to pause the game
         // TODO: Implement pause menu/functionality
