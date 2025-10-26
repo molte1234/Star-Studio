@@ -57,8 +57,8 @@ public class GameManager : MonoBehaviour
     {
         this.bandName = bandName;
 
-        // Assign first 3 slots to main band members
-        for (int i = 0; i < 3; i++)
+        // Copy all slots from setup (up to 6)
+        for (int i = 0; i < selectedBand.Length && i < slots.Length; i++)
         {
             slots[i] = selectedBand[i];
         }
@@ -84,8 +84,8 @@ public class GameManager : MonoBehaviour
         performance = 0;
         charisma = 0;
 
-        // Only sum first 3 slots (main band members)
-        for (int i = 0; i < 3; i++)
+        // Sum stats from all filled slots
+        for (int i = 0; i < slots.Length; i++)
         {
             if (slots[i] != null)
             {
@@ -120,11 +120,8 @@ public class GameManager : MonoBehaviour
                 break;
         }
 
-        // Why: Update UI after every action so player sees changes
-        if (uiController != null)
-        {
-            uiController.UpdateStatsDisplay();
-        }
+        // Why: Every action advances time by 1 quarter
+        AdvanceQuarter();
     }
 
     /// <summary>
@@ -155,10 +152,36 @@ public class GameManager : MonoBehaviour
         }
 
         // Why: Update UI to show new quarter/year
+        RefreshUI();
+    }
+
+    /// <summary>
+    /// Refreshes the UI - finds UIController_Game if needed
+    /// </summary>
+    private void RefreshUI()
+    {
+        // Find UIController_Game if reference is missing
+        if (uiController == null)
+        {
+            uiController = FindObjectOfType<UIController_Game>();
+        }
+
         if (uiController != null)
         {
-            uiController.UpdateStatsDisplay();
+            uiController.RefreshDisplay();
         }
+        else
+        {
+            Debug.LogWarning("UIController_Game not found - cannot update display");
+        }
+    }
+
+    /// <summary>
+    /// Public method to force UI refresh from external scripts
+    /// </summary>
+    public void ForceRefreshUI()
+    {
+        RefreshUI();
     }
 
     // ============================================
@@ -167,59 +190,112 @@ public class GameManager : MonoBehaviour
 
     private void DoRecord()
     {
-        // Why: Recording creates music and gains fans/money based on band skill
-        int successRoll = CalculateSuccess();
+        // Why: Recording music costs money but builds fanbase
+        int cost = 200;
 
-        money += successRoll * 10;
-        fans += successRoll * 5;
+        if (money < cost)
+        {
+            Debug.Log("❌ RECORD: Not enough money! Need $" + cost);
+            return;
+        }
 
-        Debug.Log("RECORD: Success roll = " + successRoll);
+        money -= cost;
+
+        // Fans gained based on band skill
+        int skillLevel = (technical + performance + charisma) / 3;
+        int fansGained = skillLevel * 10;
+        fans += fansGained;
+
+        // Studio time is draining
+        unity -= 5;
+        unity = Mathf.Clamp(unity, 0, 100);
+
+        Debug.Log($"🎵 RECORD: -${cost}, +{fansGained} fans, -5 unity");
     }
 
     private void DoTour()
     {
-        // Why: Touring costs money but gains lots of fans
-        int cost = 100;
+        // Why: Touring costs money upfront but gains fans and revenue
+        int cost = 300;
 
-        if (money >= cost)
+        if (money < cost)
         {
-            money -= cost;
-            int successRoll = CalculateSuccess();
-            fans += successRoll * 15;
+            Debug.Log("❌ TOUR: Not enough money! Need $" + cost);
+            return;
+        }
 
-            Debug.Log("TOUR: Success roll = " + successRoll);
-        }
-        else
-        {
-            Debug.Log("TOUR: Not enough money!");
-        }
+        money -= cost;
+
+        // Tour success based on performance and charisma
+        int tourPower = (performance + charisma) / 2;
+        int fansGained = tourPower * 20;
+        int revenue = tourPower * 50;
+
+        fans += fansGained;
+        money += revenue;
+
+        // Touring is exhausting
+        unity -= 10;
+        unity = Mathf.Clamp(unity, 0, 100);
+
+        Debug.Log($"🎤 TOUR: -${cost}, +${revenue}, +{fansGained} fans, -10 unity");
     }
 
     private void DoPractice()
     {
-        // Why: Practice improves band stats
-        // TODO: Implement stat improvement logic
-        Debug.Log("PRACTICE: Band is practicing...");
+        // Why: Practice is free and improves band skills
+        // Small stat increase
+        technical += 1;
+        performance += 1;
+        charisma += 1;
+
+        // Cap stats at reasonable level
+        technical = Mathf.Min(technical, 30);
+        performance = Mathf.Min(performance, 30);
+        charisma = Mathf.Min(charisma, 30);
+
+        // Practice together builds unity
+        unity += 5;
+        unity = Mathf.Clamp(unity, 0, 100);
+
+        Debug.Log($"🎸 PRACTICE: +1 to all stats, +5 unity");
     }
 
     private void DoRest()
     {
-        // Why: Rest recovers unity/morale
-        unity += 10;
+        // Why: Rest is free and recovers unity
+        unity += 20;
         unity = Mathf.Clamp(unity, 0, 100);
 
-        Debug.Log("REST: Unity restored");
+        Debug.Log($"😴 REST: +20 unity");
     }
 
     private void DoRelease()
     {
-        // Why: Release an album for big money/fan gain
-        int successRoll = CalculateSuccess();
+        // Why: Releasing an album is expensive but can be very profitable
+        int cost = 500;
 
-        money += successRoll * 50;
-        fans += successRoll * 25;
+        if (money < cost)
+        {
+            Debug.Log("❌ RELEASE: Not enough money! Need $" + cost);
+            return;
+        }
 
-        Debug.Log("RELEASE: Success roll = " + successRoll);
+        money -= cost;
+
+        // Release success based on all stats
+        int bandPower = technical + performance + charisma;
+        int fansGained = bandPower * 15;
+        int revenue = bandPower * 100;
+
+        fans += fansGained;
+        money += revenue;
+
+        // Exciting to release! Small unity boost
+        unity += 10;
+        unity = Mathf.Clamp(unity, 0, 100);
+
+        Debug.Log($"💿 RELEASE: -${cost}, +${revenue}, +{fansGained} fans, +10 unity");
     }
 
     /// <summary>

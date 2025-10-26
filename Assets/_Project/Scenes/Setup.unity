@@ -5352,8 +5352,8 @@ MonoBehaviour:
   characterViewer: {fileID: 1061312528}
   bandSlotDisplays:
   - {fileID: 1043303750}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 2083022052}
+  - {fileID: 1824274513}
   - {fileID: 1406149937}
   addToBandButton: {fileID: 28400757}
   startGameButton: {fileID: 423391297}
@@ -6147,6 +6147,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 217501615475617437, guid: 59337ee29835a7241af1c620712a235e, type: 3}
   m_PrefabInstance: {fileID: 1824274511}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1824274513 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2621447551764251444, guid: 59337ee29835a7241af1c620712a235e, type: 3}
+  m_PrefabInstance: {fileID: 1824274511}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21b4e7b5a0af6fe45a5f5905eb4e8585, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BandSlotDisplay
 --- !u!1 &1939243865
 GameObject:
   m_ObjectHideFlags: 0
@@ -6235,7 +6246,7 @@ GameObject:
   - component: {fileID: 1939660479}
   - component: {fileID: 1939660478}
   m_Layer: 5
-  m_Name: Canvas
+  m_Name: Canvas - Setup
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6718,6 +6729,17 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2042507726}
   m_CullTransparentMesh: 1
+--- !u!114 &2083022052 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2621447551764251444, guid: 59337ee29835a7241af1c620712a235e, type: 3}
+  m_PrefabInstance: {fileID: 19236321}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21b4e7b5a0af6fe45a5f5905eb4e8585, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BandSlotDisplay
 --- !u!1 &2105501747
 GameObject:
   m_ObjectHideFlags: 0

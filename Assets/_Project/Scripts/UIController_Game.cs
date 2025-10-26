@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
@@ -22,13 +22,19 @@ public class UIController_Game : MonoBehaviour
     public StatBar unityBar;          // 0-100 scale
 
     [Header("Band Display")]
-    public Image[] bandMemberPortraits; // Array of 3 portrait images
+    public CharacterDisplay[] characterDisplays; // Array of character displays (min 6, expandable)
 
     [Header("Event Popup - For Later")]
     public GameObject eventPopupPanel;
     public TextMeshProUGUI eventTitleText;
     public TextMeshProUGUI eventDescriptionText;
     public Button[] eventChoiceButtons;
+
+    void OnEnable()
+    {
+        // Why: Scene was just activated by SceneLoader, refresh the display
+        RefreshDisplay();
+    }
 
     void Start()
     {
@@ -39,6 +45,14 @@ public class UIController_Game : MonoBehaviour
         }
 
         // Initial display update
+        RefreshDisplay();
+    }
+
+    /// <summary>
+    /// Refreshes all displays - call this when scene activates or data changes
+    /// </summary>
+    public void RefreshDisplay()
+    {
         UpdateBandDisplay();
         UpdateStatsDisplay();
     }
@@ -68,27 +82,46 @@ public class UIController_Game : MonoBehaviour
     }
 
     /// <summary>
-    /// Shows the 3 selected band member portraits from GameManager.slots
+    /// Shows/hides band member portraits from GameManager.slots
+    /// Automatically shows characters that exist, hides empty slots
     /// </summary>
     public void UpdateBandDisplay()
     {
+        // Safety check
+        if (GameManager.Instance == null)
+        {
+            Debug.LogWarning("GameManager.Instance is null - can't update band display");
+            return;
+        }
+
+        if (characterDisplays == null || characterDisplays.Length == 0)
+        {
+            Debug.LogWarning("characterDisplays array is empty! Assign CharacterDisplay components in Inspector");
+            return;
+        }
+
         GameManager gm = GameManager.Instance;
 
-        for (int i = 0; i < 3; i++)
+        // Loop through all character displays
+        for (int i = 0; i < characterDisplays.Length; i++)
         {
-            if (i < bandMemberPortraits.Length)
+            // Safety check
+            if (characterDisplays[i] == null)
             {
-                if (gm.slots[i] != null)
-                {
-                    // Show portrait from SlotData
-                    bandMemberPortraits[i].sprite = gm.slots[i].sprite;
-                    bandMemberPortraits[i].gameObject.SetActive(true);
-                }
-                else
-                {
-                    // Hide if slot is empty
-                    bandMemberPortraits[i].gameObject.SetActive(false);
-                }
+                Debug.LogWarning($"characterDisplays[{i}] is null - not assigned in Inspector!");
+                continue;
+            }
+
+            // Check if this slot index exists in GameManager
+            if (i < gm.slots.Length && gm.slots[i] != null)
+            {
+                // Why: Character exists in this slot - show it
+                characterDisplays[i].SetCharacter(gm.slots[i]);
+            }
+            else
+            {
+                // Why: No character in this slot - hide it
+                characterDisplays[i].Clear();
             }
         }
     }
