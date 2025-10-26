@@ -3,103 +3,129 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// Controls all UI elements on the main game screen
-/// Updates displays, handles button clicks
-/// Follows the UIController naming pattern (like UIController_MainMenu)
+/// Controls all UI in the main Game scene
+/// Handles displaying stats, character portraits, and menu panels
 /// </summary>
 public class UIController_Game : MonoBehaviour
 {
-    [Header("Band Info Display")]
-    public TextMeshProUGUI bandNameText;
-
     [Header("Stats Display")]
     public TextMeshProUGUI moneyText;
     public TextMeshProUGUI fansText;
-    public TextMeshProUGUI yearText;
-    public TextMeshProUGUI quarterText;
+    public TextMeshProUGUI technicalText;
+    public TextMeshProUGUI performanceText;
+    public TextMeshProUGUI unityText;
+    public TextMeshProUGUI quarterYearText;
+    public TextMeshProUGUI bandNameText;
 
-    [Header("Stat Bars")]
-    public StatBar technicalBar;      // 0-30 scale
-    public StatBar performanceBar;    // 0-30 scale
-    public StatBar charismaBar;       // 0-30 scale
-    public StatBar unityBar;          // 0-100 scale
+    [Header("Character Displays")]
+    public CharacterDisplay[] characterDisplays;
 
-    [Header("Band Display")]
-    public CharacterDisplay[] characterDisplays; // Array of character displays (min 6, expandable)
-
-    [Header("Pause Toggle")]
-    [Tooltip("Optional: Assign the Toggle component to auto-sync its visual state with pause state")]
-    public Toggle pauseToggle;
-
-    void OnEnable()
-    {
-        // Why: Scene was just activated by SceneLoader, refresh the display
-        RefreshDisplay();
-        SyncPauseToggle();
-    }
+    [Header("Menu System - Area A (Action Panels)")]
+    [Tooltip("Panel in Area A that contains Practice action buttons")]
+    public GameObject practicePanel;
+    [Tooltip("Panel in Area A that contains Produce action buttons")]
+    public GameObject producePanel;
+    [Tooltip("Panel in Area A that contains Tour action buttons")]
+    public GameObject tourPanel;
+    [Tooltip("Panel in Area A that contains Release action buttons")]
+    public GameObject releasePanel;
+    [Tooltip("Panel in Area A that contains Finance action buttons")]
+    public GameObject financePanel;
+    [Tooltip("Panel in Area A that contains Marketing action buttons")]
+    public GameObject marketingPanel;
+    [Tooltip("Panel in Area A that contains Managing action buttons")]
+    public GameObject managingPanel;
 
     void Start()
     {
-        // Initial display update
-        RefreshDisplay();
-        SyncPauseToggle();
+        // Why: Make sure all panels start hidden
+        HideAllPanels();
+
+        RefreshUI();
     }
 
-    /// <summary>
-    /// Refreshes all displays - call this when scene activates or data changes
-    /// </summary>
+    private void HideAllPanels()
+    {
+        // Why: Start with all panels hidden
+        if (practicePanel != null) practicePanel.SetActive(false);
+        if (producePanel != null) producePanel.SetActive(false);
+        if (tourPanel != null) tourPanel.SetActive(false);
+        if (releasePanel != null) releasePanel.SetActive(false);
+        if (financePanel != null) financePanel.SetActive(false);
+        if (marketingPanel != null) marketingPanel.SetActive(false);
+        if (managingPanel != null) managingPanel.SetActive(false);
+    }
+
+    // ============================================
+    // UI REFRESH (Updates all displays)
+    // ============================================
+
+    public void RefreshUI()
+    {
+        // Why: Update all stat displays from GameManager
+        RefreshStats();
+        RefreshCharacters();
+    }
+
     public void RefreshDisplay()
     {
-        UpdateBandDisplay();
-        UpdateStatsDisplay();
+        // Why: Called by GameManager after actions, same as RefreshUI
+        RefreshUI();
     }
 
-    /// <summary>
-    /// Refreshes all stat displays with current GameManager values
-    /// Call this after any action or quarter change
-    /// </summary>
-    public void UpdateStatsDisplay()
+    private void RefreshStats()
     {
+        // Why: Show current game state numbers
+        if (GameManager.Instance == null)
+        {
+            Debug.LogWarning("⚠️ GameManager.Instance is null - cannot refresh stats!");
+            return;
+        }
+
         GameManager gm = GameManager.Instance;
 
-        // Update band name
+        if (moneyText != null)
+        {
+            moneyText.text = $"${gm.money}";
+        }
+
+        if (fansText != null)
+        {
+            fansText.text = $"{gm.fans}";
+        }
+
+        if (technicalText != null)
+        {
+            technicalText.text = $"{gm.technical}";
+        }
+
+        if (performanceText != null)
+        {
+            performanceText.text = $"{gm.performance}";
+        }
+
+        if (unityText != null)
+        {
+            unityText.text = $"{gm.unity}";
+        }
+
+        if (quarterYearText != null)
+        {
+            quarterYearText.text = $"YEAR {gm.currentYear}  QUARTER {gm.currentQuarter + 1}";
+        }
+
         if (bandNameText != null)
         {
             bandNameText.text = gm.bandName;
         }
-
-        // Update text displays
-        moneyText.text = "$" + gm.money.ToString("N0"); // N0 adds comma separators
-        fansText.text = gm.fans.ToString("N0");
-        yearText.text = "YEAR " + gm.currentYear;
-
-        // Calculate which quarter (1-4) from currentQuarter
-        int displayQuarter = (gm.currentQuarter % 4) + 1;
-        quarterText.text = "QUARTER " + displayQuarter;
-
-        // Update stat bars - FIXED: Use 30 as max for band stats (they cap at 30 in GameManager)
-        technicalBar.SetValue(gm.technical, 30);      // current value, max value
-        performanceBar.SetValue(gm.performance, 30);
-        charismaBar.SetValue(gm.charisma, 30);
-        unityBar.SetValue(gm.unity, 100);
     }
 
-    /// <summary>
-    /// Shows/hides band member portraits from GameManager.slots
-    /// Automatically shows characters that exist, hides empty slots
-    /// </summary>
-    public void UpdateBandDisplay()
+    private void RefreshCharacters()
     {
-        // Safety check
-        if (GameManager.Instance == null)
-        {
-            Debug.LogWarning("GameManager.Instance is null - can't update band display");
-            return;
-        }
-
+        // Why: Update character portraits in slots
         if (characterDisplays == null || characterDisplays.Length == 0)
         {
-            Debug.LogWarning("characterDisplays array is empty! Assign CharacterDisplay components in Inspector");
+            Debug.LogWarning("⚠️ No CharacterDisplay components assigned! Assign CharacterDisplay components in Inspector");
             return;
         }
 
@@ -130,40 +156,71 @@ public class UIController_Game : MonoBehaviour
     }
 
     // ============================================
-    // ACTION BUTTON HANDLERS (Called from Inspector)
+    // MENU TOGGLE HANDLERS (Called directly by Toggle.onValueChanged in Inspector)
     // ============================================
+    // WHY: Each toggle in Area B calls these methods directly via Inspector
+    // No need to store toggle references - Unity handles the connection
 
-    public void OnRecordClicked()
+    public void OnPracticeMenuToggled(bool isOn)
     {
-        // Why: Player clicked RECORD, tell GameManager to process it
-        GameManager.Instance.DoAction(ActionType.Record);
+        // Why: Show/hide Practice panel based on toggle state
+        ShowHidePanel(practicePanel, isOn);
     }
 
-    public void OnTourClicked()
+    public void OnProduceMenuToggled(bool isOn)
     {
-        GameManager.Instance.DoAction(ActionType.Tour);
+        // Why: Show/hide Produce panel based on toggle state
+        ShowHidePanel(producePanel, isOn);
     }
 
-    public void OnPracticeClicked()
+    public void OnTourMenuToggled(bool isOn)
     {
-        GameManager.Instance.DoAction(ActionType.Practice);
+        // Why: Show/hide Tour panel based on toggle state
+        ShowHidePanel(tourPanel, isOn);
     }
 
-    public void OnRestClicked()
+    public void OnReleaseMenuToggled(bool isOn)
     {
-        GameManager.Instance.DoAction(ActionType.Rest);
+        // Why: Show/hide Release panel based on toggle state
+        ShowHidePanel(releasePanel, isOn);
     }
 
-    public void OnReleaseClicked()
+    public void OnFinanceMenuToggled(bool isOn)
     {
-        GameManager.Instance.DoAction(ActionType.Release);
+        // Why: Show/hide Finance panel based on toggle state
+        ShowHidePanel(financePanel, isOn);
     }
 
-    public void OnNextQuarterClicked()
+    public void OnMarketingMenuToggled(bool isOn)
     {
-        // Why: Advance to next quarter
-        GameManager.Instance.AdvanceQuarter();
+        // Why: Show/hide Marketing panel based on toggle state
+        ShowHidePanel(marketingPanel, isOn);
     }
+
+    public void OnManagingMenuToggled(bool isOn)
+    {
+        // Why: Show/hide Managing panel based on toggle state
+        ShowHidePanel(managingPanel, isOn);
+    }
+
+    private void ShowHidePanel(GameObject panel, bool show)
+    {
+        // Why: If panel is null, can't show/hide it (not assigned yet)
+        if (panel == null)
+        {
+            return; // Silently ignore - panel not implemented yet
+        }
+
+        // Why: Show or hide the panel based on toggle state
+        // ToggleGroup ensures only one toggle is ON at a time, so only one panel shows
+        panel.SetActive(show);
+    }
+
+    // ============================================
+    // ACTION BUTTON HANDLERS - TODO: Design action system later
+    // ============================================
+    // NOTE: Action buttons will be added inside panels later
+    // For now, menus just open/close - no actions are executed
 
     public void OnMainMenuClicked()
     {
@@ -197,17 +254,5 @@ public class UIController_Game : MonoBehaviour
         {
             Debug.LogWarning("⚠️ TimeManager.Instance is null - cannot pause!");
         }
-    }
-
-    /// <summary>
-    /// Syncs the pause toggle's visual state with TimeManager's isPaused state
-    /// Call this when scene loads or when TimeManager.isPaused changes externally
-    /// </summary>
-    public void SyncPauseToggle()
-    {
-        if (pauseToggle == null || TimeManager.Instance == null) return;
-
-        // Why: Update toggle's isOn state to match TimeManager without triggering onValueChanged
-        pauseToggle.SetIsOnWithoutNotify(TimeManager.Instance.isPaused);
     }
 }
