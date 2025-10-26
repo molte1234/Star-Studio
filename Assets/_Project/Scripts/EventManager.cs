@@ -8,42 +8,88 @@ using System.Collections.Generic;
 /// </summary>
 public class EventManager : MonoBehaviour
 {
+    [Header("Welcome Screen")]
+    [Tooltip("Special event that shows at game start - bypasses all trigger conditions")]
+    public EventData welcomeScreenEvent;
+
     [Header("Event Database")]
     public List<EventData> allEvents; // All possible events
     private EventData currentEvent;
-    private AudioClip previousMusic; // Store music to restore after event
+    private List<EventData> triggeredEvents = new List<EventData>(); // Track which events already happened
 
     [Header("References")]
-    public UIController_Game uiController;
     public EventPanel eventPanel; // Direct reference to EventPanel script
 
-    private void Start()
+    private void Awake()
     {
-        // Why: Auto-register with GameManager when scene loads
-        if (GameManager.Instance != null)
-        {
-            GameManager.Instance.eventManager = this;
-            Debug.Log("✅ EventManager connected to GameManager");
+        // Why: Register with GameManager as early as possible
+        Debug.Log("🔧 EventManager.Awake() called!");
 
-            // ✅ FIX: Use coroutine to check for starting events after scene fully loads
-            // This ensures all UI and systems are ready before showing events
-            StartCoroutine(CheckForStartingEventsDelayed());
-        }
-        else
+        if (GameManager.Instance == null)
         {
-            Debug.LogError("❌ GameManager not found! Make sure Bootstrap scene is loaded first.");
+            Debug.LogError("❌ GameManager.Instance is NULL in EventManager.Awake()!");
+            return;
         }
+
+        Debug.Log("✅ GameManager.Instance found, connecting...");
+        GameManager.Instance.eventManager = this;
+        Debug.Log("✅ EventManager connected to GameManager");
+    }
+
+    private void OnEnable()
+    {
+        // Why: Scene was activated - check for welcome screen
+        // OnEnable runs every time the Game scene activates (not just first load)
+        Debug.Log("🔧 EventManager.OnEnable() - scene activated!");
+        StartCoroutine(CheckForStartingEventsDelayed());
     }
 
     private System.Collections.IEnumerator CheckForStartingEventsDelayed()
     {
         // Why: Wait one frame to ensure scene is fully loaded
+        Debug.Log("🔧 Coroutine: Waiting one frame...");
         yield return null;
 
+        Debug.Log("🔧 Coroutine: Frame passed, calling OnGameSceneLoaded...");
         // Check if this is a new game start (Y1 Q1 events)
         if (GameManager.Instance != null)
         {
             GameManager.Instance.OnGameSceneLoaded();
+        }
+        else
+        {
+            Debug.LogError("❌ Coroutine: GameManager.Instance is null!");
+        }
+    }
+
+    /// <summary>
+    /// Resets the triggered events list - call this when starting a new game
+    /// </summary>
+    public void ResetTriggeredEvents()
+    {
+        triggeredEvents.Clear();
+        Debug.Log("🔄 Event history cleared - all events can trigger again");
+    }
+
+    /// <summary>
+    /// Shows the welcome screen event - bypasses all trigger conditions
+    /// Called at the start of a new game
+    /// </summary>
+    public void ShowWelcomeScreen()
+    {
+        if (welcomeScreenEvent == null)
+        {
+            Debug.LogWarning("⚠️ Welcome screen event not assigned in EventManager!");
+            return;
+        }
+
+        Debug.Log("🎉 Showing welcome screen!");
+        TriggerEvent(welcomeScreenEvent);
+
+        // Mark welcome screen as triggered so it won't show again
+        if (!triggeredEvents.Contains(welcomeScreenEvent))
+        {
+            triggeredEvents.Add(welcomeScreenEvent);
         }
     }
 
@@ -60,15 +106,33 @@ public class EventManager : MonoBehaviour
 
         foreach (EventData evt in allEvents)
         {
+            // ✅ FIX: NEVER check the welcome screen event in normal flow
+            if (evt == welcomeScreenEvent)
+            {
+                Debug.Log($"   ⏭️ Skipping '{evt.eventTitle}' - this is the welcome screen (use ShowWelcomeScreen instead)");
+                continue;
+            }
+
+            // ✅ FIX: Skip if this event already triggered
+            if (triggeredEvents.Contains(evt))
+            {
+                Debug.Log($"   ⏭️ Skipping '{evt.eventTitle}' - already triggered");
+                continue;
+            }
+
             if (CheckAllConditions(evt))
             {
                 Debug.Log($"✅ All conditions met for: {evt.eventTitle}");
                 TriggerEvent(evt);
-                return; // Only one event per quarter
+
+                // ✅ FIX: Mark this event as triggered so it won't show again
+                triggeredEvents.Add(evt);
+
+                return; // Only show one event per quarter
             }
         }
 
-        Debug.Log("⚠️ No events matched all conditions this quarter");
+        Debug.Log("ℹ️ No events triggered this quarter");
     }
 
     private bool CheckAllConditions(EventData evt)
@@ -123,91 +187,74 @@ public class EventManager : MonoBehaviour
         Debug.Log($"      ✅ Random chance passed: Rolled {roll:F1}% ≤ {evt.randomChance}%");
 
         // All conditions met!
+        Debug.Log($"   ✅ ALL CONDITIONS PASSED!");
         return true;
     }
 
     private bool CheckStatCondition(EventData evt)
     {
-        // Why: Compare the specified stat against the required value
-        GameManager gm = GameManager.Instance;
+        // Why: Check if stat condition is met based on stat type and comparison
         int statValue = 0;
 
-        // Get the stat value based on which stat to check
+        // Get the stat value based on StatToCheck enum
         switch (evt.statToCheck)
         {
             case StatToCheck.Money:
-                statValue = gm.money;
+                statValue = GameManager.Instance.money;
                 break;
             case StatToCheck.Fans:
-                statValue = gm.fans;
+                statValue = GameManager.Instance.fans;
                 break;
             case StatToCheck.Technical:
-                statValue = gm.technical;
+                statValue = GameManager.Instance.technical;
                 break;
             case StatToCheck.Performance:
-                statValue = gm.performance;
+                statValue = GameManager.Instance.performance;
                 break;
             case StatToCheck.Charisma:
-                statValue = gm.charisma;
+                statValue = GameManager.Instance.charisma;
                 break;
             case StatToCheck.Unity:
-                statValue = gm.unity;
+                statValue = GameManager.Instance.unity;
                 break;
         }
 
-        // Compare based on comparison type
-        bool result = false;
+        // Check based on comparison type
         switch (evt.comparison)
         {
             case ComparisonType.GreaterThan:
-                result = statValue > evt.statValue;
-                Debug.Log($"         {evt.statToCheck} ({statValue}) > {evt.statValue}? {result}");
-                break;
+                return statValue > evt.statValue;
             case ComparisonType.LessThan:
-                result = statValue < evt.statValue;
-                Debug.Log($"         {evt.statToCheck} ({statValue}) < {evt.statValue}? {result}");
-                break;
+                return statValue < evt.statValue;
             case ComparisonType.EqualTo:
-                result = statValue == evt.statValue;
-                Debug.Log($"         {evt.statToCheck} ({statValue}) == {evt.statValue}? {result}");
-                break;
+                return statValue == evt.statValue;
             case ComparisonType.GreaterOrEqual:
-                result = statValue >= evt.statValue;
-                Debug.Log($"         {evt.statToCheck} ({statValue}) >= {evt.statValue}? {result}");
-                break;
+                return statValue >= evt.statValue;
             case ComparisonType.LessOrEqual:
-                result = statValue <= evt.statValue;
-                Debug.Log($"         {evt.statToCheck} ({statValue}) <= {evt.statValue}? {result}");
-                break;
+                return statValue <= evt.statValue;
+            default:
+                return false;
         }
-
-        return result;
     }
 
-    private void TriggerEvent(EventData evt)
+    public void TriggerEvent(EventData eventData)
     {
         // Why: Show this event to the player
-        Debug.Log($"🎉 TRIGGERING EVENT: {evt.eventTitle}");
-        currentEvent = evt;
+        Debug.Log($"🎉 TRIGGERING EVENT: {eventData.eventTitle}");
+        currentEvent = eventData;
 
         // Handle custom audio
-        HandleEventAudio(evt);
+        HandleEventAudio(eventData);
 
         // Show event through EventPanel
         if (eventPanel != null)
         {
             Debug.Log($"   📺 Showing event via EventPanel");
-            eventPanel.ShowEvent(evt);
+            eventPanel.ShowEvent(eventData);
         }
         else
         {
             Debug.LogWarning("   ⚠️ EventPanel reference missing! Assign it in Inspector.");
-        }
-
-        // OLD: Legacy support if using UIController_Game directly
-        if (uiController != null)
-        {
-            uiController.ShowEvent(evt);
         }
     }
 
@@ -266,12 +313,6 @@ public class EventManager : MonoBehaviour
         if (eventPanel != null)
         {
             eventPanel.HideEvent();
-        }
-
-        // OLD: Legacy support
-        if (uiController != null)
-        {
-            uiController.HideEvent();
         }
 
         currentEvent = null;

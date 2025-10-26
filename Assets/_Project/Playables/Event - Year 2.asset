@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Event - Year 2
   m_EditorClassIdentifier: Assembly-CSharp::EventData
   requireYearQuarter: 1
-  triggerYear: 1
+  triggerYear: 2
   triggerQuarter: 1
   requireFlag: 0
   requiredFlag: 

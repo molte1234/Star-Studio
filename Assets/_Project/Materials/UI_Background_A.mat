@@ -14,6 +14,8 @@ Material:
   m_ValidKeywords:
   - _ENABLESHADOW_ON
   - _ENABLESHIFTHUE_ON
+  - _ENABLESINEMOVE_ON
+  - _ENABLESINEROTATE_ON
   - _ENABLEWIGGLE_ON
   - _ENCHANTEDRAINBOWTOGGLE_ON
   - _OUTEROUTLINEDISTORTIONTOGGLE_ON
@@ -244,8 +246,8 @@ Material:
     - _EnableShifting: 0
     - _EnableShine: 0
     - _EnableSineGlow: 0
-    - _EnableSineMove: 0
-    - _EnableSineRotate: 0
+    - _EnableSineMove: 1
+    - _EnableSineRotate: 1
     - _EnableSineScale: 0
     - _EnableSmoke: 0
     - _EnableSmoothPixelArt: 0
@@ -404,7 +406,7 @@ Material:
     - _SineGlowMax: 4.75
     - _SineGlowMin: 0.34
     - _SineMoveFade: 1
-    - _SineRotateAngle: 15
+    - _SineRotateAngle: 45
     - _SineRotateFade: 1
     - _SineRotateFrequency: 1
     - _SineScaleFrequency: 2
@@ -482,7 +484,7 @@ Material:
     - _UseUIAlphaClip: 0
     - _VertexTintFirst: 0
     - _VibrateFade: 1
-    - _VibrateFrequency: 100
+    - _VibrateFrequency: 156.44
     - _VibrateOffset: 0.04
     - _VibrateRotation: 4
     - _WiggleFade: 1
@@ -614,8 +616,8 @@ Material:
     - _ShiftingColorB: {r: 0, g: 0, b: 0, a: 1}
     - _ShineColor: {r: 11.98431, g: 11.98431, b: 11.98431, a: 0}
     - _SineGlowColor: {r: 8, g: 0, b: 5.301961, a: 1}
-    - _SineMoveFrequency: {r: 1, g: 1, b: 0, a: 0}
-    - _SineMoveOffset: {r: 0, g: 50, b: 0, a: 0}
+    - _SineMoveFrequency: {r: 0.2, g: 1, b: 0, a: 0}
+    - _SineMoveOffset: {r: -600, g: 100, b: 0, a: 0}
     - _SineRotatePivot: {r: 0.5, g: 0.5, b: 0, a: 0}
     - _SineScaleFactor: {r: 0.2, g: 0.2, b: 0, a: 0}
     - _SourceAlphaDissolveNoiseScale: {r: 0.3, g: 0.3, b: 0, a: 0}

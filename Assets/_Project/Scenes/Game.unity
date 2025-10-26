@@ -1582,8 +1582,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e6b6b1f47c255845b13db99f93a8089, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EventManager
+  welcomeScreenEvent: {fileID: 11400000, guid: b3fc66e675aa7674aa4f94a789a9db40, type: 2}
   allEvents:
-  - {fileID: 11400000, guid: b3fc66e675aa7674aa4f94a789a9db40, type: 2}
   - {fileID: 11400000, guid: 1d224d5399a23cb43aa0efacb35939e8, type: 2}
   uiController: {fileID: 1236340057}
   eventPanel: {fileID: 2115616643}
@@ -2381,7 +2381,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.055858854, g: 0.05339979, b: 0.1509434, a: 1}
+  m_Color: {r: 0.14509805, g: 0.14509805, b: 0.14509805, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -6512,7 +6512,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.14509805, g: 0.14509805, b: 0.14509805, a: 0.92156863}
+  m_Color: {r: 0.07845727, g: 0.07609469, b: 0.16981131, a: 0.90588236}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

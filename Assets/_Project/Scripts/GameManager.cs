@@ -11,7 +11,11 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance;
 
     [Header("Game State")]
-    private bool isNewGame = false; // Why: Track if this is a fresh game start
+    [Tooltip("Check this to trigger welcome screen on next game scene load (for testing)")]
+    public bool isNewGame = true;
+
+    [Tooltip("Enable to manually control 'Is New Game' - prevents code from changing it")]
+    public bool testingMode = false;
 
     [Header("Band Info")]
     public string bandName;
@@ -90,7 +94,17 @@ public class GameManager : MonoBehaviour
         RecalculateStats();
 
         // ✅ Mark this as a new game so Game scene can check for starting events
-        isNewGame = true;
+        // Only if not in testing mode (testing mode = manual control)
+        if (!testingMode)
+        {
+            isNewGame = true;
+        }
+
+        // ✅ Reset event history so events can trigger again
+        if (eventManager != null)
+        {
+            eventManager.ResetTriggeredEvents();
+        }
 
         Debug.Log($"🎸 Band '{bandName}' is ready! Starting Year 1 Quarter 1");
     }
@@ -147,25 +161,29 @@ public class GameManager : MonoBehaviour
 
     /// <summary>
     /// Called by EventManager when it first loads
-    /// Checks for Y1Q1 events if this is a new game
+    /// Shows welcome screen if this is a new game
     /// </summary>
     public void OnGameSceneLoaded()
     {
-        // Why: If this is a fresh game start, check for starting events (Y1 Q1)
+        // Why: If this is a fresh game start, show welcome screen
         if (isNewGame && eventManager != null)
         {
             Debug.Log("========================================");
-            Debug.Log("🎮 NEW GAME START - CHECKING FOR Y1 Q1 EVENTS");
+            Debug.Log("🎮 NEW GAME START - SHOWING WELCOME SCREEN");
             Debug.Log($"   Current State: Year {currentYear}, Quarter {currentQuarter} (displays as Q{(currentQuarter % 4) + 1})");
-            Debug.Log($"   EventManager has {eventManager.allEvents.Count} events in database");
             Debug.Log("========================================");
 
-            eventManager.CheckForEvents();
-            isNewGame = false; // Only check once
+            eventManager.ShowWelcomeScreen();  // ✅ Show welcome screen (bypasses all conditions)
+
+            // Only auto-clear isNewGame if not in testing mode
+            if (!testingMode)
+            {
+                isNewGame = false; // Only show once
+            }
         }
         else if (!isNewGame)
         {
-            Debug.Log("⚠️ OnGameSceneLoaded called but isNewGame is false - skipping Y1Q1 check");
+            Debug.Log("⚠️ OnGameSceneLoaded called but isNewGame is false - skipping welcome screen");
         }
         else if (eventManager == null)
         {
@@ -192,6 +210,23 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
+    /// DEBUG: Manually show welcome screen - useful for testing
+    /// </summary>
+    [ContextMenu("Show Welcome Screen")]
+    public void DEBUG_ShowWelcomeScreen()
+    {
+        if (eventManager != null)
+        {
+            Debug.Log("🔧 DEBUG: Manually showing welcome screen");
+            eventManager.ShowWelcomeScreen();
+        }
+        else
+        {
+            Debug.LogError("❌ DEBUG: Cannot show welcome screen - EventManager is null!");
+        }
+    }
+
+    /// <summary>
     /// Advances game time by one quarter
     /// Checks for events, updates displays
     /// </summary>
@@ -212,7 +247,7 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        // ✅ FIXED: Check for events (this was commented out!)
+        // Check for events
         if (eventManager != null)
         {
             eventManager.CheckForEvents();

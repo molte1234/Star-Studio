@@ -4,11 +4,14 @@ using TMPro;
 
 /// <summary>
 /// Controls all UI elements on the main game screen
-/// Updates displays, handles button clicks, shows/hides event popups
+/// Updates displays, handles button clicks
 /// Follows the UIController naming pattern (like UIController_MainMenu)
 /// </summary>
 public class UIController_Game : MonoBehaviour
 {
+    [Header("Band Info Display")]
+    public TextMeshProUGUI bandNameText;
+
     [Header("Stats Display")]
     public TextMeshProUGUI moneyText;
     public TextMeshProUGUI fansText;
@@ -24,12 +27,6 @@ public class UIController_Game : MonoBehaviour
     [Header("Band Display")]
     public CharacterDisplay[] characterDisplays; // Array of character displays (min 6, expandable)
 
-    [Header("Event Popup - For Later")]
-    public GameObject eventPopupPanel;
-    public TextMeshProUGUI eventTitleText;
-    public TextMeshProUGUI eventDescriptionText;
-    public Button[] eventChoiceButtons;
-
     void OnEnable()
     {
         // Why: Scene was just activated by SceneLoader, refresh the display
@@ -38,12 +35,6 @@ public class UIController_Game : MonoBehaviour
 
     void Start()
     {
-        // Hide event popup at start
-        if (eventPopupPanel != null)
-        {
-            eventPopupPanel.SetActive(false);
-        }
-
         // Initial display update
         RefreshDisplay();
     }
@@ -64,6 +55,12 @@ public class UIController_Game : MonoBehaviour
     public void UpdateStatsDisplay()
     {
         GameManager gm = GameManager.Instance;
+
+        // Update band name
+        if (bandNameText != null)
+        {
+            bandNameText.text = gm.bandName;
+        }
 
         // Update text displays
         moneyText.text = "$" + gm.money.ToString("N0"); // N0 adds comma separators
@@ -173,35 +170,5 @@ public class UIController_Game : MonoBehaviour
         // Why: Player wants to pause the game
         // TODO: Implement pause menu/functionality
         Debug.Log("PAUSE clicked - implement pause menu here");
-    }
-
-    // ============================================
-    // EVENT POPUP METHODS (FOR LATER)
-    // ============================================
-
-    /// <summary>
-    /// Shows the event popup with given event data
-    /// </summary>
-    public void ShowEvent(EventData eventData)
-    {
-        if (eventPopupPanel != null)
-        {
-            eventPopupPanel.SetActive(true);
-
-            // TODO: Populate event UI with eventData
-            // eventTitleText.text = eventData.eventTitle;
-            // eventDescriptionText.text = eventData.description;
-        }
-    }
-
-    /// <summary>
-    /// Hides the event popup
-    /// </summary>
-    public void HideEvent()
-    {
-        if (eventPopupPanel != null)
-        {
-            eventPopupPanel.SetActive(false);
-        }
     }
 }
