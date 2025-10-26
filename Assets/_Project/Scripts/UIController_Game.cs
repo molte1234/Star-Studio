@@ -16,9 +16,9 @@ public class UIController_Game : MonoBehaviour
     public TextMeshProUGUI quarterText;
 
     [Header("Stat Bars")]
-    public StatBar technicalBar;      // 0-10 scale
-    public StatBar performanceBar;    // 0-10 scale
-    public StatBar charismaBar;       // 0-10 scale
+    public StatBar technicalBar;      // 0-30 scale
+    public StatBar performanceBar;    // 0-30 scale
+    public StatBar charismaBar;       // 0-30 scale
     public StatBar unityBar;          // 0-100 scale
 
     [Header("Band Display")]
@@ -74,10 +74,10 @@ public class UIController_Game : MonoBehaviour
         int displayQuarter = (gm.currentQuarter % 4) + 1;
         quarterText.text = "QUARTER " + displayQuarter;
 
-        // Update stat bars
-        technicalBar.SetValue(gm.technical, 10);      // current value, max value
-        performanceBar.SetValue(gm.performance, 10);
-        charismaBar.SetValue(gm.charisma, 10);
+        // Update stat bars - FIXED: Use 30 as max for band stats (they cap at 30 in GameManager)
+        technicalBar.SetValue(gm.technical, 30);      // current value, max value
+        performanceBar.SetValue(gm.performance, 30);
+        charismaBar.SetValue(gm.charisma, 30);
         unityBar.SetValue(gm.unity, 100);
     }
 

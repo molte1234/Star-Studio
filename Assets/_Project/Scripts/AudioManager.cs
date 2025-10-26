@@ -2,6 +2,10 @@
 using DG.Tweening;
 using System.Collections;
 
+/// <summary>
+/// Singleton AudioManager - handles all music and SFX
+/// Now includes event music system with pause/resume
+/// </summary>
 public class AudioManager : MonoBehaviour
 {
     // Why: Singleton pattern - only one AudioManager exists
@@ -10,6 +14,7 @@ public class AudioManager : MonoBehaviour
     [Header("Audio Sources - DO NOT ASSIGN MANUALLY")]
     [SerializeField] private AudioSource musicSource1;
     [SerializeField] private AudioSource musicSource2;
+    [SerializeField] private AudioSource eventMusicSource; // NEW: Dedicated source for event music
     [SerializeField] private AudioSource sfxSource;
 
     [Header("Music Tracks")]
@@ -27,12 +32,20 @@ public class AudioManager : MonoBehaviour
     [Range(0f, 1f)] public float musicVolume = 0.7f;
     [Range(0f, 1f)] public float sfxVolume = 0.8f;
     [Range(0.5f, 3f)] public float crossfadeDuration = 1.5f;
+    [Range(0.3f, 2f)] public float eventFadeDuration = 1f; // Faster fade for events
 
     // Why: Track which source is currently active for crossfading
     private AudioSource activeSource;
     private AudioSource inactiveSource;
     private bool isPlayingPlaylist = false;
     private int currentPlaylistIndex = 0;
+
+    // Why: Store paused music state so we can resume it
+    private AudioClip pausedClip;
+    private float pausedTime;
+    private bool wasPausedDuringPlaylist;
+    private AudioClip[] pausedPlaylist;
+    private int pausedPlaylistIndex;
 
     private void Awake()
     {
@@ -47,7 +60,7 @@ public class AudioManager : MonoBehaviour
             return;
         }
 
-        // Why: Create the two music sources for crossfading
+        // Why: Create the audio sources
         SetupAudioSources();
     }
 
@@ -92,6 +105,17 @@ public class AudioManager : MonoBehaviour
             musicSource2.loop = true;
             musicSource2.playOnAwake = false;
             musicSource2.volume = 0f; // Start silent
+        }
+
+        // Why: Create event music source (separate from main music)
+        if (eventMusicSource == null)
+        {
+            GameObject eventSource = new GameObject("EventMusicSource");
+            eventSource.transform.SetParent(transform);
+            eventMusicSource = eventSource.AddComponent<AudioSource>();
+            eventMusicSource.loop = true;
+            eventMusicSource.playOnAwake = false;
+            eventMusicSource.volume = 0f; // Start silent
         }
 
         // Why: Create SFX source
@@ -200,9 +224,118 @@ public class AudioManager : MonoBehaviour
         });
     }
 
+    // ============================================
+    // EVENT MUSIC SYSTEM
+    // ============================================
+
+    /// <summary>
+    /// Pauses current music and prepares to play event music
+    /// Stores the paused state so it can be resumed later
+    /// </summary>
+    public void PauseMusic()
+    {
+        Debug.Log("🎵 Pausing music for event...");
+
+        // Why: Store what was playing so we can resume it
+        pausedClip = activeSource.clip;
+        pausedTime = activeSource.time;
+        wasPausedDuringPlaylist = isPlayingPlaylist;
+
+        if (isPlayingPlaylist)
+        {
+            pausedPlaylist = gamePlaylist; // Store reference to playlist
+            pausedPlaylistIndex = currentPlaylistIndex;
+        }
+
+        // Why: Stop playlist coroutine if running
+        isPlayingPlaylist = false;
+        StopAllCoroutines();
+
+        // Why: Fade out current music quickly
+        activeSource.DOKill(); // Kill any ongoing tweens
+        activeSource.DOFade(0f, eventFadeDuration).SetEase(Ease.OutQuad).OnComplete(() =>
+        {
+            activeSource.Pause(); // Pause instead of stop to keep position
+        });
+    }
+
+    /// <summary>
+    /// Plays special event music on dedicated event source
+    /// This plays on top of the paused regular music
+    /// </summary>
+    public void PlayEventMusic(AudioClip eventMusic)
+    {
+        if (eventMusic == null)
+        {
+            Debug.Log("🎵 No event music provided");
+            return;
+        }
+
+        Debug.Log($"🎵 Playing event music: {eventMusic.name}");
+
+        // Why: Setup event music source
+        eventMusicSource.clip = eventMusic;
+        eventMusicSource.volume = 0f;
+        eventMusicSource.loop = true;
+        eventMusicSource.Play();
+
+        // Why: Fade in event music
+        eventMusicSource.DOFade(musicVolume, eventFadeDuration).SetEase(Ease.InQuad);
+    }
+
+    /// <summary>
+    /// Resumes the music that was playing before the event
+    /// Fades out event music and fades in regular music
+    /// </summary>
+    public void ResumeMusic()
+    {
+        Debug.Log("🎵 Resuming music after event...");
+
+        // Why: Fade out event music if it's playing
+        if (eventMusicSource.isPlaying)
+        {
+            eventMusicSource.DOKill();
+            eventMusicSource.DOFade(0f, eventFadeDuration).SetEase(Ease.OutQuad).OnComplete(() =>
+            {
+                eventMusicSource.Stop();
+                eventMusicSource.clip = null;
+            });
+        }
+
+        // Why: Resume regular music
+        if (pausedClip != null)
+        {
+            // Resume from where we paused
+            activeSource.time = pausedTime;
+            activeSource.Play();
+
+            activeSource.DOKill();
+            activeSource.DOFade(musicVolume, eventFadeDuration).SetEase(Ease.InQuad);
+
+            // Why: If we were in a playlist, resume it
+            if (wasPausedDuringPlaylist && pausedPlaylist != null)
+            {
+                isPlayingPlaylist = true;
+                currentPlaylistIndex = pausedPlaylistIndex;
+                StartCoroutine(PlaylistCoroutine(pausedPlaylist));
+            }
+        }
+
+        // Why: Clear paused state
+        pausedClip = null;
+        pausedTime = 0f;
+        wasPausedDuringPlaylist = false;
+        pausedPlaylist = null;
+    }
+
+    // ============================================
+    // SFX SYSTEM (unchanged - always works)
+    // ============================================
+
     public void PlaySFX(AudioClip clip)
     {
         // Why: Play a one-shot sound effect
+        // SFX use separate AudioSource so they NEVER interrupt music
         if (clip == null) return;
         sfxSource.PlayOneShot(clip, sfxVolume);
     }

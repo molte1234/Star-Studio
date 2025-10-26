@@ -389,7 +389,7 @@ PrefabInstance:
     - target: {fileID: -3546526013772036085, guid: 11147f0e899bfec4cb2539a2f4f53009, type: 3}
       propertyPath: 'gamePlaylist.Array.data[0]'
       value: 
-      objectReference: {fileID: 8300000, guid: ac4579acfd185e6479aea8def66a250f, type: 3}
+      objectReference: {fileID: 8300000, guid: 48975bda8194b5846a2ca41fb1f880c7, type: 3}
     - target: {fileID: -3546526013772036085, guid: 11147f0e899bfec4cb2539a2f4f53009, type: 3}
       propertyPath: 'gamePlaylist.Array.data[1]'
       value: 
@@ -397,11 +397,11 @@ PrefabInstance:
     - target: {fileID: -3546526013772036085, guid: 11147f0e899bfec4cb2539a2f4f53009, type: 3}
       propertyPath: 'gamePlaylist.Array.data[2]'
       value: 
-      objectReference: {fileID: 8300000, guid: 48975bda8194b5846a2ca41fb1f880c7, type: 3}
+      objectReference: {fileID: 8300000, guid: f207c6a03e5e08a4e95097fbf77198e2, type: 3}
     - target: {fileID: -3546526013772036085, guid: 11147f0e899bfec4cb2539a2f4f53009, type: 3}
       propertyPath: 'gamePlaylist.Array.data[3]'
       value: 
-      objectReference: {fileID: 8300000, guid: f207c6a03e5e08a4e95097fbf77198e2, type: 3}
+      objectReference: {fileID: 8300000, guid: ac4579acfd185e6479aea8def66a250f, type: 3}
     - target: {fileID: 2466279691354865895, guid: 11147f0e899bfec4cb2539a2f4f53009, type: 3}
       propertyPath: m_LocalPosition.x
       value: 740.5238
