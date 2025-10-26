@@ -29,6 +29,12 @@ public class AudioManager : MonoBehaviour
     public AudioClip characterSelect;
     public AudioClip bandComplete;
 
+    [Header("Time System Sounds")]
+    public AudioClip quarterAdvanceClip;
+    public AudioClip yearAdvanceClip;
+    public AudioClip pauseClip;
+    public AudioClip unpauseClip;
+
     [Header("Settings")]
     [Range(0f, 1f)] public float musicVolume = 0.7f;
     [Range(0f, 1f)] public float sfxVolume = 0.8f;
@@ -142,56 +148,47 @@ public class AudioManager : MonoBehaviour
 
     public void PlayMusic(AudioClip clip)
     {
-        // Why: Stop playlist mode if it was playing
+        // Why: Start playing music with crossfade
+        if (clip == null) return;
+
+        // Why: Stop playlist if one is running
         isPlayingPlaylist = false;
         StopAllCoroutines();
 
-        if (clip == null)
-        {
-            Debug.LogWarning("AudioManager: Tried to play null music clip");
-            return;
-        }
+        // Why: If already playing this clip, do nothing
+        if (activeSource.clip == clip && activeSource.isPlaying) return;
 
-        // Why: If same clip is already playing, don't crossfade
-        if (activeSource.clip == clip && activeSource.isPlaying)
-        {
-            Debug.Log($"🎵 Already playing: {clip.name}");
-            return;
-        }
+        // Why: Crossfade to new music
+        StartCoroutine(CrossfadeMusic(clip));
+    }
 
-        Debug.Log($"🎵 Crossfading to: {clip.name}");
+    private IEnumerator CrossfadeMusic(AudioClip newClip)
+    {
+        // Why: Setup new clip on inactive source
+        inactiveSource.clip = newClip;
+        inactiveSource.time = 0f;
+        inactiveSource.volume = 0f;
+        inactiveSource.Play();
 
-        // Why: Swap sources - inactive becomes active
-        AudioSource newSource = inactiveSource;
-        AudioSource oldSource = activeSource;
+        // Why: Fade in new music
+        inactiveSource.DOFade(musicVolume, crossfadeDuration).SetEase(Ease.InQuad);
 
-        // Why: Setup new source
-        newSource.clip = clip;
-        newSource.volume = 0f;
-        newSource.loop = true;
-        newSource.Play();
+        // Why: Fade out old music
+        activeSource.DOFade(0f, crossfadeDuration).SetEase(Ease.OutQuad);
 
-        // Why: Crossfade
-        newSource.DOFade(musicVolume, crossfadeDuration).SetEase(Ease.InOutQuad);
-        oldSource.DOFade(0f, crossfadeDuration).SetEase(Ease.InOutQuad).OnComplete(() =>
-        {
-            oldSource.Stop();
-            oldSource.clip = null;
-        });
+        yield return new WaitForSeconds(crossfadeDuration);
 
-        // Why: Update which source is active
-        activeSource = newSource;
-        inactiveSource = oldSource;
+        // Why: Stop old music and swap sources
+        activeSource.Stop();
+        AudioSource temp = activeSource;
+        activeSource = inactiveSource;
+        inactiveSource = temp;
     }
 
     public void PlayPlaylist(AudioClip[] playlist)
     {
-        // Why: Start playing a playlist with crossfade between tracks
-        if (playlist == null || playlist.Length == 0)
-        {
-            Debug.LogWarning("AudioManager: Playlist is empty or null");
-            return;
-        }
+        // Why: Play a playlist of tracks in order, looping back to start
+        if (playlist == null || playlist.Length == 0) return;
 
         isPlayingPlaylist = true;
         currentPlaylistIndex = 0;
@@ -202,16 +199,15 @@ public class AudioManager : MonoBehaviour
     {
         while (isPlayingPlaylist)
         {
-            AudioClip currentClip = playlist[currentPlaylistIndex];
+            AudioClip currentTrack = playlist[currentPlaylistIndex];
 
-            // Why: Play current track
-            PlayMusic(currentClip);
+            // Why: Crossfade to next track
+            yield return StartCoroutine(CrossfadeMusic(currentTrack));
 
-            // Why: Wait for track to finish (minus crossfade time so we overlap)
-            float waitTime = currentClip.length - crossfadeDuration;
-            yield return new WaitForSeconds(waitTime);
+            // Why: Wait for track to finish
+            yield return new WaitForSeconds(currentTrack.length - crossfadeDuration);
 
-            // Why: Move to next track (loop back to start)
+            // Why: Move to next track (loop back to start if at end)
             currentPlaylistIndex = (currentPlaylistIndex + 1) % playlist.Length;
         }
     }
@@ -362,9 +358,64 @@ public class AudioManager : MonoBehaviour
         sfxSource.volume = sfxVolume;
     }
 
-    // Why: Convenience methods for UI buttons
+    // ============================================
+    // CONVENIENCE METHODS FOR UI BUTTONS
+    // ============================================
+
     public void PlayButtonClick() => PlaySFX(buttonClick);
     public void PlayButtonHover() => PlaySFX(buttonHover);
     public void PlayCharacterSelect() => PlaySFX(characterSelect);
     public void PlayBandComplete() => PlaySFX(bandComplete);
+
+    // ============================================
+    // TIME SYSTEM SOUNDS
+    // ============================================
+
+    /// <summary>
+    /// Play sound when quarter advances (lighter click)
+    /// Called by GameManager.AdvanceQuarter() when quarter changes but NOT year
+    /// </summary>
+    public void PlayQuarterAdvance()
+    {
+        if (quarterAdvanceClip != null)
+        {
+            PlaySFX(quarterAdvanceClip);
+        }
+    }
+
+    /// <summary>
+    /// Play sound when year advances (bigger, more dramatic)
+    /// Called by GameManager.AdvanceQuarter() when year rolls over
+    /// </summary>
+    public void PlayYearAdvance()
+    {
+        if (yearAdvanceClip != null)
+        {
+            PlaySFX(yearAdvanceClip);
+        }
+    }
+
+    /// <summary>
+    /// Play sound when time pauses (slow down effect)
+    /// Called by TimeManager.PauseTime()
+    /// </summary>
+    public void PlayPause()
+    {
+        if (pauseClip != null)
+        {
+            PlaySFX(pauseClip);
+        }
+    }
+
+    /// <summary>
+    /// Play sound when time resumes (speed back up effect)
+    /// Called by TimeManager.ResumeTime()
+    /// </summary>
+    public void PlayUnpause()
+    {
+        if (unpauseClip != null)
+        {
+            PlaySFX(unpauseClip);
+        }
+    }
 }

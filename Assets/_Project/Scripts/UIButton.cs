@@ -1,7 +1,12 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 using DG.Tweening;
 
+/// <summary>
+/// UIButton - Handles button animations (hover, press, shadow)
+/// NOW SUPPORTS TOGGLE BUTTONS: Stays in pressed state when Toggle is ON
+/// </summary>
 public class UIButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler, IPointerClickHandler
 {
     [Header("Optional Shadow")]
@@ -45,11 +50,33 @@ public class UIButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     private CanvasGroup shadowCanvasGroup;
     private float shadowOriginalAlpha = 1f;
 
+    // Toggle support
+    private Toggle toggleComponent;
+    private Button buttonComponent;
+    private ColorBlock originalColors;
+
     void Awake()
     {
         // Why: Store original scale and position to return to later
         originalScale = transform.localScale;
         originalPosition = transform.localPosition;
+
+        // Why: Check if this is a Toggle button (check Toggle FIRST, then Button)
+        toggleComponent = GetComponent<Toggle>();
+        if (toggleComponent == null)
+        {
+            buttonComponent = GetComponent<Button>();
+        }
+
+        // Why: Store original colors from Toggle OR Button
+        if (toggleComponent != null)
+        {
+            originalColors = toggleComponent.colors;
+        }
+        else if (buttonComponent != null)
+        {
+            originalColors = buttonComponent.colors;
+        }
 
         // Why: Setup shadow if assigned
         if (shadowObject != null)
@@ -64,10 +91,134 @@ public class UIButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
             }
             shadowOriginalAlpha = shadowCanvasGroup.alpha;
         }
+
+        // Why: Subscribe to Toggle events if this is a Toggle button
+        if (toggleComponent != null)
+        {
+            toggleComponent.onValueChanged.AddListener(OnToggleValueChanged);
+
+            // Why: Apply initial state if Toggle starts ON
+            if (toggleComponent.isOn)
+            {
+                ApplyTogglePressedState(immediate: true);
+            }
+        }
+    }
+
+    void OnDestroy()
+    {
+        // Why: Cleanup Toggle listener
+        if (toggleComponent != null)
+        {
+            toggleComponent.onValueChanged.RemoveListener(OnToggleValueChanged);
+        }
+    }
+
+    /// <summary>
+    /// Called when Toggle value changes
+    /// Keeps button in pressed state when Toggle is ON
+    /// </summary>
+    private void OnToggleValueChanged(bool isOn)
+    {
+        if (isOn)
+        {
+            // Why: Toggle is ON → stay in pressed state
+            ApplyTogglePressedState(immediate: false);
+        }
+        else
+        {
+            // Why: Toggle is OFF → return to normal state
+            ApplyToggleNormalState();
+        }
+    }
+
+    /// <summary>
+    /// Applies pressed state for Toggle ON
+    /// If bool = true → normal color = pressed color
+    /// </summary>
+    private void ApplyTogglePressedState(bool immediate)
+    {
+        // Why: Scale down and move to pressed position
+        Vector3 pressPosition = originalPosition + new Vector3(-pressMoveLeft, -pressMoveDown, 0);
+        float duration = immediate ? 0f : animationDuration * 0.5f;
+
+        transform.DOKill();
+        transform.DOScale(originalScale * pressScale, duration).SetEase(Ease.OutQuad);
+        transform.DOLocalMove(pressPosition, duration).SetEase(Ease.OutQuad);
+
+        // Why: bool = true → Set normal color = pressed color
+        if (toggleComponent != null)
+        {
+            ColorBlock colors = toggleComponent.colors;
+            colors.normalColor = originalColors.pressedColor;
+            toggleComponent.colors = colors;
+        }
+        else if (buttonComponent != null)
+        {
+            ColorBlock colors = buttonComponent.colors;
+            colors.normalColor = originalColors.pressedColor;
+            buttonComponent.colors = colors;
+        }
+
+        // Why: Scale down and fade shadow
+        if (shadowObject != null)
+        {
+            shadowObject.transform.DOKill();
+            shadowObject.transform.DOScale(shadowOriginalScale * pressScale, duration).SetEase(Ease.OutQuad);
+
+            if (shadowCanvasGroup != null)
+            {
+                shadowCanvasGroup.DOKill();
+                shadowCanvasGroup.DOFade(shadowPressedAlpha, duration).SetEase(Ease.OutQuad);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Returns to normal state for Toggle OFF
+    /// If bool = false → normal color = original normal color
+    /// </summary>
+    private void ApplyToggleNormalState()
+    {
+        float duration = animationDuration * 0.5f;
+
+        transform.DOKill();
+        transform.DOScale(originalScale, duration).SetEase(Ease.OutQuad);
+        transform.DOLocalMove(originalPosition, duration).SetEase(Ease.OutQuad);
+
+        // Why: bool = false → Set normal color = original normal color
+        if (toggleComponent != null)
+        {
+            ColorBlock colors = toggleComponent.colors;
+            colors.normalColor = originalColors.normalColor;
+            toggleComponent.colors = colors;
+        }
+        else if (buttonComponent != null)
+        {
+            ColorBlock colors = buttonComponent.colors;
+            colors.normalColor = originalColors.normalColor;
+            buttonComponent.colors = colors;
+        }
+
+        // Why: Return shadow to normal
+        if (shadowObject != null)
+        {
+            shadowObject.transform.DOKill();
+            shadowObject.transform.DOScale(shadowOriginalScale, duration).SetEase(Ease.OutQuad);
+
+            if (shadowCanvasGroup != null)
+            {
+                shadowCanvasGroup.DOKill();
+                shadowCanvasGroup.DOFade(shadowOriginalAlpha, duration).SetEase(Ease.OutQuad);
+            }
+        }
     }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
+        // Why: Don't animate hover if Toggle is ON (already in pressed state)
+        if (toggleComponent != null && toggleComponent.isOn) return;
+
         // Why: Scale up slightly on hover (no position change)
         isHovering = true;
 
@@ -102,6 +253,9 @@ public class UIButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 
     public void OnPointerExit(PointerEventData eventData)
     {
+        // Why: Don't animate exit if Toggle is ON (stay in pressed state)
+        if (toggleComponent != null && toggleComponent.isOn) return;
+
         // Why: Return to original state when mouse leaves
         isHovering = false;
 
@@ -169,6 +323,13 @@ public class UIButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 
     public void OnPointerUp(PointerEventData eventData)
     {
+        // Why: If this is a Toggle button and it's ON, stay in pressed state
+        if (toggleComponent != null && toggleComponent.isOn)
+        {
+            // Stay pressed
+            return;
+        }
+
         // Why: Return to hover state if still hovering, otherwise return to normal
         transform.DOKill();
         if (shadowObject != null)

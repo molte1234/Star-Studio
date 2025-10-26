@@ -27,16 +27,22 @@ public class UIController_Game : MonoBehaviour
     [Header("Band Display")]
     public CharacterDisplay[] characterDisplays; // Array of character displays (min 6, expandable)
 
+    [Header("Pause Toggle")]
+    [Tooltip("Optional: Assign the Toggle component to auto-sync its visual state with pause state")]
+    public Toggle pauseToggle;
+
     void OnEnable()
     {
         // Why: Scene was just activated by SceneLoader, refresh the display
         RefreshDisplay();
+        SyncPauseToggle();
     }
 
     void Start()
     {
         // Initial display update
         RefreshDisplay();
+        SyncPauseToggle();
     }
 
     /// <summary>
@@ -165,10 +171,43 @@ public class UIController_Game : MonoBehaviour
         SceneLoader.Instance.LoadMainMenu();
     }
 
-    public void OnPauseClicked()
+    // ============================================
+    // PAUSE TOGGLE HANDLER (Called by Toggle.onValueChanged)
+    // ============================================
+
+    /// <summary>
+    /// Called by Toggle component's onValueChanged event
+    /// Pauses or resumes time based on toggle state
+    /// </summary>
+    public void OnPauseToggled(bool isPaused)
     {
-        // Why: Player wants to pause the game
-        // TODO: Implement pause menu/functionality
-        Debug.Log("PAUSE clicked - implement pause menu here");
+        // Why: Player toggled pause, update TimeManager
+        if (TimeManager.Instance != null)
+        {
+            if (isPaused)
+            {
+                TimeManager.Instance.PauseTime();
+            }
+            else
+            {
+                TimeManager.Instance.ResumeTime();
+            }
+        }
+        else
+        {
+            Debug.LogWarning("⚠️ TimeManager.Instance is null - cannot pause!");
+        }
+    }
+
+    /// <summary>
+    /// Syncs the pause toggle's visual state with TimeManager's isPaused state
+    /// Call this when scene loads or when TimeManager.isPaused changes externally
+    /// </summary>
+    public void SyncPauseToggle()
+    {
+        if (pauseToggle == null || TimeManager.Instance == null) return;
+
+        // Why: Update toggle's isOn state to match TimeManager without triggering onValueChanged
+        pauseToggle.SetIsOnWithoutNotify(TimeManager.Instance.isPaused);
     }
 }

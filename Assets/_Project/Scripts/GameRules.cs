@@ -1,8 +1,16 @@
 using UnityEngine;
 
+/// <summary>
+/// ScriptableObject that holds all game balance numbers in one place
+/// Easy to tweak without touching code
+/// </summary>
 [CreateAssetMenu(fileName = "GameRules", menuName = "Band Manager/Game Rules")]
 public class GameRules : ScriptableObject
 {
+    [Header("Time Settings")]
+    [Tooltip("How long each quarter lasts in seconds")]
+    public float quarterDuration = 30f; // 30 seconds per quarter
+
     [Header("Starting Values")]
     public int startingMoney = 500;
     public int startingFans = 50;

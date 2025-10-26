@@ -4,6 +4,7 @@ using System.Collections.Generic;
 /// <summary>
 /// Singleton GameManager - holds all game state and processes player actions
 /// This is the brain of the game
+/// NOTE: Quarter advancement is now handled by TimeManager (continuous time)
 /// </summary>
 public class GameManager : MonoBehaviour
 {
@@ -65,48 +66,17 @@ public class GameManager : MonoBehaviour
         // Why: Initialize game with selected band members
         this.bandName = bandName;
 
-        // Copy all slots from setup (up to 6)
-        for (int i = 0; i < selectedBand.Length && i < slots.Length; i++)
+        // Copy band members
+        for (int i = 0; i < selectedBand.Length; i++)
         {
             slots[i] = selectedBand[i];
         }
 
-        // Reset game state to starting values
-        currentQuarter = 0;
-        currentYear = 1;
-
-        // Use rules if available, otherwise use defaults
-        if (rules != null)
-        {
-            money = rules.startingMoney;
-            fans = rules.startingFans;
-        }
-        else
-        {
-            money = 500;
-            fans = 50;
-        }
-
-        unity = 100;
-        flags.Clear();
-
-        // Calculate initial band stats from members
+        // Calculate starting stats from band members
         RecalculateStats();
 
-        // ✅ Mark this as a new game so Game scene can check for starting events
-        // Only if not in testing mode (testing mode = manual control)
-        if (!testingMode)
-        {
-            isNewGame = true;
-        }
-
-        // ✅ Reset event history so events can trigger again
-        if (eventManager != null)
-        {
-            eventManager.ResetTriggeredEvents();
-        }
-
-        Debug.Log($"🎸 Band '{bandName}' is ready! Starting Year 1 Quarter 1");
+        Debug.Log($"🎸 New Game Setup Complete: {bandName}");
+        Debug.Log($"   Starting Year 1 Quarter 1");
     }
 
     /// <summary>
@@ -132,6 +102,8 @@ public class GameManager : MonoBehaviour
 
     /// <summary>
     /// Main action processor - player chose one of 5 actions
+    /// NOTE: Actions NO LONGER advance quarters automatically!
+    /// Time advances continuously via TimeManager
     /// </summary>
     public void DoAction(ActionType action)
     {
@@ -155,8 +127,9 @@ public class GameManager : MonoBehaviour
                 break;
         }
 
-        // Why: After action, advance time by 1 quarter
-        AdvanceQuarter();
+        // Why: Update UI after action
+        // NOTE: We DON'T call AdvanceQuarter() anymore - TimeManager handles that!
+        RefreshUI();
     }
 
     /// <summary>
@@ -228,6 +201,7 @@ public class GameManager : MonoBehaviour
 
     /// <summary>
     /// Advances game time by one quarter
+    /// NOW CALLED BY TIMEMANAGER automatically every X seconds!
     /// Checks for events, updates displays
     /// </summary>
     public void AdvanceQuarter()
@@ -238,6 +212,24 @@ public class GameManager : MonoBehaviour
         if (currentQuarter % 4 == 0)
         {
             currentYear++;
+
+            // Why: Play year change sound (bigger, more dramatic)
+            if (audioManager != null)
+            {
+                audioManager.PlayYearAdvance();
+            }
+
+            Debug.Log($"📅 YEAR ADVANCED: Year {currentYear}");
+        }
+        else
+        {
+            // Why: Play quarter change sound (lighter click)
+            if (audioManager != null)
+            {
+                audioManager.PlayQuarterAdvance();
+            }
+
+            Debug.Log($"📅 QUARTER ADVANCED: Year {currentYear}, Quarter {(currentQuarter % 4) + 1}");
         }
 
         // Check if game is over (40 quarters = 10 years)
@@ -301,107 +293,77 @@ public class GameManager : MonoBehaviour
 
         if (money < cost)
         {
-            Debug.Log("❌ RECORD: Not enough money! Need $" + cost);
+            Debug.Log("❌ RECORD: Not enough money!");
             return;
         }
 
         money -= cost;
+        fans += 10 + (charisma / 3); // More charisma = better marketing
 
-        // Fans gained based on band skill
-        int skillLevel = (technical + performance + charisma) / 3;
-        int fansGained = skillLevel * 10;
-        fans += fansGained;
-
-        // Studio time is draining
-        unity -= 5;
-        unity = Mathf.Clamp(unity, 0, 100);
-
-        Debug.Log($"🎵 RECORD: -${cost}, +{fansGained} fans, -5 unity");
+        Debug.Log($"🎵 RECORD: -${cost}, +{10 + (charisma / 3)} fans");
     }
 
     private void DoTour()
     {
-        // Why: Touring costs money upfront but gains fans and revenue
-        int cost = 300;
+        // Why: Touring earns money and fans but drains unity
+        int cost = rules.tourCost;
 
         if (money < cost)
         {
-            Debug.Log("❌ TOUR: Not enough money! Need $" + cost);
+            Debug.Log("❌ TOUR: Not enough money!");
             return;
         }
 
         money -= cost;
+        int earnings = performance * rules.tourMoneyMultiplier;
+        money += earnings;
+        fans += rules.tourFanGain;
+        unity -= rules.tourUnityCost;
 
-        // Revenue from tour based on fanbase + performance skill
-        int revenue = (fans / 10) + (performance * 20);
-        money += revenue;
-
-        // Fans gained from live exposure
-        int fansGained = performance * 5;
-        fans += fansGained;
-
-        // Touring is exhausting
-        unity -= 10;
+        // Clamp unity to 0-100
         unity = Mathf.Clamp(unity, 0, 100);
 
-        Debug.Log($"🎤 TOUR: -${cost}, +${revenue}, +{fansGained} fans, -10 unity");
+        Debug.Log($"🎤 TOUR: -${cost}, +${earnings}, +{rules.tourFanGain} fans, -{rules.tourUnityCost} unity");
     }
 
     private void DoPractice()
     {
-        // Why: Practice improves skills but costs time
-        technical += 2;
-        performance += 2;
-        charisma += 1;
+        // Why: Practice improves band stats
+        technical += rules.practiceStatGain;
+        performance += rules.practiceStatGain;
+        charisma += rules.practiceStatGain;
 
-        // Small unity gain from working together
-        unity += 5;
-        unity = Mathf.Clamp(unity, 0, 100);
-
-        Debug.Log("🎸 PRACTICE: +2 technical, +2 performance, +1 charisma, +5 unity");
+        Debug.Log($"🎸 PRACTICE: +{rules.practiceStatGain} to all stats");
     }
 
     private void DoRest()
     {
-        // Why: Resting recovers unity and prevents burnout
-        unity += 20;
+        // Why: Rest recovers unity
+        unity += rules.restUnityGain;
         unity = Mathf.Clamp(unity, 0, 100);
 
-        // Small money cost (living expenses)
-        money -= 50;
-
-        Debug.Log("😴 REST: +20 unity, -$50 living expenses");
+        Debug.Log($"😌 REST: +{rules.restUnityGain} unity");
     }
 
     private void DoRelease()
     {
-        // Why: Release an album - big fanbase boost if you have enough tracks
-        // For prototype: simplified - just big fan gain based on skills
+        // Why: Release album - big fan boost based on stats
+        int fanGain = (technical + performance + charisma) / 3;
+        fans += fanGain;
 
-        int skillLevel = (technical + performance + charisma) / 3;
-        int fansGained = skillLevel * 50;
-        fans += fansGained;
-
-        // Promotion costs
-        int cost = 400;
-        if (money < cost)
-        {
-            Debug.Log("❌ RELEASE: Not enough money! Need $" + cost);
-            return;
-        }
-
-        money -= cost;
-
-        Debug.Log($"💿 RELEASE: -${cost}, +{fansGained} fans");
+        Debug.Log($"💿 RELEASE: +{fanGain} fans");
     }
 
     // ============================================
-    // GAME END
+    // GAME OVER
     // ============================================
 
     private void EndGame()
     {
-        Debug.Log("🎉 GAME OVER - 10 years complete!");
+        Debug.Log("========================================");
+        Debug.Log("🎊 GAME OVER - Reached 10 years!");
+        Debug.Log($"   Final Stats: ${money}, {fans} fans");
+        Debug.Log("========================================");
 
         // Why: Load the GameOver scene
         if (SceneLoader.Instance != null)
@@ -413,8 +375,6 @@ public class GameManager : MonoBehaviour
             Debug.LogError("❌ SceneLoader.Instance is null - cannot load GameOver scene!");
         }
     }
-
-
 }
 
 // Why: Enum for the 5 action types
