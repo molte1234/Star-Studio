@@ -1,6 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
+/// <summary>
+/// Singleton GameManager - holds all game state and processes player actions
+/// This is the brain of the game
+/// </summary>
 public class GameManager : MonoBehaviour
 {
     // Singleton pattern - only one GameManager exists
@@ -8,29 +12,29 @@ public class GameManager : MonoBehaviour
 
     [Header("Band Info")]
     public string bandName;
-    public SlotData[] slots = new SlotData[6]; // 3 main + 3 support/equipment
+    public SlotData[] slots = new SlotData[6]; // 3 main band members + 3 support/equipment slots
 
     [Header("Time")]
-    public int currentQuarter = 0; // 0-79 (80 quarters = 20 years)
-    public int currentYear = 1;     // 1-20
+    public int currentQuarter = 0; // 0-39 (40 quarters = 10 years)
+    public int currentYear = 1;     // 1-10
 
     [Header("Resources")]
     public int money = 500;
     public int fans = 50;
 
-    [Header("Band Stats")]
-    public int technical = 0;    // Calculated from band members
-    public int performance = 0;
-    public int charisma = 0;
+    [Header("Band Stats - Calculated from Members")]
+    public int technical = 0;    // Sum of all 3 band members' technical
+    public int performance = 0;  // Sum of all 3 band members' performance
+    public int charisma = 0;     // Sum of all 3 band members' charisma
     public int unity = 100;      // Band cohesion (0-100)
 
     [Header("Story Flags")]
     public List<string> flags = new List<string>(); // Track story progression
 
     [Header("References")]
-    public GameRules rules; // ScriptableObject with all the numbers
+    public GameRules rules; // ScriptableObject with all the balance numbers
     public EventManager eventManager;
-    public UIManager uiManager;
+    public UIController_Game uiController; // Reference to game screen UI
     public AudioManager audioManager;
 
     void Awake()
@@ -39,6 +43,7 @@ public class GameManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
+            DontDestroyOnLoad(gameObject);
         }
         else
         {
@@ -46,32 +51,41 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Called from BandSetupScene when player finishes selecting their band
+    /// </summary>
     public void SetupNewGame(SlotData[] selectedBand, string bandName)
     {
-        // Why: Called from BandSetupScene, initializes new game
         this.bandName = bandName;
 
+        // Assign first 3 slots to main band members
         for (int i = 0; i < 3; i++)
         {
             slots[i] = selectedBand[i];
         }
 
+        // Reset game state
         currentQuarter = 0;
         currentYear = 1;
         money = rules.startingMoney;
         fans = rules.startingFans;
         unity = 100;
 
+        // Calculate initial band stats
         CalculateBandStats();
     }
 
+    /// <summary>
+    /// Sums up stats from all active band members
+    /// Call this whenever band composition changes
+    /// </summary>
     public void CalculateBandStats()
     {
-        // Why: Sum up stats from all active band members
         technical = 0;
         performance = 0;
         charisma = 0;
 
+        // Only sum first 3 slots (main band members)
         for (int i = 0; i < 3; i++)
         {
             if (slots[i] != null)
@@ -83,9 +97,11 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Player clicked an action button - process the results
+    /// </summary>
     public void DoAction(ActionType actionType)
     {
-        // Why: Player clicked an action button, process the results
         switch (actionType)
         {
             case ActionType.Record:
@@ -105,91 +121,136 @@ public class GameManager : MonoBehaviour
                 break;
         }
 
-        AdvanceQuarter();
+        // Why: Update UI after every action so player sees changes
+        if (uiController != null)
+        {
+            uiController.UpdateStatsDisplay();
+        }
     }
 
-    private void DoRecord()
-    {
-        // Why: Spend money to create music, gain creativity
-        money -= rules.recordCost;
-        // Add recording logic here
-    }
-
-    private void DoTour()
-    {
-        // Why: Earn money and fans, lose unity
-        int earnings = performance * rules.tourMoneyMultiplier;
-        money += earnings;
-        fans += rules.tourFanGain;
-        unity -= rules.tourUnityCost;
-    }
-
-    private void DoPractice()
-    {
-        // Why: Improve stats slightly
-        technical += rules.practiceStatGain;
-        performance += rules.practiceStatGain;
-    }
-
-    private void DoRest()
-    {
-        // Why: Recover unity
-        unity += rules.restUnityGain;
-        unity = Mathf.Min(unity, 100); // Cap at 100
-    }
-
-    private void DoRelease()
-    {
-        // Why: Release album, gain fans based on quality
-        // Add release logic here
-    }
-
+    /// <summary>
+    /// Advances game time by one quarter
+    /// Checks for events, updates displays
+    /// </summary>
     public void AdvanceQuarter()
     {
-        // Why: Move time forward, check for events and win/lose
         currentQuarter++;
 
+        // Every 4 quarters = 1 year
         if (currentQuarter % 4 == 0)
         {
             currentYear++;
         }
 
-        uiManager.UpdateUI();
-        eventManager.CheckForEvents();
-        CheckGameOver();
-    }
+        // Check if game is over (40 quarters = 10 years)
+        if (currentQuarter >= 40)
+        {
+            EndGame();
+            return;
+        }
 
-    private void CheckGameOver()
-    {
-        // Why: Check win/lose conditions
-        if (money <= 0)
+        // Check for random events
+        if (eventManager != null)
         {
-            GameOver("Bankruptcy!");
+            // eventManager.CheckForEvents();
         }
-        if (unity <= 0)
+
+        // Why: Update UI to show new quarter/year
+        if (uiController != null)
         {
-            GameOver("Band broke up!");
-        }
-        if (currentQuarter >= 80)
-        {
-            GameWin();
+            uiController.UpdateStatsDisplay();
         }
     }
 
-    private void GameOver(string reason)
+    // ============================================
+    // ACTION IMPLEMENTATIONS
+    // ============================================
+
+    private void DoRecord()
     {
-        Debug.Log("Game Over: " + reason);
-        // Load EndScene
+        // Why: Recording creates music and gains fans/money based on band skill
+        int successRoll = CalculateSuccess();
+
+        money += successRoll * 10;
+        fans += successRoll * 5;
+
+        Debug.Log("RECORD: Success roll = " + successRoll);
     }
 
-    private void GameWin()
+    private void DoTour()
     {
-        Debug.Log("You survived 20 years!");
-        // Load EndScene with victory
+        // Why: Touring costs money but gains lots of fans
+        int cost = 100;
+
+        if (money >= cost)
+        {
+            money -= cost;
+            int successRoll = CalculateSuccess();
+            fans += successRoll * 15;
+
+            Debug.Log("TOUR: Success roll = " + successRoll);
+        }
+        else
+        {
+            Debug.Log("TOUR: Not enough money!");
+        }
+    }
+
+    private void DoPractice()
+    {
+        // Why: Practice improves band stats
+        // TODO: Implement stat improvement logic
+        Debug.Log("PRACTICE: Band is practicing...");
+    }
+
+    private void DoRest()
+    {
+        // Why: Rest recovers unity/morale
+        unity += 10;
+        unity = Mathf.Clamp(unity, 0, 100);
+
+        Debug.Log("REST: Unity restored");
+    }
+
+    private void DoRelease()
+    {
+        // Why: Release an album for big money/fan gain
+        int successRoll = CalculateSuccess();
+
+        money += successRoll * 50;
+        fans += successRoll * 25;
+
+        Debug.Log("RELEASE: Success roll = " + successRoll);
+    }
+
+    /// <summary>
+    /// Calculates action success based on band stats
+    /// Returns a value 1-10 based on combined band power
+    /// </summary>
+    private int CalculateSuccess()
+    {
+        // Simple formula: average of all stats
+        int totalStats = technical + performance + charisma;
+        int averageSkill = totalStats / 3;
+
+        // Add some randomness (±2)
+        int randomBonus = Random.Range(-2, 3);
+        int result = averageSkill + randomBonus;
+
+        // Clamp to 1-10
+        return Mathf.Clamp(result, 1, 10);
+    }
+
+    private void EndGame()
+    {
+        Debug.Log("GAME OVER! 10 years complete!");
+        // TODO: Load end scene with final score
     }
 }
 
-// Why: Enum makes action types clear and safe
+/// <summary>
+/// Enum for the 5 action types
+/// </summary>
 public enum ActionType
 {
     Record,

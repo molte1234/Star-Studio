@@ -1,6 +1,10 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+/// <summary>
+/// Manages event triggering and display
+/// Checks for events each quarter and handles player choices
+/// </summary>
 public class EventManager : MonoBehaviour
 {
     [Header("Event Database")]
@@ -8,7 +12,7 @@ public class EventManager : MonoBehaviour
     private EventData currentEvent;
 
     [Header("References")]
-    public UIManager uiManager;
+    public UIController_Game uiController; // UPDATED: Changed from UIManager
 
     public void CheckForEvents()
     {
@@ -75,7 +79,7 @@ public class EventManager : MonoBehaviour
     {
         // Why: Show this event to the player
         currentEvent = evt;
-        uiManager.ShowEvent(evt);
+        uiController.ShowEvent(evt);
     }
 
     public void PlayerChoseOption(int choiceIndex)
@@ -97,7 +101,7 @@ public class EventManager : MonoBehaviour
         }
 
         // Show outcome text briefly (optional)
-        uiManager.HideEvent();
+        uiController.HideEvent();
         currentEvent = null;
     }
 }
