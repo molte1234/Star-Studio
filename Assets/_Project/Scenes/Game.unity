@@ -635,12 +635,20 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1904710439}
     - target: {fileID: 1450112059515605715, guid: e979c1468329ea1498fbb40fb8e62ca9, type: 3}
+      propertyPath: onValueChanged.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1450112059515605715, guid: e979c1468329ea1498fbb40fb8e62ca9, type: 3}
+      propertyPath: onValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1450112059515605715, guid: e979c1468329ea1498fbb40fb8e62ca9, type: 3}
       propertyPath: onValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 1236340056}
+      objectReference: {fileID: 1236340057}
     - target: {fileID: 1450112059515605715, guid: e979c1468329ea1498fbb40fb8e62ca9, type: 3}
       propertyPath: onValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: 
+      value: OnProduceMenuToggled
       objectReference: {fileID: 0}
     - target: {fileID: 1450112059515605715, guid: e979c1468329ea1498fbb40fb8e62ca9, type: 3}
       propertyPath: onValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
@@ -2140,9 +2148,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e6b6b1f47c255845b13db99f93a8089, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EventManager
-  welcomeScreenEvent: {fileID: 11400000, guid: b3fc66e675aa7674aa4f94a789a9db40, type: 2}
   allEvents:
   - {fileID: 11400000, guid: 1d224d5399a23cb43aa0efacb35939e8, type: 2}
+  welcomeScreenEvent: {fileID: 11400000, guid: 6c9885a1bfd8f7f48b581fef23ff8523, type: 2}
   eventPanel: {fileID: 2115616643}
 --- !u!4 &475990453
 Transform:
@@ -5842,15 +5850,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d447feeaa4c9f674b84df3e2b2f7132f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIController_Game
-  bandNameText: {fileID: 1335861737}
   moneyText: {fileID: 809884376}
   fansText: {fileID: 31587328}
-  yearText: {fileID: 1634718388}
-  quarterText: {fileID: 1023936615}
-  technicalBar: {fileID: 1621720820}
-  performanceBar: {fileID: 346488160}
-  charismaBar: {fileID: 903095551}
-  unityBar: {fileID: 2116953016}
+  unityText: {fileID: 0}
+  quarterYearText: {fileID: 0}
+  bandNameText: {fileID: 1335861737}
+  charismaText: {fileID: 0}
+  stagePerformanceText: {fileID: 0}
+  vocalText: {fileID: 0}
+  instrumentText: {fileID: 0}
+  songwritingText: {fileID: 0}
+  productionText: {fileID: 0}
+  managementText: {fileID: 0}
+  practicalText: {fileID: 0}
   characterDisplays:
   - {fileID: 5935828509147968386}
   - {fileID: 546411404}
@@ -5858,7 +5870,13 @@ MonoBehaviour:
   - {fileID: 755571332}
   - {fileID: 1002836879}
   - {fileID: 401070782}
-  pauseToggle: {fileID: 7646404999338306032}
+  practicePanel: {fileID: 320924752}
+  producePanel: {fileID: 267755665}
+  tourPanel: {fileID: 0}
+  releasePanel: {fileID: 0}
+  financePanel: {fileID: 0}
+  marketingPanel: {fileID: 0}
+  managingPanel: {fileID: 0}
 --- !u!4 &1236340058
 Transform:
   m_ObjectHideFlags: 0
@@ -10488,12 +10506,16 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1904710439}
     - target: {fileID: 1450112059515605715, guid: e979c1468329ea1498fbb40fb8e62ca9, type: 3}
+      propertyPath: onValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1450112059515605715, guid: e979c1468329ea1498fbb40fb8e62ca9, type: 3}
       propertyPath: onValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 1236340057}
     - target: {fileID: 1450112059515605715, guid: e979c1468329ea1498fbb40fb8e62ca9, type: 3}
       propertyPath: onValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: OnPracticeClicked
+      value: OnPracticeMenuToggled
       objectReference: {fileID: 0}
     - target: {fileID: 1450112059515605715, guid: e979c1468329ea1498fbb40fb8e62ca9, type: 3}
       propertyPath: onValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
@@ -11011,8 +11033,8 @@ SceneRoots:
   m_Roots:
   - {fileID: 2059434351}
   - {fileID: 1111964134}
-  - {fileID: 1930733269}
   - {fileID: 1236340058}
+  - {fileID: 1930733269}
   - {fileID: 475990453}
   - {fileID: 1615719807}
   - {fileID: 1884703458}

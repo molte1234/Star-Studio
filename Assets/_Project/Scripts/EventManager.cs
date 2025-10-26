@@ -2,84 +2,31 @@
 using System.Collections.Generic;
 
 /// <summary>
-/// Manages event triggering and display
-/// Checks for events each quarter and handles player choices
-/// Now supports year + quarter checking and custom audio
+/// Manages story events - checking triggers and displaying events to the player
+/// Attached to GameManager in Bootstrap scene
 /// </summary>
 public class EventManager : MonoBehaviour
 {
-    [Header("Welcome Screen")]
-    [Tooltip("Special event that shows at game start - bypasses all trigger conditions")]
+    [Header("Event Database")]
+    [Tooltip("All possible events in the game")]
+    public List<EventData> allEvents = new List<EventData>();
+
+    [Header("Special Events")]
+    [Tooltip("Welcome screen event - shown once at game start")]
     public EventData welcomeScreenEvent;
 
-    [Header("Event Database")]
-    public List<EventData> allEvents; // All possible events
-    private EventData currentEvent;
-    private List<EventData> triggeredEvents = new List<EventData>(); // Track which events already happened
+    [Header("UI Reference")]
+    public EventPanel eventPanel; // Reference to the EventPanel UI
 
-    [Header("References")]
-    public EventPanel eventPanel; // Direct reference to EventPanel script
+    private List<EventData> triggeredEvents = new List<EventData>(); // Track which events already triggered
+    private EventData currentEvent; // Currently displayed event
 
-    private void Awake()
-    {
-        // Why: Register with GameManager as early as possible
-        Debug.Log("🔧 EventManager.Awake() called!");
-
-        if (GameManager.Instance == null)
-        {
-            Debug.LogError("❌ GameManager.Instance is NULL in EventManager.Awake()!");
-            return;
-        }
-
-        Debug.Log("✅ GameManager.Instance found, connecting...");
-        GameManager.Instance.eventManager = this;
-        Debug.Log("✅ EventManager connected to GameManager");
-    }
-
-    private void OnEnable()
-    {
-        // Why: Scene was activated - check for welcome screen
-        // OnEnable runs every time the Game scene activates (not just first load)
-        Debug.Log("🔧 EventManager.OnEnable() - scene activated!");
-        StartCoroutine(CheckForStartingEventsDelayed());
-    }
-
-    private System.Collections.IEnumerator CheckForStartingEventsDelayed()
-    {
-        // Why: Wait one frame to ensure scene is fully loaded
-        Debug.Log("🔧 Coroutine: Waiting one frame...");
-        yield return null;
-
-        Debug.Log("🔧 Coroutine: Frame passed, calling OnGameSceneLoaded...");
-        // Check if this is a new game start (Y1 Q1 events)
-        if (GameManager.Instance != null)
-        {
-            GameManager.Instance.OnGameSceneLoaded();
-        }
-        else
-        {
-            Debug.LogError("❌ Coroutine: GameManager.Instance is null!");
-        }
-    }
-
-    /// <summary>
-    /// Resets the triggered events list - call this when starting a new game
-    /// </summary>
-    public void ResetTriggeredEvents()
-    {
-        triggeredEvents.Clear();
-        Debug.Log("🔄 Event history cleared - all events can trigger again");
-    }
-
-    /// <summary>
-    /// Shows the welcome screen event - bypasses all trigger conditions
-    /// Called at the start of a new game
-    /// </summary>
     public void ShowWelcomeScreen()
     {
+        // Why: Display welcome screen at game start (called from UIController_Game)
         if (welcomeScreenEvent == null)
         {
-            Debug.LogWarning("⚠️ Welcome screen event not assigned in EventManager!");
+            Debug.LogError("❌ Welcome Screen Event not assigned in EventManager!");
             return;
         }
 
@@ -193,7 +140,7 @@ public class EventManager : MonoBehaviour
 
     private bool CheckStatCondition(EventData evt)
     {
-        // Why: Check if stat condition is met based on stat type and comparison
+        // ✅ UPDATED: Check if stat condition is met using NEW 8-stat system
         int statValue = 0;
 
         // Get the stat value based on StatToCheck enum
@@ -205,14 +152,30 @@ public class EventManager : MonoBehaviour
             case StatToCheck.Fans:
                 statValue = GameManager.Instance.fans;
                 break;
-            case StatToCheck.Technical:
-                statValue = GameManager.Instance.technical;
-                break;
-            case StatToCheck.Performance:
-                statValue = GameManager.Instance.performance;
-                break;
+            // ✅ NEW 8-STAT SYSTEM:
             case StatToCheck.Charisma:
                 statValue = GameManager.Instance.charisma;
+                break;
+            case StatToCheck.StagePerformance:
+                statValue = GameManager.Instance.stagePerformance;
+                break;
+            case StatToCheck.Vocal:
+                statValue = GameManager.Instance.vocal;
+                break;
+            case StatToCheck.Instrument:
+                statValue = GameManager.Instance.instrument;
+                break;
+            case StatToCheck.Songwriting:
+                statValue = GameManager.Instance.songwriting;
+                break;
+            case StatToCheck.Production:
+                statValue = GameManager.Instance.production;
+                break;
+            case StatToCheck.Management:
+                statValue = GameManager.Instance.management;
+                break;
+            case StatToCheck.Practical:
+                statValue = GameManager.Instance.practical;
                 break;
             case StatToCheck.Unity:
                 statValue = GameManager.Instance.unity;
@@ -287,15 +250,22 @@ public class EventManager : MonoBehaviour
 
         ChoiceData choice = currentEvent.choices[choiceIndex];
 
-        // Apply effects
+        // Apply resource changes
         GameManager.Instance.money += choice.moneyChange;
         GameManager.Instance.fans += choice.fansChange;
         GameManager.Instance.unity += choice.unityChange;
 
-        // Apply stat changes if any
-        GameManager.Instance.technical += choice.technicalChange;
-        GameManager.Instance.performance += choice.performanceChange;
+        // ✅ UPDATED: Apply NEW 8-stat system changes
+        // Note: ChoiceData also needs to be updated to have these new stat fields
+        // For now, keeping the old fields but you'll need to add new ones to ChoiceData
         GameManager.Instance.charisma += choice.charismaChange;
+        GameManager.Instance.stagePerformance += choice.stagePerformanceChange;
+        GameManager.Instance.vocal += choice.vocalChange;
+        GameManager.Instance.instrument += choice.instrumentChange;
+        GameManager.Instance.songwriting += choice.songwritingChange;
+        GameManager.Instance.production += choice.productionChange;
+        GameManager.Instance.management += choice.managementChange;
+        GameManager.Instance.practical += choice.practicalChange;
 
         // Add flags if any
         foreach (string flag in choice.flagsToAdd)
@@ -319,5 +289,12 @@ public class EventManager : MonoBehaviour
 
         // Refresh UI to show stat changes
         GameManager.Instance.ForceRefreshUI();
+    }
+
+    public void ResetTriggeredEvents()
+    {
+        // Why: Clear the history of triggered events (used when starting new game)
+        triggeredEvents.Clear();
+        Debug.Log("🔄 Event history cleared");
     }
 }

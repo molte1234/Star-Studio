@@ -3572,9 +3572,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterViewer
   portraitImage: {fileID: 1620431475}
   nameText: {fileID: 120700698}
-  technicalText: {fileID: 322084581}
-  performanceText: {fileID: 1197294700}
   charismaText: {fileID: 164221762}
+  stagePerformanceText: {fileID: 0}
+  vocalText: {fileID: 0}
+  instrumentText: {fileID: 0}
+  songwritingText: {fileID: 0}
+  productionText: {fileID: 0}
+  managementText: {fileID: 0}
+  practicalText: {fileID: 0}
   traitText: {fileID: 485911427}
   hiredStampImage: {fileID: 360176534}
 --- !u!1 &1068859972
@@ -5338,10 +5343,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BandSetupManager
   availableCharacters:
-  - {fileID: 11400000, guid: 9c0c822ceaadb824b96d156184bc603a, type: 2}
-  - {fileID: 11400000, guid: 55e8fc38664139e48aceac7cae704c54, type: 2}
-  - {fileID: 11400000, guid: 611fb27ef13340141934adc73715df3f, type: 2}
-  - {fileID: 11400000, guid: 0c0e312910020e64fb76277b8c3c0223, type: 2}
+  - {fileID: 11400000, guid: 7fa2a653fd490664b90bf0d554f2d50c, type: 2}
+  - {fileID: 11400000, guid: 643f53ed2029d1c4b97a713b57a76617, type: 2}
+  - {fileID: 11400000, guid: b999fef7cb4c6b642aa303a3961aa6c7, type: 2}
+  - {fileID: 11400000, guid: f2c3d1434da36f3488a89d423c9868d5, type: 2}
   selectedBand:
   - {fileID: 0}
   - {fileID: 0}

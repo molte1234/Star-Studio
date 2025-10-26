@@ -81,6 +81,7 @@ public class EventPanel : MonoBehaviour
             titleText.text = eventData.eventTitle;
         }
 
+        // ✅ FIXED: Now EventData has eventSprite field
         if (eventImage != null && eventData.eventSprite != null)
         {
             eventImage.sprite = eventData.eventSprite;
@@ -147,58 +148,33 @@ public class EventPanel : MonoBehaviour
 
     private void CreateOKButton()
     {
-        // Why: Create a single "OK" button that just closes the event
-        spawnedButtons = new GameObject[1];
+        // Why: Create a simple OK button when event has no choices
+        if (choiceButtonPrefab == null)
+        {
+            Debug.LogError("EventPanel: Cannot create OK button - choiceButtonPrefab is null!");
+            return;
+        }
 
         GameObject buttonObj = Instantiate(choiceButtonPrefab, buttonContainer);
-        spawnedButtons[0] = buttonObj;
+        spawnedButtons = new GameObject[] { buttonObj };
 
-        // Set button text to "OK"
         TextMeshProUGUI buttonText = buttonObj.GetComponentInChildren<TextMeshProUGUI>();
         if (buttonText != null)
         {
             buttonText.text = "OK";
         }
 
-        // Hook up button to just close the panel
         Button button = buttonObj.GetComponentInChildren<Button>();
         if (button != null)
         {
             button.onClick.RemoveAllListeners();
-            button.onClick.AddListener(() => OnOKClicked());
-        }
-    }
-
-    private void OnOKClicked()
-    {
-        // Why: Player clicked OK on an event with no choices - just close the panel
-        Debug.Log("EventPanel: OK button clicked - closing event");
-
-        // Play button click sound
-        if (AudioManager.Instance != null)
-        {
-            AudioManager.Instance.PlayButtonClick();
-        }
-
-        // ✅ FIX: Resume regular music (fade out event music)
-        if (AudioManager.Instance != null)
-        {
-            AudioManager.Instance.ResumeMusic();
-        }
-
-        // Hide the panel
-        HideEvent();
-
-        // ✅ FIX: Refresh UI after closing
-        if (GameManager.Instance != null)
-        {
-            GameManager.Instance.ForceRefreshUI();
+            button.onClick.AddListener(() => HideEvent());
         }
     }
 
     private void ClearButtons()
     {
-        // Why: Remove all previously spawned buttons
+        // Why: Remove old buttons before creating new ones
         if (spawnedButtons != null)
         {
             foreach (GameObject btn in spawnedButtons)
@@ -208,13 +184,13 @@ public class EventPanel : MonoBehaviour
                     Destroy(btn);
                 }
             }
-            spawnedButtons = null;
         }
+        spawnedButtons = null;
     }
 
     private void ShowPanelWithAnimation()
     {
-        // Why: Animate panel appearing
+        // Why: Animate panel in with a bounce
         if (panelRoot == null) return;
 
         panelRoot.SetActive(true);

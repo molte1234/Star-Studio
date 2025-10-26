@@ -20,7 +20,12 @@ public class GameManager : MonoBehaviour
 
     [Header("Band Info")]
     public string bandName;
-    public SlotData[] slots = new SlotData[6]; // 3 main band members + 3 support/equipment slots
+
+    /// <summary>
+    /// UPDATED: Runtime state wrappers for each slot (wraps SlotData + runtime info)
+    /// Changed from SlotData[] slots to CharacterSlotState[]
+    /// </summary>
+    public CharacterSlotState[] characterStates = new CharacterSlotState[6];
 
     [Header("Time")]
     public int currentQuarter = 0; // 0-39 (40 quarters = 10 years)
@@ -30,11 +35,33 @@ public class GameManager : MonoBehaviour
     public int money = 500;
     public int fans = 50;
 
-    [Header("Band Stats - Calculated from Members")]
-    public int technical = 0;    // Sum of all 3 band members' technical
-    public int performance = 0;  // Sum of all 3 band members' performance
-    public int charisma = 0;     // Sum of all 3 band members' charisma
-    public int unity = 100;      // Band cohesion (0-100)
+    [Header("Band Stats - NEW 8-STAT SYSTEM")]
+    [Tooltip("Sum of all band members' charisma - Social, look, fan appeal")]
+    public int charisma = 0;
+
+    [Tooltip("Sum of all band members' stage performance - Live show entertainment")]
+    public int stagePerformance = 0;
+
+    [Tooltip("Sum of all band members' vocal - Singing ability")]
+    public int vocal = 0;
+
+    [Tooltip("Sum of all band members' instrument - Playing instrument")]
+    public int instrument = 0;
+
+    [Tooltip("Sum of all band members' songwriting - Creating music")]
+    public int songwriting = 0;
+
+    [Tooltip("Sum of all band members' production - Studio/technical skills")]
+    public int production = 0;
+
+    [Tooltip("Sum of all band members' management - Business/organization")]
+    public int management = 0;
+
+    [Tooltip("Sum of all band members' practical - General utility")]
+    public int practical = 0;
+
+    [Tooltip("Band cohesion (0-100)")]
+    public int unity = 100;
 
     [Header("Story Flags")]
     public List<string> flags = new List<string>(); // Track story progression
@@ -60,16 +87,24 @@ public class GameManager : MonoBehaviour
 
     /// <summary>
     /// Called from BandSetupScene when player finishes selecting their band
+    /// UPDATED: Now creates CharacterSlotState wrappers
     /// </summary>
     public void SetupNewGame(SlotData[] selectedBand, string bandName)
     {
         // Why: Initialize game with selected band members
         this.bandName = bandName;
 
-        // Copy band members
+        // UPDATED: Convert SlotData[] to CharacterSlotState[]
         for (int i = 0; i < selectedBand.Length; i++)
         {
-            slots[i] = selectedBand[i];
+            if (selectedBand[i] != null)
+            {
+                characterStates[i] = new CharacterSlotState(selectedBand[i]);
+            }
+            else
+            {
+                characterStates[i] = null;
+            }
         }
 
         // Calculate starting stats from band members
@@ -81,21 +116,34 @@ public class GameManager : MonoBehaviour
 
     /// <summary>
     /// Sums up all band member stats
+    /// UPDATED: Now calculates all 8 stats instead of 3
     /// </summary>
     public void RecalculateStats()
     {
-        technical = 0;
-        performance = 0;
+        // Reset all stats
         charisma = 0;
+        stagePerformance = 0;
+        vocal = 0;
+        instrument = 0;
+        songwriting = 0;
+        production = 0;
+        management = 0;
+        practical = 0;
 
         // Sum stats from first 3 slots (band members)
         for (int i = 0; i < 3; i++)
         {
-            if (slots[i] != null)
+            if (characterStates[i] != null && characterStates[i].slotData != null)
             {
-                technical += slots[i].technical;
-                performance += slots[i].performance;
-                charisma += slots[i].charisma;
+                SlotData data = characterStates[i].slotData;
+                charisma += data.charisma;
+                stagePerformance += data.stagePerformance;
+                vocal += data.vocal;
+                instrument += data.instrument;
+                songwriting += data.songwriting;
+                production += data.production;
+                management += data.management;
+                practical += data.practical;
             }
         }
     }
@@ -284,6 +332,8 @@ public class GameManager : MonoBehaviour
 
     // ============================================
     // ACTION IMPLEMENTATIONS
+    // NOTE: These still use old stat names (charisma) which maps to the new charisma stat
+    // Will update these formulas later when designing proper action system
     // ============================================
 
     private void DoRecord()
@@ -315,7 +365,8 @@ public class GameManager : MonoBehaviour
         }
 
         money -= cost;
-        int earnings = performance * rules.tourMoneyMultiplier;
+        // NOTE: Using stagePerformance instead of old "performance" stat
+        int earnings = stagePerformance * rules.tourMoneyMultiplier;
         money += earnings;
         fans += rules.tourFanGain;
         unity -= rules.tourUnityCost;
@@ -329,11 +380,12 @@ public class GameManager : MonoBehaviour
     private void DoPractice()
     {
         // Why: Practice improves band stats
-        technical += rules.practiceStatGain;
-        performance += rules.practiceStatGain;
-        charisma += rules.practiceStatGain;
+        // NOTE: For now just improving a few key stats, will refine later
+        stagePerformance += rules.practiceStatGain;
+        vocal += rules.practiceStatGain;
+        instrument += rules.practiceStatGain;
 
-        Debug.Log($"🎸 PRACTICE: +{rules.practiceStatGain} to all stats");
+        Debug.Log($"🎸 PRACTICE: +{rules.practiceStatGain} to performance stats");
     }
 
     private void DoRest()
@@ -348,13 +400,14 @@ public class GameManager : MonoBehaviour
     private void DoRelease()
     {
         // Why: Release album - big fan boost based on stats
-        int fanGain = (technical + performance + charisma) / 3;
+        // NOTE: Using new stat system - averaging relevant stats
+        int fanGain = (songwriting + production + charisma) / 3;
         fans += fanGain;
 
         Debug.Log($"💿 RELEASE: +{fanGain} fans");
     }
 
-    // ============================================
+    // =========================================== 
     // GAME OVER
     // ============================================
 

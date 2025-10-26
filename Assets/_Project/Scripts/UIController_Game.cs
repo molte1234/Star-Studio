@@ -8,14 +8,22 @@ using TMPro;
 /// </summary>
 public class UIController_Game : MonoBehaviour
 {
-    [Header("Stats Display")]
+    [Header("Stats Display - Resources")]
     public TextMeshProUGUI moneyText;
     public TextMeshProUGUI fansText;
-    public TextMeshProUGUI technicalText;
-    public TextMeshProUGUI performanceText;
     public TextMeshProUGUI unityText;
     public TextMeshProUGUI quarterYearText;
     public TextMeshProUGUI bandNameText;
+
+    [Header("Stats Display - NEW 8-Stat System")]
+    public TextMeshProUGUI charismaText;
+    public TextMeshProUGUI stagePerformanceText;
+    public TextMeshProUGUI vocalText;
+    public TextMeshProUGUI instrumentText;
+    public TextMeshProUGUI songwritingText;
+    public TextMeshProUGUI productionText;
+    public TextMeshProUGUI managementText;
+    public TextMeshProUGUI practicalText;
 
     [Header("Character Displays")]
     public CharacterDisplay[] characterDisplays;
@@ -75,7 +83,7 @@ public class UIController_Game : MonoBehaviour
 
     private void RefreshStats()
     {
-        // Why: Show current game state numbers
+        // ✅ UPDATED: Display NEW 8-stat system + resources
         if (GameManager.Instance == null)
         {
             Debug.LogWarning("⚠️ GameManager.Instance is null - cannot refresh stats!");
@@ -84,6 +92,7 @@ public class UIController_Game : MonoBehaviour
 
         GameManager gm = GameManager.Instance;
 
+        // Update resource displays
         if (moneyText != null)
         {
             moneyText.text = $"${gm.money}";
@@ -92,16 +101,6 @@ public class UIController_Game : MonoBehaviour
         if (fansText != null)
         {
             fansText.text = $"{gm.fans}";
-        }
-
-        if (technicalText != null)
-        {
-            technicalText.text = $"{gm.technical}";
-        }
-
-        if (performanceText != null)
-        {
-            performanceText.text = $"{gm.performance}";
         }
 
         if (unityText != null)
@@ -117,6 +116,47 @@ public class UIController_Game : MonoBehaviour
         if (bandNameText != null)
         {
             bandNameText.text = gm.bandName;
+        }
+
+        // ✅ NEW: Update 8-stat system displays
+        if (charismaText != null)
+        {
+            charismaText.text = $"{gm.charisma}";
+        }
+
+        if (stagePerformanceText != null)
+        {
+            stagePerformanceText.text = $"{gm.stagePerformance}";
+        }
+
+        if (vocalText != null)
+        {
+            vocalText.text = $"{gm.vocal}";
+        }
+
+        if (instrumentText != null)
+        {
+            instrumentText.text = $"{gm.instrument}";
+        }
+
+        if (songwritingText != null)
+        {
+            songwritingText.text = $"{gm.songwriting}";
+        }
+
+        if (productionText != null)
+        {
+            productionText.text = $"{gm.production}";
+        }
+
+        if (managementText != null)
+        {
+            managementText.text = $"{gm.management}";
+        }
+
+        if (practicalText != null)
+        {
+            practicalText.text = $"{gm.practical}";
         }
     }
 
@@ -141,11 +181,11 @@ public class UIController_Game : MonoBehaviour
                 continue;
             }
 
-            // Check if this slot index exists in GameManager
-            if (i < gm.slots.Length && gm.slots[i] != null)
+            // ✅ FIXED: Check characterStates instead of slots
+            if (i < gm.characterStates.Length && gm.characterStates[i] != null && gm.characterStates[i].slotData != null)
             {
                 // Why: Character exists in this slot - show it
-                characterDisplays[i].SetCharacter(gm.slots[i]);
+                characterDisplays[i].SetCharacter(gm.characterStates[i].slotData);
             }
             else
             {
@@ -203,56 +243,12 @@ public class UIController_Game : MonoBehaviour
         ShowHidePanel(managingPanel, isOn);
     }
 
-    private void ShowHidePanel(GameObject panel, bool show)
+    private void ShowHidePanel(GameObject panel, bool shouldShow)
     {
-        // Why: If panel is null, can't show/hide it (not assigned yet)
-        if (panel == null)
+        // Why: Toggle panel visibility
+        if (panel != null)
         {
-            return; // Silently ignore - panel not implemented yet
-        }
-
-        // Why: Show or hide the panel based on toggle state
-        // ToggleGroup ensures only one toggle is ON at a time, so only one panel shows
-        panel.SetActive(show);
-    }
-
-    // ============================================
-    // ACTION BUTTON HANDLERS - TODO: Design action system later
-    // ============================================
-    // NOTE: Action buttons will be added inside panels later
-    // For now, menus just open/close - no actions are executed
-
-    public void OnMainMenuClicked()
-    {
-        // Why: Player wants to return to main menu
-        SceneLoader.Instance.LoadMainMenu();
-    }
-
-    // ============================================
-    // PAUSE TOGGLE HANDLER (Called by Toggle.onValueChanged)
-    // ============================================
-
-    /// <summary>
-    /// Called by Toggle component's onValueChanged event
-    /// Pauses or resumes time based on toggle state
-    /// </summary>
-    public void OnPauseToggled(bool isPaused)
-    {
-        // Why: Player toggled pause, update TimeManager
-        if (TimeManager.Instance != null)
-        {
-            if (isPaused)
-            {
-                TimeManager.Instance.PauseTime();
-            }
-            else
-            {
-                TimeManager.Instance.ResumeTime();
-            }
-        }
-        else
-        {
-            Debug.LogWarning("⚠️ TimeManager.Instance is null - cannot pause!");
+            panel.SetActive(shouldShow);
         }
     }
 }

@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2dc8cafbbc01014fa49fffa76ec8831, type: 3}
   m_Name: GameRules
   m_EditorClassIdentifier: Assembly-CSharp::GameRules
+  quarterDuration: 30
   startingMoney: 500
   startingFans: 50
   recordCost: 100

@@ -1,80 +1,63 @@
-using UnityEngine;
+﻿using UnityEngine;
 using Sirenix.OdinInspector;
 
 /// <summary>
-/// ScriptableObject that defines an event - story moments, choices, consequences
-/// Events can have multiple conditions - ALL must be met for event to trigger
+/// ScriptableObject that defines a single story event
+/// Create instances via: Assets > Create > Band Manager > Event Data
 /// </summary>
 [CreateAssetMenu(fileName = "NewEvent", menuName = "Band Manager/Event Data")]
 public class EventData : ScriptableObject
 {
-    [Header("Trigger Conditions - ALL must be true")]
-    [InfoBox("Event will trigger when ALL enabled conditions are met. Disable checkboxes for conditions you don't need.")]
-
-    [FoldoutGroup("Time Condition")]
-    [ToggleLeft]
-    [Tooltip("Enable to require specific year and quarter")]
-    public bool requireYearQuarter = false;
-
-    [FoldoutGroup("Time Condition")]
-    [ShowIf("requireYearQuarter")]
-    [Range(1, 20)]
-    [Tooltip("Year when event should trigger (1-20)")]
-    public int triggerYear = 1;
-
-    [FoldoutGroup("Time Condition")]
-    [ShowIf("requireYearQuarter")]
-    [Range(1, 4)]
-    [Tooltip("Quarter when event should trigger (1=Q1, 2=Q2, 3=Q3, 4=Q4)")]
-    public int triggerQuarter = 1;
-
-    [FoldoutGroup("Flag Condition")]
-    [ToggleLeft]
-    [Tooltip("Enable to require a story flag")]
-    public bool requireFlag = false;
-
-    [FoldoutGroup("Flag Condition")]
-    [ShowIf("requireFlag")]
-    [Tooltip("Story flag that must be set for this event to trigger")]
-    public string requiredFlag;
-
-    [FoldoutGroup("Random Chance")]
-    [Range(0f, 100f)]
-    [Tooltip("Chance this event triggers when conditions are met (100% = always, 0% = never)")]
-    public float randomChance = 100f;
-
-    [FoldoutGroup("Stat Condition")]
-    [ToggleLeft]
-    [Tooltip("Enable to require specific stat values")]
-    public bool requireStat = false;
-
-    [FoldoutGroup("Stat Condition")]
-    [ShowIf("requireStat")]
-    [EnumToggleButtons]
-    public StatToCheck statToCheck;
-
-    [FoldoutGroup("Stat Condition")]
-    [ShowIf("requireStat")]
-    [EnumToggleButtons]
-    public ComparisonType comparison;
-
-    [FoldoutGroup("Stat Condition")]
-    [ShowIf("requireStat")]
-    [Tooltip("Value to compare against")]
-    public int statValue;
-
-    [Header("Event Content")]
-    [Title("Visual & Text", bold: false)]
+    [Header("Event Info")]
+    [TextArea(2, 4)]
     public string eventTitle;
 
-    [TextArea(3, 6)]
+    [TextArea(4, 10)]
     public string eventDescription;
 
-    [PreviewField(80, ObjectFieldAlignment.Left)]
+    [Header("Optional Visual")]
+    [Tooltip("Optional sprite/illustration for this event (shows in EventPanel)")]
     public Sprite eventSprite;
 
-    [Header("Audio (Optional)")]
-    [Tooltip("Custom music to play during this event. Leave empty to keep current music.")]
+    [Header("Trigger Conditions")]
+    [Tooltip("Enable to require specific year/quarter")]
+    public bool requireYearQuarter = false;
+
+    [ShowIf("requireYearQuarter")]
+    [Range(1, 10)]
+    public int triggerYear = 1;
+
+    [ShowIf("requireYearQuarter")]
+    [Range(1, 4)]
+    public int triggerQuarter = 1;
+
+    [Space(10)]
+    [Tooltip("Enable to require a specific story flag")]
+    public bool requireFlag = false;
+
+    [ShowIf("requireFlag")]
+    public string requiredFlag;
+
+    [Space(10)]
+    [Tooltip("Enable to require a stat threshold (e.g. Fans > 100)")]
+    public bool requireStat = false;
+
+    [ShowIf("requireStat")]
+    public StatToCheck statToCheck;
+
+    [ShowIf("requireStat")]
+    public ComparisonType comparison;
+
+    [ShowIf("requireStat")]
+    public int statValue;
+
+    [Space(10)]
+    [Range(0f, 100f)]
+    [Tooltip("Random chance this event triggers (0-100%). Even if all conditions met, this is checked.")]
+    public float randomChance = 100f;
+
+    [Header("Audio")]
+    [Tooltip("Music to play during this event. Leave empty to keep current music.")]
     public AudioClip eventMusic;
 
     [Tooltip("SFX to play when event pops up. Leave empty for default popup sound.")]
@@ -86,16 +69,23 @@ public class EventData : ScriptableObject
 }
 
 /// <summary>
-/// Which stat to check for stat-based triggers
+/// ✅ UPDATED: Which stat to check for stat-based triggers
+/// Replaced old 3-stat system with new 8-stat system
 /// </summary>
 public enum StatToCheck
 {
     Money,
     Fans,
-    Technical,
-    Performance,
-    Charisma,
-    Unity
+    // ✅ NEW 8-STAT SYSTEM:
+    Charisma,        // Social, look, fan appeal
+    StagePerformance, // Live show entertainment
+    Vocal,           // Singing ability
+    Instrument,      // Playing instrument
+    Songwriting,     // Creating music
+    Production,      // Studio/technical skills
+    Management,      // Business/organization
+    Practical,       // General utility/getting stuff done
+    Unity            // Band cohesion (kept from old system)
 }
 
 /// <summary>

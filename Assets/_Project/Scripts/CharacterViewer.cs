@@ -2,29 +2,49 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
+/// <summary>
+/// Displays a character's info in the Band Setup scene
+/// Shows portrait, name, all 8 stats, and trait
+/// </summary>
 public class CharacterViewer : MonoBehaviour
 {
     [Header("UI Elements")]
     public Image portraitImage;
     public TextMeshProUGUI nameText;
-    public TextMeshProUGUI technicalText;      // Why: Just the number
-    public TextMeshProUGUI performanceText;    // Why: Just the number
-    public TextMeshProUGUI charismaText;       // Why: Just the number
+
+    [Header("NEW 8-Stat System")]
+    public TextMeshProUGUI charismaText;         // Social, look, fan appeal
+    public TextMeshProUGUI stagePerformanceText; // Live show entertainment
+    public TextMeshProUGUI vocalText;            // Singing ability
+    public TextMeshProUGUI instrumentText;       // Playing instrument
+    public TextMeshProUGUI songwritingText;      // Creating music
+    public TextMeshProUGUI productionText;       // Studio/technical skills
+    public TextMeshProUGUI managementText;       // Business/organization
+    public TextMeshProUGUI practicalText;        // General utility
+
     public TextMeshProUGUI traitText;
 
     [Header("Hired Stamp")]
-    public Image hiredStampImage;              // Why: Shows when character is already in band
+    public Image hiredStampImage;                // Why: Shows when character is already in band
 
+    /// <summary>
+    /// Display all character info - called when browsing characters
+    /// </summary>
     public void DisplayCharacter(SlotData character, bool isAlreadyInBand)
     {
-        // Why: Show all of this character's info
+        // Why: Show portrait and name
         portraitImage.sprite = character.sprite;
         nameText.text = character.displayName;
 
-        // Why: Display stat values only (labels are separate UI elements)
-        technicalText.text = character.technical.ToString();
-        performanceText.text = character.performance.ToString();
+        // Why: Display all 8 stat values (labels are separate UI elements)
         charismaText.text = character.charisma.ToString();
+        stagePerformanceText.text = character.stagePerformance.ToString();
+        vocalText.text = character.vocal.ToString();
+        instrumentText.text = character.instrument.ToString();
+        songwritingText.text = character.songwriting.ToString();
+        productionText.text = character.production.ToString();
+        managementText.text = character.management.ToString();
+        practicalText.text = character.practical.ToString();
 
         traitText.text = character.trait;
 

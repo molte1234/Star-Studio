@@ -1,17 +1,28 @@
-using UnityEngine;
+﻿using UnityEngine;
 
+/// <summary>
+/// ✅ UPDATED: Data for a single choice in an event
+/// Replaced old 3-stat system with new 8-stat system
+/// </summary>
 [System.Serializable]
 public class ChoiceData
 {
     public string choiceText;
 
-    [Header("Effects")]
+    [Header("Resource Effects")]
     public int moneyChange;
     public int fansChange;
     public int unityChange;
-    public int technicalChange;
-    public int performanceChange;
+
+    [Header("Stat Effects - NEW 8-Stat System")]
     public int charismaChange;
+    public int stagePerformanceChange;
+    public int vocalChange;
+    public int instrumentChange;
+    public int songwritingChange;
+    public int productionChange;
+    public int managementChange;
+    public int practicalChange;
 
     [Header("Story Flags")]
     public string[] flagsToAdd;

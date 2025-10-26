@@ -801,23 +801,21 @@ MonoBehaviour:
   isNewGame: 0
   testingMode: 0
   bandName: 
-  slots:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
   currentQuarter: 0
   currentYear: 1
   money: 500
   fans: 50
-  technical: 0
-  performance: 0
   charisma: 0
+  stagePerformance: 0
+  vocal: 0
+  instrument: 0
+  songwriting: 0
+  production: 0
+  management: 0
+  practical: 0
   unity: 100
   flags: []
-  rules: {fileID: 11400000, guid: f40ff41cb63d506498fc9b06f6f956cf, type: 2}
+  rules: {fileID: 11400000, guid: 561b47b11cf003f4e88fe2a63f0c97e5, type: 2}
   eventManager: {fileID: 0}
   uiController: {fileID: 0}
   audioManager: {fileID: 5676846021186701307}

@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b47e55145e30a141b2d1f8a9d3448dc, type: 3}
+  m_Name: Luna
+  m_EditorClassIdentifier: Assembly-CSharp::SlotData
+  displayName: Luna
+  realName: 
+  sprite: {fileID: 21300000, guid: cdd47aa9fed8d9e4ebbe89fb17052e4f, type: 3}
+  slotType: 0
+  charisma: 2
+  stagePerformance: 0
+  vocal: 2
+  instrument: 1
+  songwriting: 1
+  production: 1
+  management: 1
+  practical: 1
+  morale: 5
+  trait: 
+  upkeepCost: 0
+  hireCost: 0
+  description: 

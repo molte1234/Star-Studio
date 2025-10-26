@@ -68,16 +68,24 @@ public class UIController_GameOver : MonoBehaviour
         gm.money = 500;
         gm.fans = 50;
 
-        // Reset stats
-        gm.technical = 0;
-        gm.performance = 0;
+        // ✅ UPDATED: Reset NEW 8-stat system
         gm.charisma = 0;
+        gm.stagePerformance = 0;
+        gm.vocal = 0;
+        gm.instrument = 0;
+        gm.songwriting = 0;
+        gm.production = 0;
+        gm.management = 0;
+        gm.practical = 0;
         gm.unity = 100;
 
-        // Clear band slots
-        for (int i = 0; i < gm.slots.Length; i++)
+        // ✅ FIXED: Clear characterStates (not slots)
+        if (gm.characterStates != null)
         {
-            gm.slots[i] = null;
+            for (int i = 0; i < gm.characterStates.Length; i++)
+            {
+                gm.characterStates[i] = null;
+            }
         }
 
         // Clear flags
