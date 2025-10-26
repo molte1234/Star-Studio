@@ -21,6 +21,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip menuMusic;
     public AudioClip setupMusic;
     public AudioClip[] gamePlaylist; // Multiple tracks for game scene
+    public AudioClip gameOverMusic; // NEW: Music for GameOver scene
 
     [Header("UI Sound Effects")]
     public AudioClip buttonClick;
@@ -80,6 +81,10 @@ public class AudioManager : MonoBehaviour
         else if (sceneName == "Game" && gamePlaylist != null && gamePlaylist.Length > 0)
         {
             PlayPlaylist(gamePlaylist);
+        }
+        else if (sceneName == "GameOver" && gameOverMusic != null)
+        {
+            PlayMusic(gameOverMusic);
         }
     }
 

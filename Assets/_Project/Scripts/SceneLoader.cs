@@ -42,6 +42,7 @@ public class SceneLoader : MonoBehaviour
         DeactivateScene("MainMenu");
         DeactivateScene("Setup");
         DeactivateScene("Game");
+        DeactivateScene("GameOver");
     }
 
     private void ActivateScene(string sceneName)
@@ -78,4 +79,5 @@ public class SceneLoader : MonoBehaviour
     public void LoadMainMenu() => LoadScene("MainMenu");
     public void LoadSetup() => LoadScene("Setup");
     public void LoadGame() => LoadScene("Game");
+    public void LoadGameOver() => LoadScene("GameOver");
 }

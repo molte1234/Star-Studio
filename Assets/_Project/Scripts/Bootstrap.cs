@@ -8,6 +8,7 @@ public class Bootstrap : MonoBehaviour
     public string mainMenuScene = "MainMenu";
     public string setupScene = "Setup";
     public string gameScene = "Game";
+    public string gameOverScene = "GameOver";
 
     private string activeSceneName;
 
@@ -47,6 +48,11 @@ public class Bootstrap : MonoBehaviour
                 Debug.Log("🔧 Editor Mode: MainMenu scene detected as active");
                 return mainMenuScene;
             }
+            if (scene.name == gameOverScene)
+            {
+                Debug.Log("🔧 Editor Mode: GameOver scene detected as active");
+                return gameOverScene;
+            }
         }
 
         // Why: Default to MainMenu if none detected
@@ -60,6 +66,7 @@ public class Bootstrap : MonoBehaviour
         yield return LoadSceneIfMissing(mainMenuScene);
         yield return LoadSceneIfMissing(setupScene);
         yield return LoadSceneIfMissing(gameScene);
+        yield return LoadSceneIfMissing(gameOverScene);
 
         // Why: Now deactivate all scenes except the active one
         DeactivateInactiveScenes();
@@ -70,7 +77,7 @@ public class Bootstrap : MonoBehaviour
             AudioManager.Instance.OnSceneActivated(activeSceneName);
         }
 
-        Debug.Log($"✅ Bootstrap: Setup complete! '{activeSceneName}' is visible");
+        Debug.Log($"✅ Bootstrap: Setup complete! Scene '{activeSceneName}' is visible");
     }
 
     private IEnumerator LoadSceneIfMissing(string sceneName)
@@ -109,6 +116,10 @@ public class Bootstrap : MonoBehaviour
         if (gameScene != activeSceneName)
         {
             DeactivateScene(gameScene);
+        }
+        if (gameOverScene != activeSceneName)
+        {
+            DeactivateScene(gameOverScene);
         }
     }
 

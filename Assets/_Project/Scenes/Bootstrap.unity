@@ -274,6 +274,7 @@ MonoBehaviour:
   mainMenuScene: MainMenu
   setupScene: Setup
   gameScene: Game
+  gameOverScene: GameOver
 --- !u!4 &1492549415
 Transform:
   m_ObjectHideFlags: 0
@@ -638,6 +639,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 95116daf21934a04fb183a43145c5f6b, type: 3}
   - {fileID: 8300000, guid: f207c6a03e5e08a4e95097fbf77198e2, type: 3}
   - {fileID: 8300000, guid: ac4579acfd185e6479aea8def66a250f, type: 3}
+  gameOverMusic: {fileID: 8300000, guid: bc2046f1942a7e84683c2721a05963cc, type: 3}
   buttonClick: {fileID: 8300000, guid: 4d262f8394320314fa535cf5ea3caff8, type: 3}
   buttonHover: {fileID: 8300000, guid: 7cb71641b6ad9f94c8c202b67139055d, type: 3}
   characterSelect: {fileID: 8300000, guid: c454f0066ef17b94daa5753983170042, type: 3}
@@ -672,7 +674,7 @@ Transform:
   m_GameObject: {fileID: 6155124735101106135}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 740.5238, y: 495.99155, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -690,8 +692,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7dd00797ad8421d40af5b853e8be62de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
-  isNewGame: 1
-  testingMode: 1
+  isNewGame: 0
+  testingMode: 0
   bandName: 
   slots:
   - {fileID: 0}

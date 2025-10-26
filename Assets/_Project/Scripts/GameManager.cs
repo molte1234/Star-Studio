@@ -402,8 +402,19 @@ public class GameManager : MonoBehaviour
     private void EndGame()
     {
         Debug.Log("🎉 GAME OVER - 10 years complete!");
-        // TODO: Load end scene with results
+
+        // Why: Load the GameOver scene
+        if (SceneLoader.Instance != null)
+        {
+            SceneLoader.Instance.LoadGameOver();
+        }
+        else
+        {
+            Debug.LogError("❌ SceneLoader.Instance is null - cannot load GameOver scene!");
+        }
     }
+
+
 }
 
 // Why: Enum for the 5 action types

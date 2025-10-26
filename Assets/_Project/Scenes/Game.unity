@@ -1585,7 +1585,6 @@ MonoBehaviour:
   welcomeScreenEvent: {fileID: 11400000, guid: b3fc66e675aa7674aa4f94a789a9db40, type: 2}
   allEvents:
   - {fileID: 11400000, guid: 1d224d5399a23cb43aa0efacb35939e8, type: 2}
-  uiController: {fileID: 1236340057}
   eventPanel: {fileID: 2115616643}
 --- !u!4 &475990453
 Transform:
@@ -4123,6 +4122,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d447feeaa4c9f674b84df3e2b2f7132f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIController_Game
+  bandNameText: {fileID: 1335861737}
   moneyText: {fileID: 809884376}
   fansText: {fileID: 31587328}
   yearText: {fileID: 1634718388}
@@ -4138,10 +4138,6 @@ MonoBehaviour:
   - {fileID: 755571332}
   - {fileID: 1002836879}
   - {fileID: 401070782}
-  eventPopupPanel: {fileID: 2115616639}
-  eventTitleText: {fileID: 926108646}
-  eventDescriptionText: {fileID: 0}
-  eventChoiceButtons: []
 --- !u!4 &1236340058
 Transform:
   m_ObjectHideFlags: 0
