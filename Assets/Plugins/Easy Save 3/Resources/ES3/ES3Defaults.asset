@@ -39,6 +39,7 @@ MonoBehaviour:
     - Assembly-CSharp-firstpass
     - CFXRDemo
     - CFXRRuntime
+    - Coffee.UIParticle
     - KinoBloom.Runtime
     - Lofelt.NiceVibrations
     - Lofelt.NiceVibrations.Demo
