@@ -1,7 +1,11 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
+/// <summary>
+/// Manages the Band Setup scene
+/// Handles character browsing, selection, and money transactions
+/// </summary>
 public class BandSetupManager : MonoBehaviour
 {
     [Header("Character Pool")]
@@ -33,14 +37,22 @@ public class BandSetupManager : MonoBehaviour
         startGameButton.interactable = false;
     }
 
-    // Why: Called by UIController_Setup when NEXT button clicked
+    // ============================================
+    // CHARACTER BROWSING
+    // ============================================
+
+    /// <summary>
+    /// Called by UIController_Setup when NEXT button clicked
+    /// </summary>
     public void ShowNextCharacter()
     {
         currentCharacterIndex = (currentCharacterIndex + 1) % availableCharacters.Length;
         ShowCurrentCharacter();
     }
 
-    // Why: Called by UIController_Setup when PREV button clicked
+    /// <summary>
+    /// Called by UIController_Setup when PREV button clicked
+    /// </summary>
     public void ShowPreviousCharacter()
     {
         currentCharacterIndex--;
@@ -60,27 +72,55 @@ public class BandSetupManager : MonoBehaviour
         // Why: Pass both character data and "already hired" status
         characterViewer.DisplayCharacter(character, alreadyInBand);
 
-        // Why: Disable add button if already in band or all visible slots are full
+        // Why: Disable add button if already in band, all visible slots are full, OR not enough money
         bool bandIsFull = (nextEmptySlot >= maxSlots);
-        addToBandButton.interactable = !alreadyInBand && !bandIsFull;
+        bool canAfford = (GameManager.Instance.money >= character.hireCost);
+        addToBandButton.interactable = !alreadyInBand && !bandIsFull && canAfford;
     }
 
-    // Why: Called by UIController_Setup when ADD button clicked
+    // ============================================
+    // ADD CHARACTER (WITH MONEY TRANSACTION)
+    // ============================================
+
+    /// <summary>
+    /// Called by UIController_Setup when ADD button clicked
+    /// Deducts hire cost from player's money
+    /// </summary>
     public void AddCurrentCharacterToBand()
     {
-        // Why: Add the character/item to the next empty band slot
+        // Why: Safety checks
         if (nextEmptySlot >= maxSlots) return; // All visible slots are full
 
         SlotData character = availableCharacters[currentCharacterIndex];
         if (IsCharacterInBand(character)) return; // Already added
 
+        // Why: Check if player can afford this character
+        if (GameManager.Instance.money < character.hireCost)
+        {
+            Debug.LogWarning($"❌ Cannot hire {character.displayName} - Not enough money! (Need ${character.hireCost}, have ${GameManager.Instance.money})");
+
+            // Why: Play error sound (using button hover as negative feedback)
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayButtonHover();
+            }
+
+            return;
+        }
+
+        // Why: DEDUCT HIRE COST FROM PLAYER'S MONEY
+        GameManager.Instance.money -= character.hireCost;
+        Debug.Log($"💰 Hired {character.displayName} for ${character.hireCost} (Remaining: ${GameManager.Instance.money})");
+
+        // Why: Add character to band
         selectedBand[nextEmptySlot] = character;
         bandSlotDisplays[nextEmptySlot].DisplayCharacter(character);
         nextEmptySlot++;
 
-        // Why: Play character select sound effect
+        // Why: Play money OUT sound + character select sound
         if (AudioManager.Instance != null)
         {
+            AudioManager.Instance.PlayMoneyOut();
             AudioManager.Instance.PlayCharacterSelect();
         }
 
@@ -90,10 +130,18 @@ public class BandSetupManager : MonoBehaviour
             startGameButton.interactable = true;
         }
 
-        ShowCurrentCharacter(); // Update button states and hired stamp
+        // Why: Update viewer (hired stamp + button states)
+        ShowCurrentCharacter();
     }
 
-    // Why: Called by BandSlotDisplay when X button clicked
+    // ============================================
+    // REMOVE CHARACTER (WITH REFUND)
+    // ============================================
+
+    /// <summary>
+    /// Called by BandSlotDisplay when X button clicked
+    /// Refunds the hire cost back to player
+    /// </summary>
     public void RemoveCharacterFromBand(SlotData characterToRemove)
     {
         // Why: Find which slot this character/item is in
@@ -109,6 +157,16 @@ public class BandSetupManager : MonoBehaviour
 
         // Why: If not found, do nothing
         if (foundIndex == -1) return;
+
+        // Why: REFUND HIRE COST TO PLAYER'S MONEY
+        GameManager.Instance.money += characterToRemove.hireCost;
+        Debug.Log($"💰 Removed {characterToRemove.displayName}, refunded ${characterToRemove.hireCost} (Total: ${GameManager.Instance.money})");
+
+        // Why: Play money IN sound
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayMoneyIn();
+        }
 
         // Why: Shift all characters after this one to the left
         for (int i = foundIndex; i < nextEmptySlot - 1; i++)
@@ -156,7 +214,13 @@ public class BandSetupManager : MonoBehaviour
         return false;
     }
 
-    // Why: Called by UIController_Setup when START button clicked
+    // ============================================
+    // START GAME
+    // ============================================
+
+    /// <summary>
+    /// Called by UIController_Setup when START button clicked
+    /// </summary>
     public void StartGame()
     {
         // Why: Play game start sound effect (using band complete sound for now)

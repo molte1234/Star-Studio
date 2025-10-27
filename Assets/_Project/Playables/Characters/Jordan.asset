@@ -13,19 +13,20 @@ MonoBehaviour:
   m_Name: Jordan
   m_EditorClassIdentifier: Assembly-CSharp::SlotData
   displayName: Jordan
-  realName: 
+  realName: Jordan Hale
   sprite: {fileID: 21300000, guid: f5ef11fc409a9074a85a84784801d740, type: 3}
   slotType: 0
-  charisma: 2
-  stagePerformance: 0
-  vocal: 2
-  instrument: 1
+  charisma: 6
+  stagePerformance: 1
+  vocal: 1
+  instrument: 0
   songwriting: 1
-  production: 1
-  management: 1
-  practical: 1
-  morale: 5
+  production: 4
+  management: 8
+  practical: 2
+  morale: 7
   trait: 
-  upkeepCost: 0
-  hireCost: 0
-  description: 
+  upkeepCost: 75
+  hireCost: 150
+  description: Former banker who swapped balance sheets for beats. Brings ruthless
+    efficiency and suspiciously good negotiation skills to any label.

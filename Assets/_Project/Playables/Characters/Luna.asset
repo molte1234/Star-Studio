@@ -13,19 +13,21 @@ MonoBehaviour:
   m_Name: Luna
   m_EditorClassIdentifier: Assembly-CSharp::SlotData
   displayName: Luna
-  realName: 
+  realName: Luna Vale
   sprite: {fileID: 21300000, guid: cdd47aa9fed8d9e4ebbe89fb17052e4f, type: 3}
   slotType: 0
-  charisma: 2
-  stagePerformance: 0
-  vocal: 2
-  instrument: 1
-  songwriting: 1
+  charisma: 6
+  stagePerformance: 8
+  vocal: 4
+  instrument: 2
+  songwriting: 2
   production: 1
-  management: 1
+  management: 2
   practical: 1
-  morale: 5
+  morale: 7
   trait: 
-  upkeepCost: 0
-  hireCost: 0
-  description: 
+  upkeepCost: 50
+  hireCost: 100
+  description: Blue-haired songwriter in her mid-20s, wrapped in a worn leather jacket
+    and endless midnight energy. Her melodies shimmer between heartbreak and rebellion,
+    always one chorus away from stardom.

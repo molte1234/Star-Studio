@@ -23,11 +23,14 @@ public class AudioManager : MonoBehaviour
     public AudioClip[] gamePlaylist; // Multiple tracks for game scene
     public AudioClip gameOverMusic; // NEW: Music for GameOver scene
 
+    // ADD TO [Header("UI Sound Effects")] SECTION:
     [Header("UI Sound Effects")]
     public AudioClip buttonClick;
     public AudioClip buttonHover;
     public AudioClip characterSelect;
     public AudioClip bandComplete;
+    public AudioClip moneyInClip;   // NEW: Money received sound (ka-ching!)
+    public AudioClip moneyOutClip;  // NEW: Money spent sound (register beep)
 
     [Header("Time System Sounds")]
     public AudioClip quarterAdvanceClip;
@@ -366,6 +369,10 @@ public class AudioManager : MonoBehaviour
     public void PlayButtonHover() => PlaySFX(buttonHover);
     public void PlayCharacterSelect() => PlaySFX(characterSelect);
     public void PlayBandComplete() => PlaySFX(bandComplete);
+
+    // NEW: Money transaction sounds
+    public void PlayMoneyIn() => PlaySFX(moneyInClip);   // Ka-ching! Receiving money
+    public void PlayMoneyOut() => PlaySFX(moneyOutClip); // Register beep, spending money
 
     // ============================================
     // TIME SYSTEM SOUNDS

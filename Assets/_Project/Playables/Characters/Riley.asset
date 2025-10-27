@@ -13,19 +13,21 @@ MonoBehaviour:
   m_Name: Riley
   m_EditorClassIdentifier: Assembly-CSharp::SlotData
   displayName: Riley
-  realName: 
+  realName: Riley Mae
   sprite: {fileID: 21300000, guid: 557785791830e0947a9f519d149b895b, type: 3}
   slotType: 0
-  charisma: 2
-  stagePerformance: 0
-  vocal: 2
-  instrument: 1
-  songwriting: 1
+  charisma: 4
+  stagePerformance: 1
+  vocal: 8
+  instrument: 5
+  songwriting: 5
   production: 1
-  management: 1
-  practical: 1
-  morale: 5
+  management: 0
+  practical: 2
+  morale: 4
   trait: 
-  upkeepCost: 0
-  hireCost: 0
-  description: 
+  upkeepCost: 50
+  hireCost: 25
+  description: Former drug addict turned country firebrand, wrapped in denim and
+    second chances. Her rough-edged voice tells every scar like a story, and every
+    chorus feels like survival set to steel guitar.

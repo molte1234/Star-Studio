@@ -409,7 +409,7 @@ AudioSource:
   Priority: 128
   DopplerLevel: 1
   MinDistance: 1
-  MaxDistance: 500
+  MaxDistance: 500.00003
   Pan2D: 0
   rolloffMode: 0
   BypassEffects: 0
@@ -649,6 +649,8 @@ MonoBehaviour:
   buttonHover: {fileID: 8300000, guid: 7cb71641b6ad9f94c8c202b67139055d, type: 3}
   characterSelect: {fileID: 8300000, guid: c454f0066ef17b94daa5753983170042, type: 3}
   bandComplete: {fileID: 8300000, guid: ecf9a9deb9896374dad7f408c1dbd172, type: 3}
+  moneyInClip: {fileID: 8300000, guid: 34a7953d78a071645a93ad132c45fff4, type: 3}
+  moneyOutClip: {fileID: 8300000, guid: 82e9cf7c483229444b4dd079dc08ca83, type: 3}
   quarterAdvanceClip: {fileID: 8300000, guid: 67e0352dd619daa449a6f8e942db4040, type: 3}
   yearAdvanceClip: {fileID: 8300000, guid: d0076e3e6edbfe840a35f1e66d1237e4, type: 3}
   pauseClip: {fileID: 8300000, guid: 43d12af3b7369004994864638516ff11, type: 3}
@@ -679,7 +681,7 @@ AudioSource:
   Priority: 128
   DopplerLevel: 1
   MinDistance: 1
-  MaxDistance: 500
+  MaxDistance: 413.48547
   Pan2D: 0
   rolloffMode: 0
   BypassEffects: 0
