@@ -1,10 +1,5 @@
 ﻿using UnityEngine;
 
-/// <summary>
-/// ScriptableObject template for characters and items
-/// This is the BASE DATA - it never changes during gameplay
-/// Runtime state (busy, current action) is stored in CharacterSlotState wrapper
-/// </summary>
 [CreateAssetMenu(fileName = "NewSlot", menuName = "Band Manager/Slot Data")]
 public class SlotData : ScriptableObject
 {
@@ -12,13 +7,13 @@ public class SlotData : ScriptableObject
     [Tooltip("Stage name / Artist name / Item name (what players see in game)")]
     public string displayName;
 
-    [Tooltip("Real name (for future use - not currently used in game, just a safeguard for later features)")]
+    [Tooltip("Real name (for future use)")]
     public string realName;
 
     public Sprite sprite;
     public SlotType slotType;
 
-    [Header("Core Stats - NEW 8-STAT SYSTEM")]
+    [Header("Core Stats")]
     [Range(0, 10)]
     [Tooltip("Social skills, looks, fan appeal")]
     public int charisma = 0;
@@ -60,23 +55,20 @@ public class SlotData : ScriptableObject
     public string trait;
 
     [Header("Costs")]
-    [Tooltip("Upkeep cost per quarter - paid automatically each quarter (like salary for people, maintenance for items)")]
+    [Tooltip("Upkeep cost per quarter - paid automatically each quarter")]
     public int upkeepCost = 0;
 
-    [Tooltip("One-time hire/purchase cost - paid when adding to band (0 for starting band members)")]
+    [Tooltip("One-time hire/purchase cost")]
     public int hireCost = 0;
 
-    [Header("Optional Description")]
+    [Header("Description")]
     [TextArea(3, 6)]
-    [Tooltip("Backstory or flavor text (optional, shown in character viewer)")]
+    [Tooltip("Character biography or item description")]
     public string description;
 }
 
-/// <summary>
-/// Simplified slot types - just Person and Item
-/// </summary>
 public enum SlotType
 {
-    Person,      // People: band members, managers, producers, etc. (any human)
-    Item         // Items: equipment, instruments, vehicles, studio gear, etc.
-}   
+    Person,
+    Item
+}
