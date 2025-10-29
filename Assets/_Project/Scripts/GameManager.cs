@@ -1,14 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-/// <summary>
-/// Singleton GameManager - holds all game state and processes player actions
-/// This is the brain of the game
-/// NOTE: Quarter advancement is now handled by TimeManager (continuous time)
-/// </summary>
 public class GameManager : MonoBehaviour
 {
-    // Singleton pattern - only one GameManager exists
     public static GameManager Instance;
 
     [Header("Game State")]
@@ -22,59 +16,68 @@ public class GameManager : MonoBehaviour
     public string bandName;
 
     /// <summary>
-    /// UPDATED: Runtime state wrappers for each slot (wraps SlotData + runtime info)
-    /// Changed from SlotData[] slots to CharacterSlotState[]
+    /// Runtime state wrappers for each slot (wraps SlotData + runtime info)
+    /// NOTE: This won't show in Inspector because it's a custom class
+    /// Use the debug buttons below to see band members
     /// </summary>
     public CharacterSlotState[] characterStates = new CharacterSlotState[6];
 
+    [Header("🔍 DEBUG: Current Band Members (Read-Only Display)")]
+    [Tooltip("These are automatically updated - just for viewing in Inspector")]
+    [SerializeField] private string slot0_Name = "EMPTY";
+    [SerializeField] private string slot1_Name = "EMPTY";
+    [SerializeField] private string slot2_Name = "EMPTY";
+    [SerializeField] private string slot3_Name = "EMPTY";
+    [SerializeField] private string slot4_Name = "EMPTY";
+    [SerializeField] private string slot5_Name = "EMPTY";
+
     [Header("Time")]
-    public int currentQuarter = 0; // 0-39 (40 quarters = 10 years)
-    public int currentYear = 1;     // 1-10
+    public int currentQuarter = 0;
+    public int currentYear = 1;
 
     [Header("Resources")]
     public int money = 500;
     public int fans = 50;
 
-    [Header("Band Stats - NEW 8-STAT SYSTEM")]
-    [Tooltip("Sum of all band members' charisma - Social, look, fan appeal")]
+    [Header("Band Stats - Total from All Members")]
+    [Tooltip("Sum of all band members' charisma")]
     public int charisma = 0;
 
-    [Tooltip("Sum of all band members' stage performance - Live show entertainment")]
+    [Tooltip("Sum of all band members' stage performance")]
     public int stagePerformance = 0;
 
-    [Tooltip("Sum of all band members' vocal - Singing ability")]
+    [Tooltip("Sum of all band members' vocal")]
     public int vocal = 0;
 
-    [Tooltip("Sum of all band members' instrument - Playing instrument")]
+    [Tooltip("Sum of all band members' instrument")]
     public int instrument = 0;
 
-    [Tooltip("Sum of all band members' songwriting - Creating music")]
+    [Tooltip("Sum of all band members' songwriting")]
     public int songwriting = 0;
 
-    [Tooltip("Sum of all band members' production - Studio/technical skills")]
+    [Tooltip("Sum of all band members' production")]
     public int production = 0;
 
-    [Tooltip("Sum of all band members' management - Business/organization")]
+    [Tooltip("Sum of all band members' management")]
     public int management = 0;
 
-    [Tooltip("Sum of all band members' practical - General utility")]
+    [Tooltip("Sum of all band members' practical")]
     public int practical = 0;
 
     [Tooltip("Band cohesion (0-100)")]
     public int unity = 100;
 
     [Header("Story Flags")]
-    public List<string> flags = new List<string>(); // Track story progression
+    public List<string> flags = new List<string>();
 
     [Header("References")]
-    public GameRules rules; // ScriptableObject with all the balance numbers
+    public GameRules rules;
     public EventManager eventManager;
-    public UIController_Game uiController; // Reference to game screen UI
+    public UIController_Game uiController;
     public AudioManager audioManager;
 
     void Awake()
     {
-        // Why: Singleton setup - GameManager lives in Bootstrap scene
         if (Instance == null)
         {
             Instance = this;
@@ -85,16 +88,135 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    void Update()
+    {
+        // Why: Update the debug display every frame so you can see band members in Inspector
+        UpdateDebugDisplay();
+    }
+
     /// <summary>
-    /// Called from BandSetupScene when player finishes selecting their band
-    /// UPDATED: Now creates CharacterSlotState wrappers
+    /// Updates the read-only debug fields in Inspector
     /// </summary>
+    private void UpdateDebugDisplay()
+    {
+        slot0_Name = GetSlotDebugName(0);
+        slot1_Name = GetSlotDebugName(1);
+        slot2_Name = GetSlotDebugName(2);
+        slot3_Name = GetSlotDebugName(3);
+        slot4_Name = GetSlotDebugName(4);
+        slot5_Name = GetSlotDebugName(5);
+    }
+
+    private string GetSlotDebugName(int index)
+    {
+        if (characterStates[index] != null && characterStates[index].slotData != null)
+        {
+            string busyStatus = characterStates[index].isBusy ? " [BUSY]" : "";
+            return $"{characterStates[index].slotData.displayName}{busyStatus}";
+        }
+        return "EMPTY";
+    }
+
+    /// <summary>
+    /// DEBUG: Print all band members to console
+    /// </summary>
+    [ContextMenu("🔍 DEBUG: Show Band Members")]
+    public void DEBUG_ShowBandMembers()
+    {
+        Debug.Log("========================================");
+        Debug.Log($"🎸 BAND: {bandName}");
+        Debug.Log("========================================");
+
+        for (int i = 0; i < characterStates.Length; i++)
+        {
+            if (characterStates[i] != null && characterStates[i].slotData != null)
+            {
+                SlotData data = characterStates[i].slotData;
+                Debug.Log($"   Slot {i}: {data.displayName}");
+                Debug.Log($"      Stats - CHA:{data.charisma} STAGE:{data.stagePerformance} VOC:{data.vocal} INST:{data.instrument}");
+                Debug.Log($"              SONG:{data.songwriting} PROD:{data.production} MGT:{data.management} PRAC:{data.practical}");
+            }
+            else
+            {
+                Debug.Log($"   Slot {i}: EMPTY");
+            }
+        }
+
+        Debug.Log("========================================");
+        Debug.Log($"📊 TOTAL BAND STATS:");
+        Debug.Log($"   CHA:{charisma} STAGE:{stagePerformance} VOC:{vocal} INST:{instrument}");
+        Debug.Log($"   SONG:{songwriting} PROD:{production} MGT:{management} PRAC:{practical}");
+        Debug.Log("========================================");
+    }
+
+    /// <summary>
+    /// DEBUG: Manually force create test band (useful when Start() order is wrong)
+    /// </summary>
+    [ContextMenu("🔧 DEBUG: Force Create Test Band")]
+    public void DEBUG_ForceCreateTestBand()
+    {
+        Debug.Log("🔧 Manually triggering TestBandHelper...");
+
+        TestBandHelper testHelper = GetComponent<TestBandHelper>();
+        if (testHelper != null)
+        {
+            testHelper.CheckAndCreateTestBand();
+            RefreshUI();
+        }
+        else
+        {
+            Debug.LogError("❌ TestBandHelper component not found on GameManager!");
+        }
+    }
+
+    /// <summary>
+    /// Called by EventManager when it loads in Game scene
+    /// Since EventManager lives in a different scene, it can't be hardlinked
+    /// </summary>
+    public void RegisterEventManager(EventManager manager)
+    {
+        eventManager = manager;
+        Debug.Log("✅ EventManager registered with GameManager");
+
+        // Why: After EventManager registers, check if we should show welcome screen
+        CheckForWelcomeScreen();
+    }
+
+    /// <summary>
+    /// Called by UIController_Game when it loads in Game scene
+    /// Since UIController_Game lives in a different scene, it can't be hardlinked
+    /// </summary>
+    public void RegisterUIController(UIController_Game controller)
+    {
+        uiController = controller;
+        Debug.Log("✅ UIController_Game registered with GameManager");
+    }
+
+    /// <summary>
+    /// Check if we should show welcome screen (called after EventManager registers)
+    /// </summary>
+    private void CheckForWelcomeScreen()
+    {
+        if (isNewGame && eventManager != null)
+        {
+            Debug.Log("========================================");
+            Debug.Log("🎮 NEW GAME START - SHOWING WELCOME SCREEN");
+            Debug.Log($"   Current State: Year {currentYear}, Quarter {(currentQuarter % 4) + 1}");
+            Debug.Log("========================================");
+
+            eventManager.ShowWelcomeScreen();
+
+            if (!testingMode)
+            {
+                isNewGame = false;
+            }
+        }
+    }
+
     public void SetupNewGame(SlotData[] selectedBand, string bandName)
     {
-        // Why: Initialize game with selected band members
         this.bandName = bandName;
 
-        // UPDATED: Convert SlotData[] to CharacterSlotState[]
         for (int i = 0; i < selectedBand.Length; i++)
         {
             if (selectedBand[i] != null)
@@ -107,20 +229,24 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        // Calculate starting stats from band members
         RecalculateStats();
 
+        Debug.Log("========================================");
         Debug.Log($"🎸 New Game Setup Complete: {bandName}");
-        Debug.Log($"   Starting Year 1 Quarter 1");
+        Debug.Log($"   Starting Year {currentYear}, Quarter {currentQuarter + 1}");
+        Debug.Log($"   Band Members:");
+        for (int i = 0; i < characterStates.Length; i++)
+        {
+            if (characterStates[i] != null && characterStates[i].slotData != null)
+            {
+                Debug.Log($"      Slot {i}: {characterStates[i].slotData.displayName}");
+            }
+        }
+        Debug.Log("========================================");
     }
 
-    /// <summary>
-    /// Sums up all band member stats
-    /// UPDATED: Now calculates all 8 stats instead of 3
-    /// </summary>
     public void RecalculateStats()
     {
-        // Reset all stats
         charisma = 0;
         stagePerformance = 0;
         vocal = 0;
@@ -130,8 +256,7 @@ public class GameManager : MonoBehaviour
         management = 0;
         practical = 0;
 
-        // Sum stats from first 3 slots (band members)
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < characterStates.Length; i++)
         {
             if (characterStates[i] != null && characterStates[i].slotData != null)
             {
@@ -146,16 +271,40 @@ public class GameManager : MonoBehaviour
                 practical += data.practical;
             }
         }
+
+        Debug.Log($"📊 Band Stats: CHA:{charisma} STAGE:{stagePerformance} VOC:{vocal} INST:{instrument} SONG:{songwriting} PROD:{production} MGT:{management} PRAC:{practical}");
     }
 
-    /// <summary>
-    /// Main action processor - player chose one of 5 actions
-    /// NOTE: Actions NO LONGER advance quarters automatically!
-    /// Time advances continuously via TimeManager
-    /// </summary>
+    [ContextMenu("Force Check Events Now")]
+    public void DEBUG_ForceCheckEvents()
+    {
+        if (eventManager != null)
+        {
+            Debug.Log("🔧 DEBUG: Manual event check triggered");
+            eventManager.CheckForEvents();
+        }
+        else
+        {
+            Debug.LogError("❌ DEBUG: Cannot check events - EventManager is null!");
+        }
+    }
+
+    [ContextMenu("Show Welcome Screen")]
+    public void DEBUG_ShowWelcomeScreen()
+    {
+        if (eventManager != null)
+        {
+            Debug.Log("🔧 DEBUG: Manually showing welcome screen");
+            eventManager.ShowWelcomeScreen();
+        }
+        else
+        {
+            Debug.LogError("❌ DEBUG: Cannot show welcome screen - EventManager is null!");
+        }
+    }
+
     public void DoAction(ActionType action)
     {
-        // Process the action
         switch (action)
         {
             case ActionType.Record:
@@ -175,93 +324,17 @@ public class GameManager : MonoBehaviour
                 break;
         }
 
-        // Why: Update UI after action
-        // NOTE: We DON'T call AdvanceQuarter() anymore - TimeManager handles that!
         RefreshUI();
     }
 
-    /// <summary>
-    /// Called by EventManager when it first loads
-    /// Shows welcome screen if this is a new game
-    /// </summary>
-    public void OnGameSceneLoaded()
-    {
-        // Why: If this is a fresh game start, show welcome screen
-        if (isNewGame && eventManager != null)
-        {
-            Debug.Log("========================================");
-            Debug.Log("🎮 NEW GAME START - SHOWING WELCOME SCREEN");
-            Debug.Log($"   Current State: Year {currentYear}, Quarter {currentQuarter} (displays as Q{(currentQuarter % 4) + 1})");
-            Debug.Log("========================================");
-
-            eventManager.ShowWelcomeScreen();  // ✅ Show welcome screen (bypasses all conditions)
-
-            // Only auto-clear isNewGame if not in testing mode
-            if (!testingMode)
-            {
-                isNewGame = false; // Only show once
-            }
-        }
-        else if (!isNewGame)
-        {
-            Debug.Log("⚠️ OnGameSceneLoaded called but isNewGame is false - skipping welcome screen");
-        }
-        else if (eventManager == null)
-        {
-            Debug.LogError("❌ OnGameSceneLoaded called but eventManager is null!");
-        }
-    }
-
-    /// <summary>
-    /// DEBUG: Manually trigger event check - useful for testing
-    /// Call this from Inspector or console to force an event check
-    /// </summary>
-    [ContextMenu("Force Check Events Now")]
-    public void DEBUG_ForceCheckEvents()
-    {
-        if (eventManager != null)
-        {
-            Debug.Log("🔧 DEBUG: Manual event check triggered");
-            eventManager.CheckForEvents();
-        }
-        else
-        {
-            Debug.LogError("❌ DEBUG: Cannot check events - EventManager is null!");
-        }
-    }
-
-    /// <summary>
-    /// DEBUG: Manually show welcome screen - useful for testing
-    /// </summary>
-    [ContextMenu("Show Welcome Screen")]
-    public void DEBUG_ShowWelcomeScreen()
-    {
-        if (eventManager != null)
-        {
-            Debug.Log("🔧 DEBUG: Manually showing welcome screen");
-            eventManager.ShowWelcomeScreen();
-        }
-        else
-        {
-            Debug.LogError("❌ DEBUG: Cannot show welcome screen - EventManager is null!");
-        }
-    }
-
-    /// <summary>
-    /// Advances game time by one quarter
-    /// NOW CALLED BY TIMEMANAGER automatically every X seconds!
-    /// Checks for events, updates displays
-    /// </summary>
     public void AdvanceQuarter()
     {
         currentQuarter++;
 
-        // Every 4 quarters = 1 year
         if (currentQuarter % 4 == 0)
         {
             currentYear++;
 
-            // Why: Play year change sound (bigger, more dramatic)
             if (audioManager != null)
             {
                 audioManager.PlayYearAdvance();
@@ -271,7 +344,6 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            // Why: Play quarter change sound (lighter click)
             if (audioManager != null)
             {
                 audioManager.PlayQuarterAdvance();
@@ -280,14 +352,12 @@ public class GameManager : MonoBehaviour
             Debug.Log($"📅 QUARTER ADVANCED: Year {currentYear}, Quarter {(currentQuarter % 4) + 1}");
         }
 
-        // Check if game is over (40 quarters = 10 years)
         if (currentQuarter >= 40)
         {
             EndGame();
             return;
         }
 
-        // Check for events
         if (eventManager != null)
         {
             eventManager.CheckForEvents();
@@ -297,16 +367,11 @@ public class GameManager : MonoBehaviour
             Debug.LogWarning("⚠️ EventManager is null - cannot check for events!");
         }
 
-        // Why: Update UI to show new quarter/year
         RefreshUI();
     }
 
-    /// <summary>
-    /// Refreshes the UI - finds UIController_Game if needed
-    /// </summary>
     private void RefreshUI()
     {
-        // Find UIController_Game if reference is missing
         if (uiController == null)
         {
             uiController = FindObjectOfType<UIController_Game>();
@@ -322,23 +387,13 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Public method to force UI refresh from external scripts
-    /// </summary>
     public void ForceRefreshUI()
     {
         RefreshUI();
     }
 
-    // ============================================
-    // ACTION IMPLEMENTATIONS
-    // NOTE: These still use old stat names (charisma) which maps to the new charisma stat
-    // Will update these formulas later when designing proper action system
-    // ============================================
-
     private void DoRecord()
     {
-        // Why: Recording music costs money but builds fanbase
         int cost = 200;
 
         if (money < cost)
@@ -348,14 +403,13 @@ public class GameManager : MonoBehaviour
         }
 
         money -= cost;
-        fans += 10 + (charisma / 3); // More charisma = better marketing
+        fans += 10 + (charisma / 3);
 
         Debug.Log($"🎵 RECORD: -${cost}, +{10 + (charisma / 3)} fans");
     }
 
     private void DoTour()
     {
-        // Why: Touring earns money and fans but drains unity
         int cost = rules.tourCost;
 
         if (money < cost)
@@ -365,13 +419,11 @@ public class GameManager : MonoBehaviour
         }
 
         money -= cost;
-        // NOTE: Using stagePerformance instead of old "performance" stat
         int earnings = stagePerformance * rules.tourMoneyMultiplier;
         money += earnings;
         fans += rules.tourFanGain;
         unity -= rules.tourUnityCost;
 
-        // Clamp unity to 0-100
         unity = Mathf.Clamp(unity, 0, 100);
 
         Debug.Log($"🎤 TOUR: -${cost}, +${earnings}, +{rules.tourFanGain} fans, -{rules.tourUnityCost} unity");
@@ -379,8 +431,6 @@ public class GameManager : MonoBehaviour
 
     private void DoPractice()
     {
-        // Why: Practice improves band stats
-        // NOTE: For now just improving a few key stats, will refine later
         stagePerformance += rules.practiceStatGain;
         vocal += rules.practiceStatGain;
         instrument += rules.practiceStatGain;
@@ -390,7 +440,6 @@ public class GameManager : MonoBehaviour
 
     private void DoRest()
     {
-        // Why: Rest recovers unity
         unity += rules.restUnityGain;
         unity = Mathf.Clamp(unity, 0, 100);
 
@@ -399,17 +448,11 @@ public class GameManager : MonoBehaviour
 
     private void DoRelease()
     {
-        // Why: Release album - big fan boost based on stats
-        // NOTE: Using new stat system - averaging relevant stats
         int fanGain = (songwriting + production + charisma) / 3;
         fans += fanGain;
 
         Debug.Log($"💿 RELEASE: +{fanGain} fans");
     }
-
-    // =========================================== 
-    // GAME OVER
-    // ============================================
 
     private void EndGame()
     {
@@ -418,7 +461,6 @@ public class GameManager : MonoBehaviour
         Debug.Log($"   Final Stats: ${money}, {fans} fans");
         Debug.Log("========================================");
 
-        // Why: Load the GameOver scene
         if (SceneLoader.Instance != null)
         {
             SceneLoader.Instance.LoadGameOver();
@@ -430,7 +472,6 @@ public class GameManager : MonoBehaviour
     }
 }
 
-// Why: Enum for the 5 action types
 public enum ActionType
 {
     Record,

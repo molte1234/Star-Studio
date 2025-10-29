@@ -1247,6 +1247,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 287428355}
   m_CullTransparentMesh: 1
+--- !u!1 &317391901
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 317391902}
+  m_Layer: 0
+  m_Name: ----------
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &317391902
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 317391901}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &320246678
 GameObject:
   m_ObjectHideFlags: 0
@@ -2148,8 +2179,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e6b6b1f47c255845b13db99f93a8089, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EventManager
-  allEvents:
-  - {fileID: 11400000, guid: 1d224d5399a23cb43aa0efacb35939e8, type: 2}
+  allEvents: []
   welcomeScreenEvent: {fileID: 11400000, guid: 6c9885a1bfd8f7f48b581fef23ff8523, type: 2}
   eventPanel: {fileID: 2115616643}
 --- !u!4 &475990453
@@ -4861,7 +4891,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 367.6, y: -408.45}
+  m_AnchoredPosition: {x: 367.59998, y: -408.45}
   m_SizeDelta: {x: -1276.0446, y: -865.4049}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1011676743
@@ -5148,7 +5178,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -29.4485, y: 77.866}
+  m_AnchoredPosition: {x: -29.448486, y: 77.866}
   m_SizeDelta: {x: -671.5024, y: -701.4211}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1092359023
@@ -5345,7 +5375,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -29.4485, y: 77.866}
+  m_AnchoredPosition: {x: -29.448486, y: 77.866}
   m_SizeDelta: {x: -671.5024, y: -701.4211}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1153407648
@@ -5855,14 +5885,6 @@ MonoBehaviour:
   unityText: {fileID: 0}
   quarterYearText: {fileID: 0}
   bandNameText: {fileID: 1335861737}
-  charismaText: {fileID: 0}
-  stagePerformanceText: {fileID: 0}
-  vocalText: {fileID: 0}
-  instrumentText: {fileID: 0}
-  songwritingText: {fileID: 0}
-  productionText: {fileID: 0}
-  managementText: {fileID: 0}
-  practicalText: {fileID: 0}
   characterDisplays:
   - {fileID: 5935828509147968386}
   - {fileID: 546411404}
@@ -8140,6 +8162,57 @@ RectTransform:
   m_AnchoredPosition: {x: 22, y: 63.313416}
   m_SizeDelta: {x: 242.75842, y: 89.70459}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1665180856
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1665180858}
+  - component: {fileID: 1665180857}
+  m_Layer: 0
+  m_Name: TestBandHelper
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1665180857
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1665180856}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66c791256b3ed1b4688b00d5724dc669, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TestBandHelper
+  useTestBand: 1
+  testCharacters:
+  - {fileID: 11400000, guid: f2c3d1434da36f3488a89d423c9868d5, type: 2}
+  - {fileID: 11400000, guid: b999fef7cb4c6b642aa303a3961aa6c7, type: 2}
+  - {fileID: 11400000, guid: 643f53ed2029d1c4b97a713b57a76617, type: 2}
+  - {fileID: 11400000, guid: 7fa2a653fd490664b90bf0d554f2d50c, type: 2}
+  testBandName: Test Band
+--- !u!4 &1665180858
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1665180856}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1687240083
 GameObject:
   m_ObjectHideFlags: 0
@@ -8345,7 +8418,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -400.8048, y: -394.8319}
+  m_AnchoredPosition: {x: -400.80487, y: -394.8319}
   m_SizeDelta: {x: -1081.6299, y: -862.2766}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1783990830
@@ -8627,8 +8700,8 @@ Canvas:
   m_GameObject: {fileID: 1884703454}
   m_Enabled: 1
   serializedVersion: 3
-  m_RenderMode: 0
-  m_Camera: {fileID: 0}
+  m_RenderMode: 1
+  m_Camera: {fileID: 2059434350}
   m_PlaneDistance: 100
   m_PixelPerfect: 0
   m_ReceivesEvents: 1
@@ -8704,7 +8777,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -415.31067, y: -409.31342}
+  m_AnchoredPosition: {x: -415.31073, y: -409.31342}
   m_SizeDelta: {x: -830.6213, y: -818.6268}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1904710437
@@ -10327,7 +10400,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -8, y: -0}
+  m_AnchoredPosition: {x: -8, y: 0}
   m_SizeDelta: {x: 141.5482, y: 51.4467}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2451444044362232689
@@ -11037,5 +11110,7 @@ SceneRoots:
   - {fileID: 1930733269}
   - {fileID: 475990453}
   - {fileID: 1615719807}
+  - {fileID: 1665180858}
+  - {fileID: 317391902}
   - {fileID: 1884703458}
   - {fileID: 1156159969}

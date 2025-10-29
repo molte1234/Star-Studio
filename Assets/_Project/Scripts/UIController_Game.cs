@@ -5,6 +5,7 @@ using TMPro;
 /// <summary>
 /// Controls all UI in the main Game scene
 /// Handles displaying stats, character portraits, and menu panels
+/// UPDATED: Removed 8-stat text displays - stats now live on individual characters
 /// </summary>
 public class UIController_Game : MonoBehaviour
 {
@@ -14,16 +15,6 @@ public class UIController_Game : MonoBehaviour
     public TextMeshProUGUI unityText;
     public TextMeshProUGUI quarterYearText;
     public TextMeshProUGUI bandNameText;
-
-    [Header("Stats Display - NEW 8-Stat System")]
-    public TextMeshProUGUI charismaText;
-    public TextMeshProUGUI stagePerformanceText;
-    public TextMeshProUGUI vocalText;
-    public TextMeshProUGUI instrumentText;
-    public TextMeshProUGUI songwritingText;
-    public TextMeshProUGUI productionText;
-    public TextMeshProUGUI managementText;
-    public TextMeshProUGUI practicalText;
 
     [Header("Character Displays")]
     public CharacterDisplay[] characterDisplays;
@@ -48,6 +39,17 @@ public class UIController_Game : MonoBehaviour
     {
         // Why: Make sure all panels start hidden
         HideAllPanels();
+
+        // Why: Register this UIController with GameManager (they're in different scenes)
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.RegisterUIController(this);
+            Debug.Log("✅ UIController_Game registered with GameManager");
+        }
+        else
+        {
+            Debug.LogError("❌ UIController_Game: GameManager.Instance is null!");
+        }
 
         RefreshUI();
     }
@@ -83,7 +85,7 @@ public class UIController_Game : MonoBehaviour
 
     private void RefreshStats()
     {
-        // ✅ UPDATED: Display NEW 8-stat system + resources
+        // Why: Display resources only (stats are now per-character)
         if (GameManager.Instance == null)
         {
             Debug.LogWarning("⚠️ GameManager.Instance is null - cannot refresh stats!");
@@ -110,53 +112,12 @@ public class UIController_Game : MonoBehaviour
 
         if (quarterYearText != null)
         {
-            quarterYearText.text = $"YEAR {gm.currentYear}  QUARTER {gm.currentQuarter + 1}";
+            quarterYearText.text = $"YEAR {gm.currentYear}  QUARTER {(gm.currentQuarter % 4) + 1}";
         }
 
         if (bandNameText != null)
         {
             bandNameText.text = gm.bandName;
-        }
-
-        // ✅ NEW: Update 8-stat system displays
-        if (charismaText != null)
-        {
-            charismaText.text = $"{gm.charisma}";
-        }
-
-        if (stagePerformanceText != null)
-        {
-            stagePerformanceText.text = $"{gm.stagePerformance}";
-        }
-
-        if (vocalText != null)
-        {
-            vocalText.text = $"{gm.vocal}";
-        }
-
-        if (instrumentText != null)
-        {
-            instrumentText.text = $"{gm.instrument}";
-        }
-
-        if (songwritingText != null)
-        {
-            songwritingText.text = $"{gm.songwriting}";
-        }
-
-        if (productionText != null)
-        {
-            productionText.text = $"{gm.production}";
-        }
-
-        if (managementText != null)
-        {
-            managementText.text = $"{gm.management}";
-        }
-
-        if (practicalText != null)
-        {
-            practicalText.text = $"{gm.practical}";
         }
     }
 
@@ -165,7 +126,7 @@ public class UIController_Game : MonoBehaviour
         // Why: Update character portraits in slots
         if (characterDisplays == null || characterDisplays.Length == 0)
         {
-            Debug.LogWarning("⚠️ No CharacterDisplay components assigned! Assign CharacterDisplay components in Inspector");
+            Debug.LogWarning("⚠️ No CharacterDisplay components assigned in Inspector!");
             return;
         }
 
@@ -181,7 +142,7 @@ public class UIController_Game : MonoBehaviour
                 continue;
             }
 
-            // ✅ FIXED: Check characterStates instead of slots
+            // Check if character exists in this slot
             if (i < gm.characterStates.Length && gm.characterStates[i] != null && gm.characterStates[i].slotData != null)
             {
                 // Why: Character exists in this slot - show it

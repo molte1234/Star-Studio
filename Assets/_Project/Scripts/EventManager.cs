@@ -3,7 +3,8 @@ using System.Collections.Generic;
 
 /// <summary>
 /// Manages story events - checking triggers and displaying events to the player
-/// Attached to GameManager in Bootstrap scene
+/// Attached to a GameObject in the Game scene
+/// Registers itself with GameManager on Start()
 /// </summary>
 public class EventManager : MonoBehaviour
 {
@@ -21,9 +22,23 @@ public class EventManager : MonoBehaviour
     private List<EventData> triggeredEvents = new List<EventData>(); // Track which events already triggered
     private EventData currentEvent; // Currently displayed event
 
+    void Start()
+    {
+        // Why: Register this EventManager with GameManager (they're in different scenes)
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.RegisterEventManager(this);
+            Debug.Log("✅ EventManager registered with GameManager");
+        }
+        else
+        {
+            Debug.LogError("❌ EventManager: GameManager.Instance is null!");
+        }
+    }
+
     public void ShowWelcomeScreen()
     {
-        // Why: Display welcome screen at game start (called from UIController_Game)
+        // Why: Display welcome screen at game start
         if (welcomeScreenEvent == null)
         {
             Debug.LogError("❌ Welcome Screen Event not assigned in EventManager!");
@@ -43,8 +58,6 @@ public class EventManager : MonoBehaviour
     public void CheckForEvents()
     {
         // Why: Called each quarter, see if any event should trigger
-        // Check ALL conditions for each event
-
         int currentYear = GameManager.Instance.currentYear;
         int displayQuarter = (GameManager.Instance.currentQuarter % 4) + 1;
 
@@ -53,172 +66,94 @@ public class EventManager : MonoBehaviour
 
         foreach (EventData evt in allEvents)
         {
-            // ✅ FIX: NEVER check the welcome screen event in normal flow
+            // Skip welcome screen (it's triggered manually)
             if (evt == welcomeScreenEvent)
             {
-                Debug.Log($"   ⏭️ Skipping '{evt.eventTitle}' - this is the welcome screen (use ShowWelcomeScreen instead)");
+                Debug.Log($"   ⏭️ Skipping '{evt.eventTitle}' - this is the welcome screen");
                 continue;
             }
 
-            // ✅ FIX: Skip if this event already triggered
+            // Skip if already triggered
             if (triggeredEvents.Contains(evt))
             {
                 Debug.Log($"   ⏭️ Skipping '{evt.eventTitle}' - already triggered");
                 continue;
             }
 
-            if (CheckAllConditions(evt))
+            // Check if this event should trigger
+            if (ShouldTrigger(evt))
             {
-                Debug.Log($"✅ All conditions met for: {evt.eventTitle}");
+                Debug.Log($"   ✅ TRIGGERING EVENT: {evt.eventTitle}");
                 TriggerEvent(evt);
-
-                // ✅ FIX: Mark this event as triggered so it won't show again
                 triggeredEvents.Add(evt);
-
-                return; // Only show one event per quarter
+                return; // Only show one event at a time
+            }
+            else
+            {
+                Debug.Log($"   ❌ '{evt.eventTitle}' conditions not met");
             }
         }
 
-        Debug.Log("ℹ️ No events triggered this quarter");
+        Debug.Log("   No events triggered this quarter");
     }
 
-    private bool CheckAllConditions(EventData evt)
+    private bool ShouldTrigger(EventData evt)
     {
-        // Why: Check if ALL enabled conditions are met for this event
+        // Why: Check all conditions to see if event should fire
+        GameManager gm = GameManager.Instance;
 
-        Debug.Log($"   🎯 Checking event: {evt.eventTitle}");
+        // Check year/quarter
+        int displayQuarter = (gm.currentQuarter % 4) + 1;
 
-        // Check Year/Quarter condition
-        if (evt.requireYearQuarter)
-        {
-            int currentYear = GameManager.Instance.currentYear;
-            int displayQuarter = (GameManager.Instance.currentQuarter % 4) + 1;
-
-            if (evt.triggerYear != currentYear || evt.triggerQuarter != displayQuarter)
-            {
-                Debug.Log($"      ❌ Year/Quarter mismatch: Need Y{evt.triggerYear} Q{evt.triggerQuarter}, Current Y{currentYear} Q{displayQuarter}");
-                return false;
-            }
-            Debug.Log($"      ✅ Year/Quarter match: Y{currentYear} Q{displayQuarter}");
-        }
-
-        // Check Flag condition
-        if (evt.requireFlag)
-        {
-            if (!GameManager.Instance.flags.Contains(evt.requiredFlag))
-            {
-                Debug.Log($"      ❌ Required flag missing: {evt.requiredFlag}");
-                return false;
-            }
-            Debug.Log($"      ✅ Flag present: {evt.requiredFlag}");
-        }
-
-        // Check Stat condition
-        if (evt.requireStat)
-        {
-            if (!CheckStatCondition(evt))
-            {
-                Debug.Log($"      ❌ Stat condition not met");
-                return false;
-            }
-            Debug.Log($"      ✅ Stat condition met");
-        }
-
-        // Check Random Chance (always checked)
-        float roll = Random.Range(0f, 100f);
-        if (roll > evt.randomChance)
-        {
-            Debug.Log($"      ❌ Random chance failed: Rolled {roll:F1}%, needed ≤{evt.randomChance}%");
+        if (evt.triggerYear > 0 && gm.currentYear != evt.triggerYear)
             return false;
-        }
-        Debug.Log($"      ✅ Random chance passed: Rolled {roll:F1}% ≤ {evt.randomChance}%");
 
-        // All conditions met!
-        Debug.Log($"   ✅ ALL CONDITIONS PASSED!");
+        if (evt.triggerQuarter > 0 && displayQuarter != evt.triggerQuarter)
+            return false;
+
+        // Check resource thresholds
+        if (evt.minMoney > 0 && gm.money < evt.minMoney)
+            return false;
+
+        if (evt.maxMoney > 0 && gm.money > evt.maxMoney)
+            return false;
+
+        if (evt.minFans > 0 && gm.fans < evt.minFans)
+            return false;
+
+        // Check required flags
+        foreach (string flag in evt.requiredFlags)
+        {
+            if (!gm.flags.Contains(flag))
+                return false;
+        }
+
+        // Check forbidden flags
+        foreach (string flag in evt.forbiddenFlags)
+        {
+            if (gm.flags.Contains(flag))
+                return false;
+        }
+
         return true;
     }
 
-    private bool CheckStatCondition(EventData evt)
+    private void TriggerEvent(EventData evt)
     {
-        // ✅ UPDATED: Check if stat condition is met using NEW 8-stat system
-        int statValue = 0;
+        // Why: Show the event popup
+        currentEvent = evt;
 
-        // Get the stat value based on StatToCheck enum
-        switch (evt.statToCheck)
+        if (eventPanel == null)
         {
-            case StatToCheck.Money:
-                statValue = GameManager.Instance.money;
-                break;
-            case StatToCheck.Fans:
-                statValue = GameManager.Instance.fans;
-                break;
-            // ✅ NEW 8-STAT SYSTEM:
-            case StatToCheck.Charisma:
-                statValue = GameManager.Instance.charisma;
-                break;
-            case StatToCheck.StagePerformance:
-                statValue = GameManager.Instance.stagePerformance;
-                break;
-            case StatToCheck.Vocal:
-                statValue = GameManager.Instance.vocal;
-                break;
-            case StatToCheck.Instrument:
-                statValue = GameManager.Instance.instrument;
-                break;
-            case StatToCheck.Songwriting:
-                statValue = GameManager.Instance.songwriting;
-                break;
-            case StatToCheck.Production:
-                statValue = GameManager.Instance.production;
-                break;
-            case StatToCheck.Management:
-                statValue = GameManager.Instance.management;
-                break;
-            case StatToCheck.Practical:
-                statValue = GameManager.Instance.practical;
-                break;
-            case StatToCheck.Unity:
-                statValue = GameManager.Instance.unity;
-                break;
+            Debug.LogError("❌ EventPanel is not assigned! Cannot show event.");
+            return;
         }
 
-        // Check based on comparison type
-        switch (evt.comparison)
-        {
-            case ComparisonType.GreaterThan:
-                return statValue > evt.statValue;
-            case ComparisonType.LessThan:
-                return statValue < evt.statValue;
-            case ComparisonType.EqualTo:
-                return statValue == evt.statValue;
-            case ComparisonType.GreaterOrEqual:
-                return statValue >= evt.statValue;
-            case ComparisonType.LessOrEqual:
-                return statValue <= evt.statValue;
-            default:
-                return false;
-        }
-    }
+        // Handle audio
+        HandleEventAudio(evt);
 
-    public void TriggerEvent(EventData eventData)
-    {
-        // Why: Show this event to the player
-        Debug.Log($"🎉 TRIGGERING EVENT: {eventData.eventTitle}");
-        currentEvent = eventData;
-
-        // Handle custom audio
-        HandleEventAudio(eventData);
-
-        // Show event through EventPanel
-        if (eventPanel != null)
-        {
-            Debug.Log($"   📺 Showing event via EventPanel");
-            eventPanel.ShowEvent(eventData);
-        }
-        else
-        {
-            Debug.LogWarning("   ⚠️ EventPanel reference missing! Assign it in Inspector.");
-        }
+        // Show the popup
+        eventPanel.ShowEvent(evt);
     }
 
     private void HandleEventAudio(EventData evt)
@@ -227,16 +162,16 @@ public class EventManager : MonoBehaviour
         AudioManager audioMgr = AudioManager.Instance;
         if (audioMgr == null) return;
 
-        // STEP 1: Pause current music (with fade out)
+        // Pause current music (with fade out)
         audioMgr.PauseMusic();
 
-        // STEP 2: Play popup SFX if provided (this happens on separate source, won't interrupt)
+        // Play popup SFX if provided
         if (evt.eventPopupSFX != null)
         {
             audioMgr.PlaySFX(evt.eventPopupSFX);
         }
 
-        // STEP 3: Play event music if provided (on dedicated event music source)
+        // Play event music if provided
         if (evt.eventMusic != null)
         {
             audioMgr.PlayEventMusic(evt.eventMusic);
@@ -255,9 +190,7 @@ public class EventManager : MonoBehaviour
         GameManager.Instance.fans += choice.fansChange;
         GameManager.Instance.unity += choice.unityChange;
 
-        // ✅ UPDATED: Apply NEW 8-stat system changes
-        // Note: ChoiceData also needs to be updated to have these new stat fields
-        // For now, keeping the old fields but you'll need to add new ones to ChoiceData
+        // Apply stat changes
         GameManager.Instance.charisma += choice.charismaChange;
         GameManager.Instance.stagePerformance += choice.stagePerformanceChange;
         GameManager.Instance.vocal += choice.vocalChange;
@@ -273,7 +206,7 @@ public class EventManager : MonoBehaviour
             GameManager.Instance.flags.Add(flag);
         }
 
-        // Resume regular music (fade out event music, fade in paused music)
+        // Resume regular music
         if (AudioManager.Instance != null)
         {
             AudioManager.Instance.ResumeMusic();

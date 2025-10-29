@@ -28,7 +28,7 @@ public class CharacterDisplay : MonoBehaviour
         if (portraitImage != null)
         {
             portraitImage.sprite = slotData.sprite;
-            gameObject.SetActive(true);
+            portraitImage.enabled = true; // ✅ FIX: Enable the Image component instead of the whole GameObject
             Debug.Log($"✅ CharacterDisplay showing: {slotData.displayName}");
         }
         else
@@ -42,7 +42,10 @@ public class CharacterDisplay : MonoBehaviour
     /// </summary>
     public void Clear()
     {
-        gameObject.SetActive(false);
+        if (portraitImage != null)
+        {
+            portraitImage.enabled = false; // ✅ FIX: Disable the Image component instead of the whole GameObject
+        }
         Debug.Log($"⚫ CharacterDisplay hidden (empty slot)");
     }
 }
