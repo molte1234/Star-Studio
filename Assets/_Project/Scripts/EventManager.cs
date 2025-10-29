@@ -102,40 +102,79 @@ public class EventManager : MonoBehaviour
         // Why: Check all conditions to see if event should fire
         GameManager gm = GameManager.Instance;
 
-        // Check year/quarter
-        int displayQuarter = (gm.currentQuarter % 4) + 1;
-
-        if (evt.triggerYear > 0 && gm.currentYear != evt.triggerYear)
-            return false;
-
-        if (evt.triggerQuarter > 0 && displayQuarter != evt.triggerQuarter)
-            return false;
-
-        // Check resource thresholds
-        if (evt.minMoney > 0 && gm.money < evt.minMoney)
-            return false;
-
-        if (evt.maxMoney > 0 && gm.money > evt.maxMoney)
-            return false;
-
-        if (evt.minFans > 0 && gm.fans < evt.minFans)
-            return false;
-
-        // Check required flags
-        foreach (string flag in evt.requiredFlags)
+        // ✅ CHECK 1: Year/Quarter requirement
+        if (evt.requireYearQuarter)
         {
-            if (!gm.flags.Contains(flag))
+            int displayQuarter = (gm.currentQuarter % 4) + 1;
+
+            if (gm.currentYear != evt.triggerYear)
+                return false;
+
+            if (displayQuarter != evt.triggerQuarter)
                 return false;
         }
 
-        // Check forbidden flags
-        foreach (string flag in evt.forbiddenFlags)
+        // ✅ CHECK 2: Story flag requirement
+        if (evt.requireFlag)
         {
-            if (gm.flags.Contains(flag))
+            if (!gm.flags.Contains(evt.requiredFlag))
                 return false;
+        }
+
+        // ✅ CHECK 3: Stat threshold requirement
+        if (evt.requireStat)
+        {
+            int currentValue = GetStatValue(evt.statToCheck, gm);
+            if (!CheckComparison(currentValue, evt.comparison, evt.statValue))
+                return false;
+        }
+
+        // ✅ CHECK 4: Random chance
+        if (evt.randomChance < 100f)
+        {
+            float roll = Random.Range(0f, 100f);
+            if (roll > evt.randomChance)
+            {
+                Debug.Log($"   🎲 Random check failed: rolled {roll:F1}% vs {evt.randomChance}%");
+                return false;
+            }
         }
 
         return true;
+    }
+
+    private int GetStatValue(StatToCheck stat, GameManager gm)
+    {
+        // Why: Get the current value of a stat from GameManager
+        switch (stat)
+        {
+            case StatToCheck.Money: return gm.money;
+            case StatToCheck.Fans: return gm.fans;
+            case StatToCheck.Charisma: return gm.charisma;
+            case StatToCheck.StagePerformance: return gm.stagePerformance;
+            case StatToCheck.Vocal: return gm.vocal;
+            case StatToCheck.Instrument: return gm.instrument;
+            case StatToCheck.Songwriting: return gm.songwriting;
+            case StatToCheck.Production: return gm.production;
+            case StatToCheck.Management: return gm.management;
+            case StatToCheck.Practical: return gm.practical;
+            case StatToCheck.Unity: return gm.unity;
+            default: return 0;
+        }
+    }
+
+    private bool CheckComparison(int currentValue, ComparisonType comparison, int targetValue)
+    {
+        // Why: Check if the comparison passes
+        switch (comparison)
+        {
+            case ComparisonType.GreaterThan: return currentValue > targetValue;
+            case ComparisonType.LessThan: return currentValue < targetValue;
+            case ComparisonType.EqualTo: return currentValue == targetValue;
+            case ComparisonType.GreaterOrEqual: return currentValue >= targetValue;
+            case ComparisonType.LessOrEqual: return currentValue <= targetValue;
+            default: return false;
+        }
     }
 
     private void TriggerEvent(EventData evt)

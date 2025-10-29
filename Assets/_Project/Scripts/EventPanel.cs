@@ -168,7 +168,8 @@ public class EventPanel : MonoBehaviour
         if (button != null)
         {
             button.onClick.RemoveAllListeners();
-            button.onClick.AddListener(() => HideEvent());
+            // ✅ FIXED: Now properly closes event AND stops music
+            button.onClick.AddListener(() => OnOKClicked());
         }
     }
 
@@ -231,6 +232,28 @@ public class EventPanel : MonoBehaviour
         {
             Debug.LogError("EventPanel: Could not find EventManager!");
         }
+
+        // Play button click sound
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayButtonClick();
+        }
+    }
+
+    /// <summary>
+    /// ✅ NEW: Handles OK button for events with no choices
+    /// Properly stops event music and closes panel
+    /// </summary>
+    private void OnOKClicked()
+    {
+        // Why: Stop event music and resume regular music
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.ResumeMusic();
+        }
+
+        // Close the panel
+        HideEvent();
 
         // Play button click sound
         if (AudioManager.Instance != null)

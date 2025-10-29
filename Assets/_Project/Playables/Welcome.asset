@@ -25,6 +25,6 @@ MonoBehaviour:
   comparison: 0
   statValue: 0
   randomChance: 100
-  eventMusic: {fileID: 8300000, guid: 00be41919826e7e4d8fa618ea4312043, type: 3}
-  eventPopupSFX: {fileID: 0}
+  eventMusic: {fileID: 0}
+  eventPopupSFX: {fileID: 8300000, guid: 00be41919826e7e4d8fa618ea4312043, type: 3}
   choices: []
