@@ -3,76 +3,126 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// Controls all UI in the main Game scene
-/// Handles displaying stats, character portraits, and menu panels
-/// UPDATED: Added CloseAllMenus() to return to main game view after actions
+/// Controls all UI elements on the main game screen
+/// Updates displays, handles button clicks
 /// </summary>
 public class UIController_Game : MonoBehaviour
 {
-    [Header("Stats Display - Resources")]
+    [Header("Band Info Display")]
+    public TextMeshProUGUI bandNameText;
+
+    [Header("Stats Display")]
     public TextMeshProUGUI moneyText;
     public TextMeshProUGUI fansText;
     public TextMeshProUGUI unityText;
     public TextMeshProUGUI quarterYearText;
-    public TextMeshProUGUI bandNameText;
 
-    [Header("Character Displays")]
-    public CharacterDisplay[] characterDisplays;
+    [Header("Band Display")]
+    public CharacterDisplay[] characterDisplays; // Array of character displays (min 6, expandable)
 
-    [Header("Menu System - Area A (Action Panels)")]
-    [Tooltip("Panel in Area A that contains Practice action buttons")]
+    [Header("Menu Panels (Area A)")]
     public GameObject practicePanel;
-    [Tooltip("Panel in Area A that contains Produce action buttons")]
     public GameObject producePanel;
-    [Tooltip("Panel in Area A that contains Tour action buttons")]
     public GameObject tourPanel;
-    [Tooltip("Panel in Area A that contains Release action buttons")]
     public GameObject releasePanel;
-    [Tooltip("Panel in Area A that contains Finance action buttons")]
     public GameObject financePanel;
-    [Tooltip("Panel in Area A that contains Marketing action buttons")]
     public GameObject marketingPanel;
-    [Tooltip("Panel in Area A that contains Managing action buttons")]
     public GameObject managingPanel;
 
-    [Header("Menu System - Area B (Toggle Buttons)")]
-    [Tooltip("Toggle Group that contains all menu buttons - needed to untoggle them")]
-    public ToggleGroup menuToggleGroup;
+    [Header("Menu Toggle Group (Area B)")]
+    public ToggleGroup menuToggleGroup; // The ToggleGroup that contains all 7 menu toggles
+
+    [Header("Test Band (Optional)")]
+    [Tooltip("Drag TestBandHelper here if you want to use test band on scene load")]
+    public TestBandHelper testBandHelper;
 
     void Start()
     {
-        // Why: Make sure all panels start hidden
+        Debug.Log("========================================");
+        Debug.Log("🎮 UIController_Game.Start() BEGIN");
+        Debug.Log("========================================");
+
+        // Setup menus
+        if (menuToggleGroup != null)
+        {
+            menuToggleGroup.allowSwitchOff = true;
+        }
         HideAllPanels();
 
-        // Why: Register this UIController with GameManager (they're in different scenes)
-        if (GameManager.Instance != null)
+        // STEP 1: TestBand (if assigned and enabled)
+        if (testBandHelper != null)
         {
-            GameManager.Instance.RegisterUIController(this);
-            Debug.Log("✅ UIController_Game registered with GameManager");
+            Debug.Log($"🔧 TestBandHelper assigned. useTestBand = {testBandHelper.useTestBand}");
+
+            if (testBandHelper.useTestBand)
+            {
+                Debug.Log("🎸 Populating test band...");
+                testBandHelper.PopulateTestBandIfEnabled();
+            }
         }
         else
         {
-            Debug.LogError("❌ UIController_Game: GameManager.Instance is null!");
+            Debug.Log("⚠️ No TestBandHelper assigned in Inspector");
+        }
+
+        // STEP 2: Initialize character displays
+        Debug.Log("🎨 Initializing character displays...");
+        InitializeCharacterDisplays();
+
+        Debug.Log("========================================");
+        Debug.Log("🎮 UIController_Game.Start() END");
+        Debug.Log("========================================");
+    }
+
+    /// <summary>
+    /// Initialize character display GameObjects (active/inactive) based on GameManager data
+    /// Called once at Start()
+    /// </summary>
+    private void InitializeCharacterDisplays()
+    {
+        if (GameManager.Instance == null)
+        {
+            Debug.LogWarning("⚠️ InitializeCharacterDisplays: GameManager.Instance is null!");
+            return;
+        }
+
+        GameManager gm = GameManager.Instance;
+
+        for (int i = 0; i < characterDisplays.Length; i++)
+        {
+            if (characterDisplays[i] == null)
+            {
+                Debug.LogWarning($"characterDisplays[{i}] is null - not assigned in Inspector!");
+                continue;
+            }
+
+            // Check if character exists in this slot
+            bool hasCharacter = (i < gm.characterStates.Length &&
+                                gm.characterStates[i] != null &&
+                                gm.characterStates[i].slotData != null);
+
+            // Set GameObject active/inactive
+            characterDisplays[i].gameObject.SetActive(hasCharacter);
+
+            // If character exists, set the data
+            if (hasCharacter)
+            {
+                characterDisplays[i].SetCharacter(gm.characterStates[i].slotData);
+                Debug.Log($"✅ Initialized CharacterDisplay {i}: {gm.characterStates[i].slotData.displayName}");
+            }
+            else
+            {
+                Debug.Log($"⚫ CharacterDisplay {i}: Empty (disabled)");
+            }
         }
     }
 
-    // ============================================
-    // PUBLIC METHODS - Called by other systems
-    // ============================================
-
-    /// <summary>
-    /// Closes all menu panels and untoggle all menu buttons
-    /// Called after starting an action to return to main game view
-    /// </summary>
     public void CloseAllMenus()
     {
-        // Why: Hide all panels
         HideAllPanels();
 
-        // Why: Untoggle all menu buttons
         if (menuToggleGroup != null)
         {
-            // CRITICAL: ToggleGroup needs allowSwitchOff = true to untoggle all buttons
             if (!menuToggleGroup.allowSwitchOff)
             {
                 menuToggleGroup.allowSwitchOff = true;
@@ -88,13 +138,8 @@ public class UIController_Game : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Updates all UI displays from GameManager data
-    /// Called by GameManager whenever game state changes
-    /// </summary>
     public void RefreshUI()
     {
-        // Why: Update from GameManager
         if (GameManager.Instance == null)
         {
             Debug.LogError("❌ UIController_Game.RefreshUI(): GameManager.Instance is null!");
@@ -103,41 +148,29 @@ public class UIController_Game : MonoBehaviour
 
         GameManager gm = GameManager.Instance;
 
-        // Why: Update resource displays
         if (moneyText != null) moneyText.text = "$" + gm.money.ToString();
         if (fansText != null) fansText.text = gm.fans.ToString();
         if (unityText != null) unityText.text = gm.unity.ToString() + "%";
 
-        // Why: Update quarter/year display
         if (quarterYearText != null)
         {
-            int year = (gm.currentQuarter / 4) + 1; // Years 1-20
-            int quarter = (gm.currentQuarter % 4) + 1; // Quarters 1-4
+            int year = (gm.currentQuarter / 4) + 1;
+            int quarter = (gm.currentQuarter % 4) + 1;
             quarterYearText.text = $"Q{quarter} YEAR {year}";
         }
 
-        // Why: Update band name
         if (bandNameText != null) bandNameText.text = gm.bandName;
 
-        // Why: Update character displays
         RefreshCharacters();
     }
 
-    /// <summary>
-    /// Wrapper method called by GameManager (for compatibility)
-    /// </summary>
     public void RefreshDisplay()
     {
         RefreshUI();
     }
 
-    // ============================================
-    // PRIVATE HELPER METHODS
-    // ============================================
-
     private void HideAllPanels()
     {
-        // Why: Hide all action menu panels
         if (practicePanel != null) practicePanel.SetActive(false);
         if (producePanel != null) producePanel.SetActive(false);
         if (tourPanel != null) tourPanel.SetActive(false);
@@ -149,7 +182,6 @@ public class UIController_Game : MonoBehaviour
 
     private void RefreshCharacters()
     {
-        // Why: Update character portraits and stats from GameManager
         if (GameManager.Instance == null)
         {
             Debug.LogError("❌ UIController_Game.RefreshCharacters(): GameManager.Instance is null!");
@@ -158,81 +190,59 @@ public class UIController_Game : MonoBehaviour
 
         GameManager gm = GameManager.Instance;
 
-        // Loop through all character displays
+        // Update all character displays
         for (int i = 0; i < characterDisplays.Length; i++)
         {
-            // Safety check
             if (characterDisplays[i] == null)
             {
                 Debug.LogWarning($"characterDisplays[{i}] is null - not assigned in Inspector!");
                 continue;
             }
 
-            // Check if character exists in this slot
+            // Only update displays that are active (have characters)
+            if (!characterDisplays[i].gameObject.activeSelf)
+            {
+                continue; // Skip inactive displays
+            }
+
             if (i < gm.characterStates.Length && gm.characterStates[i] != null && gm.characterStates[i].slotData != null)
             {
-                // Why: Character exists in this slot - show it
+                // Update character data (in case it changed)
                 characterDisplays[i].SetCharacter(gm.characterStates[i].slotData);
-            }
-            else
-            {
-                // Why: No character in this slot - hide it
-                characterDisplays[i].Clear();
+
+                // Update busy state for progress bars
+                CharacterSlotState charState = gm.characterStates[i];
+                if (charState.isBusy && charState.currentAction != null)
+                {
+                    // OLD (WRONG - uses baseTime):
+                    // float totalTime = charState.currentAction.baseTime;
+
+                    // NEW (CORRECT - uses actual duration with stat bonuses):
+                    float totalTime = charState.actionTotalDuration;
+                    float timeElapsed = totalTime - charState.actionTimeRemaining;
+                    float progress = (totalTime > 0) ? (timeElapsed / totalTime) : 0f;
+
+                    characterDisplays[i].SetBusyState(true, charState.currentAction.actionName, progress);
+                }
+                else
+                {
+                    characterDisplays[i].SetBusyState(false);
+                }
             }
         }
     }
 
-    // ============================================
-    // MENU TOGGLE HANDLERS (Called directly by Toggle.onValueChanged in Inspector)
-    // ============================================
-    // WHY: Each toggle in Area B calls these methods directly via Inspector
-    // No need to store toggle references - Unity handles the connection
-
-    public void OnPracticeMenuToggled(bool isOn)
-    {
-        // Why: Show/hide Practice panel based on toggle state
-        ShowHidePanel(practicePanel, isOn);
-    }
-
-    public void OnProduceMenuToggled(bool isOn)
-    {
-        // Why: Show/hide Produce panel based on toggle state
-        ShowHidePanel(producePanel, isOn);
-    }
-
-    public void OnTourMenuToggled(bool isOn)
-    {
-        // Why: Show/hide Tour panel based on toggle state
-        ShowHidePanel(tourPanel, isOn);
-    }
-
-    public void OnReleaseMenuToggled(bool isOn)
-    {
-        // Why: Show/hide Release panel based on toggle state
-        ShowHidePanel(releasePanel, isOn);
-    }
-
-    public void OnFinanceMenuToggled(bool isOn)
-    {
-        // Why: Show/hide Finance panel based on toggle state
-        ShowHidePanel(financePanel, isOn);
-    }
-
-    public void OnMarketingMenuToggled(bool isOn)
-    {
-        // Why: Show/hide Marketing panel based on toggle state
-        ShowHidePanel(marketingPanel, isOn);
-    }
-
-    public void OnManagingMenuToggled(bool isOn)
-    {
-        // Why: Show/hide Managing panel based on toggle state
-        ShowHidePanel(managingPanel, isOn);
-    }
+    // Menu toggle handlers
+    public void OnPracticeMenuToggled(bool isOn) { ShowHidePanel(practicePanel, isOn); }
+    public void OnProduceMenuToggled(bool isOn) { ShowHidePanel(producePanel, isOn); }
+    public void OnTourMenuToggled(bool isOn) { ShowHidePanel(tourPanel, isOn); }
+    public void OnReleaseMenuToggled(bool isOn) { ShowHidePanel(releasePanel, isOn); }
+    public void OnFinanceMenuToggled(bool isOn) { ShowHidePanel(financePanel, isOn); }
+    public void OnMarketingMenuToggled(bool isOn) { ShowHidePanel(marketingPanel, isOn); }
+    public void OnManagingMenuToggled(bool isOn) { ShowHidePanel(managingPanel, isOn); }
 
     private void ShowHidePanel(GameObject panel, bool shouldShow)
     {
-        // Why: Toggle panel visibility
         if (panel != null)
         {
             panel.SetActive(shouldShow);

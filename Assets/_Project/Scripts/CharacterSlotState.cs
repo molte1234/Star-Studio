@@ -6,6 +6,7 @@ using System.Collections.Generic;
 /// 
 /// WHY: SlotData is a ScriptableObject (asset file), we can't change those at runtime
 /// CharacterSlotState wraps the data and adds runtime info we CAN change
+/// UPDATED: Now stores actionTotalDuration for accurate progress calculation
 /// </summary>
 public class CharacterSlotState
 {
@@ -34,8 +35,16 @@ public class CharacterSlotState
 
     /// <summary>
     /// How much time left on current action (in seconds)
+    /// Counts down from actionTotalDuration to 0
     /// </summary>
     public float actionTimeRemaining = 0f;
+
+    /// <summary>
+    /// Total duration of current action (accounts for stat bonuses)
+    /// Used for accurate progress bar calculation
+    /// Example: baseTime=30s, but with bonuses this might be 20s
+    /// </summary>
+    public float actionTotalDuration = 0f;
 
     /// <summary>
     /// Which other character slots are in this action group with them?
@@ -75,6 +84,7 @@ public class CharacterSlotState
         isBusy = true;
         currentAction = action;
         actionTimeRemaining = duration;
+        actionTotalDuration = duration; // Store total duration for progress calculation
         groupedWithSlots = new List<int>(group); // Make a copy of the list
     }
 
@@ -86,6 +96,7 @@ public class CharacterSlotState
         isBusy = false;
         currentAction = null;
         actionTimeRemaining = 0f;
+        actionTotalDuration = 0f;
         groupedWithSlots.Clear();
     }
 

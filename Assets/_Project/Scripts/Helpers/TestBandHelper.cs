@@ -1,14 +1,14 @@
 ﻿using UnityEngine;
 
 /// <summary>
-/// DEBUG HELPER: Auto-populates band with test characters when Game scene is loaded directly
+/// DEBUG HELPER: Populates band with test characters
 /// Attach this to GameManager in Bootstrap scene
-/// Only works if no band exists (characterStates are all null)
+/// UIController_Game calls PopulateTestBandIfEnabled() before initializing displays
 /// </summary>
 public class TestBandHelper : MonoBehaviour
 {
     [Header("Test Band Settings")]
-    [Tooltip("Enable this to auto-fill band with test characters when Game scene loads with empty band")]
+    [Tooltip("Enable this to auto-fill band with test characters")]
     public bool useTestBand = true;
 
     [Tooltip("Drag up to 6 different characters here - empty slots will be left empty")]
@@ -19,18 +19,9 @@ public class TestBandHelper : MonoBehaviour
     public string testBandName = "Test Band";
 
     /// <summary>
-    /// Call this from Start() when this component is in the Game scene
+    /// Called by UIController_Game to populate test band if enabled
     /// </summary>
-    void Start()
-    {
-        // Why: Auto-check when Game scene loads
-        CheckAndCreateTestBand();
-    }
-
-    /// <summary>
-    /// Call this from GameManager.Start() or whenever Game scene loads
-    /// </summary>
-    public void CheckAndCreateTestBand()
+    public void PopulateTestBandIfEnabled()
     {
         // Why: Only create test band if feature is enabled
         if (!useTestBand)
@@ -109,11 +100,5 @@ public class TestBandHelper : MonoBehaviour
         gm.SetupNewGame(testCharacters, testBandName);
 
         Debug.Log("✅ Test band created successfully!");
-
-        // Why: Force UI refresh to show characters
-        if (gm.uiController != null)
-        {
-            gm.uiController.RefreshUI();
-        }
     }
 }

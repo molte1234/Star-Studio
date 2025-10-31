@@ -6806,11 +6806,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d447feeaa4c9f674b84df3e2b2f7132f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIController_Game
+  bandNameText: {fileID: 1335861737}
   moneyText: {fileID: 809884376}
   fansText: {fileID: 31587328}
   unityText: {fileID: 0}
   quarterYearText: {fileID: 0}
-  bandNameText: {fileID: 1335861737}
   characterDisplays:
   - {fileID: 5935828509147968386}
   - {fileID: 546411404}
@@ -6826,6 +6826,7 @@ MonoBehaviour:
   marketingPanel: {fileID: 0}
   managingPanel: {fileID: 0}
   menuToggleGroup: {fileID: 1904710439}
+  testBandHelper: {fileID: 1665180857}
 --- !u!4 &1236340058
 Transform:
   m_ObjectHideFlags: 0
@@ -12851,6 +12852,30 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2053132676}
     m_Modifications:
+    - target: {fileID: 2157350678805119660, guid: 2b43e17397e5ba54cadac17382d97147, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2685551407354456612, guid: 2b43e17397e5ba54cadac17382d97147, type: 3}
+      propertyPath: mode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2685551407354456612, guid: 2b43e17397e5ba54cadac17382d97147, type: 3}
+      propertyPath: testValue
+      value: 0.52
+      objectReference: {fileID: 0}
+    - target: {fileID: 2685551407354456612, guid: 2b43e17397e5ba54cadac17382d97147, type: 3}
+      propertyPath: colorLerpSpeed
+      value: 9.38
+      objectReference: {fileID: 0}
+    - target: {fileID: 2685551407354456612, guid: 2b43e17397e5ba54cadac17382d97147, type: 3}
+      propertyPath: animationPreview
+      value: 0.151
+      objectReference: {fileID: 0}
+    - target: {fileID: 3288184182605202582, guid: 2b43e17397e5ba54cadac17382d97147, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3569898035513302107, guid: 2b43e17397e5ba54cadac17382d97147, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -12931,9 +12956,45 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3939609002003340669, guid: 2b43e17397e5ba54cadac17382d97147, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4094015428175507091, guid: 2b43e17397e5ba54cadac17382d97147, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4439610279848711939, guid: 2b43e17397e5ba54cadac17382d97147, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5919591346093534750, guid: 2b43e17397e5ba54cadac17382d97147, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6228744027755270328, guid: 2b43e17397e5ba54cadac17382d97147, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7881827939854178706, guid: 2b43e17397e5ba54cadac17382d97147, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7930922839037589274, guid: 2b43e17397e5ba54cadac17382d97147, type: 3}
       propertyPath: m_Name
       value: Display - Character 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8022450686154645871, guid: 2b43e17397e5ba54cadac17382d97147, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8081727035970980621, guid: 2b43e17397e5ba54cadac17382d97147, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9201296767130689911, guid: 2b43e17397e5ba54cadac17382d97147, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

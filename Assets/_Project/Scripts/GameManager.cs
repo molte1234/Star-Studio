@@ -160,7 +160,7 @@ public class GameManager : MonoBehaviour
         TestBandHelper testHelper = GetComponent<TestBandHelper>();
         if (testHelper != null)
         {
-            testHelper.CheckAndCreateTestBand();
+            testHelper.PopulateTestBandIfEnabled();
             RefreshUI();
         }
         else

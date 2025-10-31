@@ -255,6 +255,13 @@ public class EventPanel : MonoBehaviour
         // Close the panel
         HideEvent();
 
+        // Refresh UI after closing
+        UIController_Game uiController = FindObjectOfType<UIController_Game>();
+        if (uiController != null)
+        {
+            uiController.RefreshUI();
+        }
+
         // Play button click sound
         if (AudioManager.Instance != null)
         {

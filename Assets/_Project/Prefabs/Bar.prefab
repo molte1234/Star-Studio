@@ -1341,7 +1341,7 @@ MonoBehaviour:
   - {fileID: 8794614683159626501}
   - {fileID: 6759439440023838570}
   - {fileID: 1847902799362561156}
-  fillBar: {fileID: 9102080595764020126}
+  fillBar: {fileID: 1847902799362561156}
   activeColor: {r: 0, g: 1, b: 0, a: 1}
   inactiveColor: {r: 1, g: 1, b: 1, a: 1}
   useSequentialFill: 1

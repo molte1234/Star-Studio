@@ -524,6 +524,7 @@ public class MemberSelectionPopup : MonoBehaviour
         if (uiController != null)
         {
             uiController.CloseAllMenus();
+            uiController.RefreshUI(); 
             Debug.Log("✅ Closed all menus - returning to main game view");
         }
         else

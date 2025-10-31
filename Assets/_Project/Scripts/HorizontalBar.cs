@@ -4,39 +4,33 @@ using DG.Tweening;
 using System.Collections;
 
 /// <summary>
-/// Simple horizontal bar display - works standalone
-/// Supports discrete segments (0-10 stats) or smooth fill (timers/progress)
+/// Simple horizontal bar display with unified 0.0-1.0 interface
+/// Supports discrete segments (stats) or smooth fill (timers/progress)
 /// 
-/// FEATURES:
-/// - Discrete Mode: 10 segments that fill individually (for stats)
-/// - Smooth Mode: Single fill bar (for timers/progress)
-/// - Toggleable Effects: Sequential fill, scale punch, color lerp
-/// - Bi-directional Animation: Animates both UP (filling) and DOWN (emptying)
-/// - Inspector Testing: Test slider (instant) + Animation Preview slider (animated)
-/// - Context Menu: Preview Animation, Fill to Max, Clear Bar
+/// UNIFIED API: SetProgress(float value) where value is 0.0 to 1.0
+/// - Discrete Mode: Converts to 10 segments internally
+/// - Smooth Mode: Uses value directly as fillAmount
 /// 
-/// USAGE:
-/// 1. Add component to GameObject with UI Images
-/// 2. Choose mode (Discrete or Smooth)
-/// 3. Assign segments[] or fillBar
-/// 4. Toggle effects on/off as needed
-/// 5. Test using sliders in Inspector (enter Play mode for animation preview)
-/// 
-/// KISS: Clean foundation, easy to add effects later (blink, pulse, shake)
+/// KISS: One method to rule them all
 /// </summary>
 public class HorizontalBar : MonoBehaviour
 {
+    [Header("═══ TEST VALUE - Drag to Test ═══")]
+    [Tooltip("Drag this slider to test bar in Inspector (Play mode)")]
+    [Range(0f, 1f)]
+    public float currentValue = 0f;
+
     [Header("Bar Mode")]
     [Tooltip("Discrete = 10 segments for stats | Smooth = fill bar for timers")]
     public BarMode mode = BarMode.Discrete;
 
     [Header("Discrete Mode (Stats)")]
     [Tooltip("Drag 10 Image components here - each represents one stat point")]
-    public Image[] segments; // 10 images for 0-10 values
+    public Image[] segments;
 
     [Header("Smooth Mode (Timers/Progress)")]
     [Tooltip("Single Image with Fill type - for smooth progress bars")]
-    public Image fillBar; // One image for smooth 0.0-1.0 fill
+    public Image fillBar;
 
     [Header("Visual Settings")]
     [Tooltip("Color when bar is active/filled")]
@@ -45,178 +39,143 @@ public class HorizontalBar : MonoBehaviour
     [Tooltip("Color when bar segment is inactive/empty")]
     public Color inactiveColor = Color.gray;
 
-    [Header("Animation Effects - Toggle On/Off")]
-    [Tooltip("Enable sequential wave fill animation (segments fill one by one)")]
+    [Header("Animation Effects (Discrete Mode Only)")]
+    [Tooltip("Enable sequential wave fill animation")]
     public bool useSequentialFill = true;
 
-    [Tooltip("Delay between each segment filling (in seconds)")]
+    [Tooltip("Delay between each segment filling")]
     [Range(0f, 0.2f)]
     public float sequentialDelay = 0.05f;
 
     [Tooltip("Enable scale punch/bounce when segment activates")]
     public bool useScalePunch = true;
 
-    [Tooltip("Scale punch strength (1.0 = no punch, 1.2 = 20% bigger)")]
+    [Tooltip("Scale punch strength")]
     [Range(1.0f, 1.5f)]
     public float punchScale = 1.15f;
 
-    [Tooltip("Enable smooth color transition (lerp from inactive to active)")]
+    [Tooltip("Enable smooth color transition")]
     public bool useColorLerp = true;
 
-    [Tooltip("Color transition speed (higher = faster)")]
+    [Tooltip("Color transition speed")]
     [Range(1f, 20f)]
     public float colorLerpSpeed = 10f;
 
-    [Header("Preview Animation (Inspector Only)")]
-    [Tooltip("Non-interactive - shows animation progress for testing")]
-    [Range(0f, 1f)]
-    public float animationPreview = 0f;
+    // Private state
+    private int lastDiscreteValue = -1;
+    private float lastTestValue = -1f;
 
-    [Header("Testing (Inspector Only)")]
-    [Range(0f, 1f)]
-    [Tooltip("Drag slider to test bar in editor - applies immediately")]
-    public float testValue = 0f;
-
-    // Why: Current value being displayed (for reference/debugging)
-    private int currentDiscreteValue = 0;
-    private float currentSmoothValue = 0f;
-    private float lastTestValue = -1f; // Track last test value to detect changes
-    private float lastAnimationPreview = -1f; // Track animation preview slider
-
-    private void Start()
+    void Start()
     {
-        // Why: Initialize bar to starting state
+        // Initialize bar to starting value
+        SetProgress(currentValue, instant: true);
+        lastTestValue = currentValue;
+    }
+
+    void Update()
+    {
+        // Apply test slider changes during Play mode
+        if (Mathf.Abs(currentValue - lastTestValue) > 0.001f)
+        {
+            SetProgress(currentValue);
+            lastTestValue = currentValue;
+        }
+    }
+
+    // ============================================
+    // UNIFIED API - ONE METHOD TO RULE THEM ALL
+    // ============================================
+
+    /// <summary>
+    /// Set bar progress from 0.0 (empty) to 1.0 (full)
+    /// Works for both Discrete and Smooth modes
+    /// </summary>
+    /// <param name="value">Progress value 0.0-1.0</param>
+    /// <param name="instant">Skip animations (instant update)</param>
+    public void SetProgress(float value, bool instant = false)
+    {
+        // Clamp to valid range
+        currentValue = Mathf.Clamp01(value);
+
         if (mode == BarMode.Discrete)
         {
-            int discreteValue = Mathf.RoundToInt(testValue * 10f);
-            SetValue(discreteValue, 10, instant: true);
+            SetProgressDiscrete(currentValue, instant);
         }
         else
         {
-            SetFillPercent(testValue);
-        }
-
-        lastTestValue = testValue;
-        lastAnimationPreview = animationPreview;
-    }
-
-    private void Update()
-    {
-        // Why: Apply test slider changes during Play mode (instant)
-        if (Mathf.Abs(testValue - lastTestValue) > 0.001f)
-        {
-            if (mode == BarMode.Discrete)
-            {
-                int discreteValue = Mathf.RoundToInt(testValue * 10f);
-                SetValue(discreteValue, 10, instant: true); // Instant for test slider
-            }
-            else
-            {
-                SetFillPercent(testValue);
-            }
-
-            lastTestValue = testValue;
-        }
-
-        // Why: Apply animation preview slider (animated)
-        if (Mathf.Abs(animationPreview - lastAnimationPreview) > 0.001f)
-        {
-            if (mode == BarMode.Discrete)
-            {
-                int previewValue = Mathf.RoundToInt(animationPreview * 10f);
-                SetValue(previewValue, 10); // Animated!
-            }
-
-            lastAnimationPreview = animationPreview;
+            SetProgressSmooth(currentValue);
         }
     }
 
-    /// <summary>
-    /// Set discrete value (0-10) - for stats
-    /// Example: SetValue(7, 10) fills 7 out of 10 segments
-    /// Animated version - respects effect toggles
-    /// Animates UP or DOWN depending on previous value
-    /// </summary>
-    public void SetValue(int current, int max, bool instant = false)
-    {
-        // Why: Only works in Discrete mode
-        if (mode != BarMode.Discrete)
-        {
-            Debug.LogWarning($"HorizontalBar '{name}' is not in Discrete mode!");
-            return;
-        }
+    // ============================================
+    // DISCRETE MODE IMPLEMENTATION
+    // ============================================
 
-        // Why: Safety check
+    private void SetProgressDiscrete(float value, bool instant)
+    {
+        // Safety check
         if (segments == null || segments.Length == 0)
         {
             Debug.LogError($"HorizontalBar '{name}' has no segments assigned!");
             return;
         }
 
-        int targetValue = Mathf.Clamp(current, 0, max);
+        // Convert 0.0-1.0 to 0-10 segments
+        int targetSegments = Mathf.RoundToInt(value * 10f);
+        targetSegments = Mathf.Clamp(targetSegments, 0, 10);
 
-        // Why: If instant mode or no animations enabled, update immediately
+        // If instant or no animations, update immediately
         if (instant || (!useSequentialFill && !useScalePunch && !useColorLerp))
         {
-            SetValueInstant(targetValue, max);
+            SetDiscreteInstant(targetSegments);
             return;
         }
 
-        // Why: Stop any ongoing animations
+        // Only animate if value actually changed
+        if (targetSegments == lastDiscreteValue)
+        {
+            return;
+        }
+
+        // Stop any ongoing animations
         StopAllCoroutines();
-        DOTween.Kill(transform); // Kill any tweens on this object
+        DOTween.Kill(transform);
 
-        // Why: Determine direction and start appropriate animation
-        if (targetValue > currentDiscreteValue)
+        // Animate up or down
+        if (targetSegments > lastDiscreteValue)
         {
-            // Animating UP (filling)
-            StartCoroutine(AnimatedFillUp(currentDiscreteValue, targetValue));
+            StartCoroutine(AnimateDiscreteUp(lastDiscreteValue, targetSegments));
         }
-        else if (targetValue < currentDiscreteValue)
+        else if (targetSegments < lastDiscreteValue)
         {
-            // Animating DOWN (emptying)
-            StartCoroutine(AnimatedFillDown(currentDiscreteValue, targetValue));
+            StartCoroutine(AnimateDiscreteDown(lastDiscreteValue, targetSegments));
         }
 
-        currentDiscreteValue = targetValue;
+        lastDiscreteValue = targetSegments;
     }
 
-    /// <summary>
-    /// Instant version - no animations
-    /// </summary>
-    private void SetValueInstant(int current, int max)
+    private void SetDiscreteInstant(int targetSegments)
     {
-        currentDiscreteValue = Mathf.Clamp(current, 0, max);
+        lastDiscreteValue = targetSegments;
 
-        // Why: Loop through segments and activate based on current value
-        int activatedCount = 0;
         for (int i = 0; i < segments.Length; i++)
         {
             if (segments[i] != null)
             {
-                // Why: Fill segments up to current value
-                bool shouldBeActive = (i < currentDiscreteValue);
+                bool shouldBeActive = (i < targetSegments);
                 segments[i].color = shouldBeActive ? activeColor : inactiveColor;
                 segments[i].transform.localScale = Vector3.one;
-
-                if (shouldBeActive) activatedCount++;
             }
         }
-
-        Debug.Log($"SetValue: {current}/{max} → Activated {activatedCount}/{segments.Length} segments (instant)");
     }
 
-    /// <summary>
-    /// Animated fill UP coroutine - handles filling segments from start to target
-    /// </summary>
-    private IEnumerator AnimatedFillUp(int startValue, int targetValue)
+    private IEnumerator AnimateDiscreteUp(int startValue, int targetValue)
     {
-        // Why: Fill segments sequentially from startValue to targetValue
         for (int i = startValue; i < targetValue; i++)
         {
             if (segments[i] != null)
             {
-                // Effect 1: Color lerp
+                // Color lerp
                 if (useColorLerp)
                 {
                     segments[i].DOColor(activeColor, 1f / colorLerpSpeed);
@@ -226,35 +185,29 @@ public class HorizontalBar : MonoBehaviour
                     segments[i].color = activeColor;
                 }
 
-                // Effect 2: Scale punch
+                // Scale punch
                 if (useScalePunch)
                 {
                     segments[i].transform.localScale = Vector3.one;
                     segments[i].transform.DOPunchScale(Vector3.one * (punchScale - 1f), 0.2f, 1, 0.5f);
                 }
 
-                // Effect 3: Sequential delay (wave effect)
+                // Sequential delay
                 if (useSequentialFill && sequentialDelay > 0f)
                 {
                     yield return new WaitForSeconds(sequentialDelay);
                 }
             }
         }
-
-        Debug.Log($"▲ AnimatedFillUp: {startValue} → {targetValue}/10 complete");
     }
 
-    /// <summary>
-    /// Animated fill DOWN coroutine - handles emptying segments from start down to target
-    /// </summary>
-    private IEnumerator AnimatedFillDown(int startValue, int targetValue)
+    private IEnumerator AnimateDiscreteDown(int startValue, int targetValue)
     {
-        // Why: Empty segments sequentially from startValue-1 down to targetValue (reverse order)
         for (int i = startValue - 1; i >= targetValue; i--)
         {
             if (segments[i] != null)
             {
-                // Effect 1: Color lerp to inactive
+                // Color lerp to inactive
                 if (useColorLerp)
                 {
                     segments[i].DOColor(inactiveColor, 1f / colorLerpSpeed);
@@ -264,158 +217,72 @@ public class HorizontalBar : MonoBehaviour
                     segments[i].color = inactiveColor;
                 }
 
-                // Effect 2: Scale punch (smaller punch when going down - feels like deflating)
+                // Smaller scale punch when going down
                 if (useScalePunch)
                 {
                     segments[i].transform.localScale = Vector3.one;
                     segments[i].transform.DOPunchScale(Vector3.one * (punchScale - 1f) * 0.5f, 0.2f, 1, 0.5f);
                 }
 
-                // Effect 3: Sequential delay (wave effect in reverse)
+                // Sequential delay
                 if (useSequentialFill && sequentialDelay > 0f)
                 {
                     yield return new WaitForSeconds(sequentialDelay);
                 }
             }
         }
-
-        Debug.Log($"▼ AnimatedFillDown: {startValue} → {targetValue}/10 complete");
     }
 
-    /// <summary>
-    /// Set smooth fill (0.0 - 1.0) - for timers and progress
-    /// Example: SetFillPercent(0.5f) fills bar to 50%
-    /// </summary>
-    public void SetFillPercent(float percent)
-    {
-        // Why: Only works in Smooth mode
-        if (mode != BarMode.Smooth)
-        {
-            Debug.LogWarning($"HorizontalBar '{name}' is not in Smooth mode!");
-            return;
-        }
+    // ============================================
+    // SMOOTH MODE IMPLEMENTATION
+    // ============================================
 
-        // Why: Safety check
+    private void SetProgressSmooth(float value)
+    {
+        // Safety check
         if (fillBar == null)
         {
             Debug.LogError($"HorizontalBar '{name}' has no fillBar assigned!");
             return;
         }
 
-        currentSmoothValue = Mathf.Clamp01(percent);
-        fillBar.fillAmount = currentSmoothValue;
+        // Set fill amount directly
+        fillBar.fillAmount = value;
 
-        // TODO: Add color gradient based on percent (red when low, green when high)
-        // TODO: Add pulse effect when timer running low
+        // TODO: Color gradient based on value (red when low, green when high)
+        // TODO: Pulse effect when timer running low
     }
 
-    /// <summary>
-    /// Get current displayed value (for debugging or external checks)
-    /// </summary>
-    public float GetCurrentValue()
-    {
-        return (mode == BarMode.Discrete) ? currentDiscreteValue : currentSmoothValue;
-    }
+    // ============================================
+    // CONTEXT MENU HELPERS
+    // ============================================
 
-    /// <summary>
-    /// Called in editor when inspector values change - for testing
-    /// </summary>
-    private void OnValidate()
+    [ContextMenu("Test: Fill to Max")]
+    private void TestFillMax()
     {
-        // Why: Don't try to update if we're not in play mode and components aren't ready
-        if (!Application.isPlaying)
+        if (Application.isPlaying)
         {
-            // Only update if segments/fillBar are actually assigned
-            if (mode == BarMode.Discrete && segments != null && segments.Length > 0)
-            {
-                // Convert 0-1 range to 0-10 discrete value
-                int discreteValue = Mathf.RoundToInt(testValue * 10f);
-                Debug.Log($"TestValue: {testValue} → Discrete: {discreteValue}/10");
-                SetValue(discreteValue, 10, instant: true); // Instant in editor
-            }
-            else if (mode == BarMode.Smooth && fillBar != null)
-            {
-                Debug.Log($"TestValue: {testValue} → Fill: {testValue * 100f}%");
-                SetFillPercent(testValue);
-            }
+            SetProgress(1f);
         }
     }
 
-    /// <summary>
-    /// Preview animation in editor - right-click component → Preview Animation
-    /// </summary>
-    [ContextMenu("Preview Animation")]
-    private void PreviewAnimation()
+    [ContextMenu("Test: Empty Bar")]
+    private void TestEmpty()
     {
-        if (Application.isPlaying && mode == BarMode.Discrete)
+        if (Application.isPlaying)
         {
-            int previewValue = Mathf.RoundToInt(animationPreview * 10f);
-            Debug.Log($"🎬 Previewing animation: {previewValue}/10");
-            SetValue(previewValue, 10);
-        }
-        else if (!Application.isPlaying)
-        {
-            Debug.LogWarning("⚠️ Preview Animation only works in Play mode! Enter Play mode and try again.");
+            SetProgress(0f);
         }
     }
 
-    /// <summary>
-    /// Quick test - fill to maximum with animation
-    /// </summary>
-    [ContextMenu("Test: Fill to Max (Animated)")]
-    private void TestFillToMax()
+    [ContextMenu("Test: Half Full")]
+    private void TestHalf()
     {
-        if (Application.isPlaying && mode == BarMode.Discrete)
+        if (Application.isPlaying)
         {
-            SetValue(10, 10);
+            SetProgress(0.5f);
         }
     }
-
-    /// <summary>
-    /// Quick test - clear bar
-    /// </summary>
-    [ContextMenu("Test: Clear Bar")]
-    private void TestClearBar()
-    {
-        if (Application.isPlaying && mode == BarMode.Discrete)
-        {
-            SetValue(0, 10, instant: true);
-        }
-    }
-
-    // ========================================
-    // FUTURE EFFECTS - Add these methods later when needed:
-    // ========================================
-
-    // public void Blink(float duration = 0.2f)
-    // {
-    //     // Quick flash for damage/change feedback
-    //     // transform.DOPunchScale(Vector3.one * 0.1f, duration);
-    // }
-
-    // public void Pulse(float duration = 1f)
-    // {
-    //     // Gentle ongoing pulse - good for warnings
-    //     // transform.DOScale(1.05f, duration).SetLoops(-1, LoopType.Yoyo);
-    // }
-
-    // public void FlashColor(Color color, float duration = 0.3f)
-    // {
-    //     // Quick color flash for feedback (damage = red, heal = green)
-    //     // foreach (var segment in segments) segment.DOColor(color, duration).From();
-    // }
-
-    // public void Shake()
-    // {
-    //     // Quick shake effect using Feel or DOTween
-    //     // transform.DOShakePosition(0.3f, 5f, 20);
-    // }
-
-    // public void PlaySoundPerSegment()
-    // {
-    //     // Optional: Play quiet tick sound when each segment fills
-    //     // if (AudioManager.Instance) AudioManager.Instance.PlaySFX("segment_tick");
-    // }
 }
 
 public enum BarMode
