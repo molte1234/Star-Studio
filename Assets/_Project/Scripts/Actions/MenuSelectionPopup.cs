@@ -148,7 +148,7 @@ public class MemberSelectionPopup : MonoBehaviour
 
     private void PopulateActionInfo(ActionData action)
     {
-        // Why: Fill in action details
+        // Why: Fill in action details with REAL values from ActionData
 
         if (titleText != null)
         {
@@ -160,24 +160,45 @@ public class MemberSelectionPopup : MonoBehaviour
             descriptionText.text = action.actionDescription;
         }
 
-        // TODO: When ActionData has cost/time/minMembers fields, use real values
-        // For now, placeholder values
+        // Calculate total cost (this will update when characters are selected)
         if (moneyText != null)
         {
-            moneyText.text = "$???"; // TODO: "$" + action.initialCost
+            // Show base cost + per character cost format
+            if (action.costPerCharacter > 0)
+            {
+                moneyText.text = $"${action.baseCost} + ${action.costPerCharacter}/member";
+            }
+            else
+            {
+                moneyText.text = $"${action.baseCost}";
+            }
         }
 
         if (timeText != null)
         {
-            timeText.text = "?? SECONDS"; // TODO: action.timeDuration + " SECONDS"
+            // Show base time
+            int timeInSeconds = Mathf.RoundToInt(action.baseTime);
+            timeText.text = $"{timeInSeconds} SECONDS";
+
+            // If time can be reduced by stats, show hint
+            if (action.timeReductionPerStatPoint > 0f)
+            {
+                timeText.text += $" (faster with {action.timeEfficiencyStat})";
+            }
         }
 
         if (minMembersText != null)
         {
-            // TODO: Hide if action.minMembers <= 1
-            // TODO: Show "(X MEMBERS MINIMUM)" if action.minMembers > 1
-            minMembersText.text = "(2 MEMBERS MINIMUM)"; // Placeholder
-            // minMembersText.gameObject.SetActive(action.minMembers > 1);
+            // Show minimum members requirement
+            if (action.minMembers > 1)
+            {
+                minMembersText.text = $"({action.minMembers} MEMBERS MINIMUM)";
+                minMembersText.gameObject.SetActive(true);
+            }
+            else
+            {
+                minMembersText.gameObject.SetActive(false);
+            }
         }
     }
 
@@ -391,16 +412,20 @@ public class MemberSelectionPopup : MonoBehaviour
 
     private void OnCharacterSlotClicked(int slotIndex)
     {
-        // Why: Toggle selection state when player clicks a character portrait
-
-        if (characterSlots == null || slotIndex >= characterSlots.Length)
+        if (characterSlots == null || slotIndex < 0 || slotIndex >= characterSlots.Length)
+        {
+            Debug.LogError($"MemberSelectionPopup: Invalid slot index {slotIndex}");
             return;
+        }
 
         CharacterSlot slot = characterSlots[slotIndex];
 
         // Can't select unavailable characters
         if (!slot.isAvailable)
+        {
+            Debug.Log($"Character {slot.characterIndex} is not available");
             return;
+        }
 
         // Toggle selection
         slot.isSelected = !slot.isSelected;
@@ -414,7 +439,7 @@ public class MemberSelectionPopup : MonoBehaviour
             AudioManager.Instance.PlayButtonClick();
         }
 
-        // Update OK button state
+        // Validate OK button state
         ValidateSelection();
     }
 
@@ -424,41 +449,48 @@ public class MemberSelectionPopup : MonoBehaviour
 
     private void ValidateSelection()
     {
-        // Why: Check if current selection is valid, enable/disable OK button
-
-        if (okButton == null) return;
-
-        // Count selected members
-        int selectedCount = 0;
-        if (characterSlots != null)
+        if (currentAction == null || characterSlots == null)
         {
-            foreach (CharacterSlot slot in characterSlots)
+            if (okButton != null)
             {
-                if (slot != null && slot.isSelected)
-                {
-                    selectedCount++;
-                }
+                okButton.interactable = false;
+            }
+            return;
+        }
+
+        // Count selected
+        int selectedCount = 0;
+        foreach (CharacterSlot slot in characterSlots)
+        {
+            if (slot != null && slot.isSelected)
+            {
+                selectedCount++;
             }
         }
 
-        // TODO: Check against action.minMembers and action.maxMembers
-        // For now, just require at least 1 member
-        bool isValid = (selectedCount >= 1);
+        // Check if meets minimum requirement
+        bool isValid = selectedCount >= currentAction.minMembers;
 
-        // TODO: Check if player has enough money (action.initialCost)
-        // For now, assume always valid
+        // Check if exceeds maximum
+        if (currentAction.maxMembers > 0 && selectedCount > currentAction.maxMembers)
+        {
+            isValid = false;
+        }
 
-        okButton.interactable = isValid;
+        // Update OK button
+        if (okButton != null)
+        {
+            okButton.interactable = isValid;
+        }
     }
 
     // ============================================
-    // BUTTON CALLBACKS
+    // BUTTON HANDLERS
     // ============================================
 
     private void OnOKClicked()
     {
-        // Why: Gather selected member indices and pass to callback
-
+        // Collect selected character indices
         List<int> selectedIndices = new List<int>();
 
         if (characterSlots != null)

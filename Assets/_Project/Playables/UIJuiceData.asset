@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eaf8df02df81e944482b50708f505765, type: 3}
+  m_Name: UIJuiceData
+  m_EditorClassIdentifier: Assembly-CSharp::UIJuiceData
+  buttonHoverDuration: 0.2
+  buttonHoverScale: 1.1
+  buttonPressDuration: 0.1
+  buttonPressScale: 0.95
+  buttonEase: 27
+  panelOpenDuration: 0.3
+  panelCloseDuration: 0.2
+  panelStartScale: 0.8
+  panelOpenEase: 27
+  panelCloseEase: 26
+  portraitBreathingEnabled: 1
+  portraitBreathingScale: 1.02
+  portraitBreathingDuration: 2
+  portraitHoverEnabled: 1
+  portraitHoverScale: 1.05
+  portraitHoverDuration: 0.15
+  statBarFillDuration: 0.5
+  statNumberPopupsEnabled: 1
+  statParticlesEnabled: 1
+  statBarEase: 6
+  particleSpawnRateMultiplier: 1
+  buttonClickParticles: 1
+  moneyGainParticles: 1
+  actionCompleteParticles: 1
+  screenShakeIntensity: 0.3
+  screenShakeDuration: 0.3
+  screenFlashEnabled: 1
+  screenFlashDuration: 0.2
+  uiSoundsEnabled: 1
+  uiSoundVolume: 0.7
+  buttonHoverSounds: 1
+  buttonClickSounds: 1
+  numberCountDuration: 0.8
+  numberCountEase: 6
+  globalJuiceMultiplier: 1
+  debugMode: 0
