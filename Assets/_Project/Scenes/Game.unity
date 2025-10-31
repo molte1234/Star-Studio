@@ -2817,7 +2817,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -128.66, y: 141.55}
+  m_AnchoredPosition: {x: -142.79, y: 139.41}
   m_SizeDelta: {x: 468.63, y: 35.94}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &634637357
@@ -6675,8 +6675,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -262.98, y: 181.39}
-  m_SizeDelta: {x: 200, y: 50}
+  m_AnchoredPosition: {x: -213.5, y: 182.38}
+  m_SizeDelta: {x: 327.2, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1215717564
 MonoBehaviour:
@@ -6825,6 +6825,7 @@ MonoBehaviour:
   financePanel: {fileID: 0}
   marketingPanel: {fileID: 0}
   managingPanel: {fileID: 0}
+  menuToggleGroup: {fileID: 1904710439}
 --- !u!4 &1236340058
 Transform:
   m_ObjectHideFlags: 0
@@ -8614,7 +8615,7 @@ GameObject:
   - component: {fileID: 1548896990}
   - component: {fileID: 1548896986}
   m_Layer: 5
-  m_Name: Button
+  m_Name: Button - OK
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9995,7 +9996,7 @@ GameObject:
   - component: {fileID: 1792933893}
   - component: {fileID: 1792933889}
   m_Layer: 5
-  m_Name: Button
+  m_Name: Button - Cancel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

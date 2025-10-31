@@ -5,7 +5,7 @@ using TMPro;
 /// <summary>
 /// Controls all UI in the main Game scene
 /// Handles displaying stats, character portraits, and menu panels
-/// UPDATED: Removed 8-stat text displays - stats now live on individual characters
+/// UPDATED: Added CloseAllMenus() to return to main game view after actions
 /// </summary>
 public class UIController_Game : MonoBehaviour
 {
@@ -35,6 +35,10 @@ public class UIController_Game : MonoBehaviour
     [Tooltip("Panel in Area A that contains Managing action buttons")]
     public GameObject managingPanel;
 
+    [Header("Menu System - Area B (Toggle Buttons)")]
+    [Tooltip("Toggle Group that contains all menu buttons - needed to untoggle them")]
+    public ToggleGroup menuToggleGroup;
+
     void Start()
     {
         // Why: Make sure all panels start hidden
@@ -50,13 +54,90 @@ public class UIController_Game : MonoBehaviour
         {
             Debug.LogError("❌ UIController_Game: GameManager.Instance is null!");
         }
+    }
 
+    // ============================================
+    // PUBLIC METHODS - Called by other systems
+    // ============================================
+
+    /// <summary>
+    /// Closes all menu panels and untoggle all menu buttons
+    /// Called after starting an action to return to main game view
+    /// </summary>
+    public void CloseAllMenus()
+    {
+        // Why: Hide all panels
+        HideAllPanels();
+
+        // Why: Untoggle all menu buttons
+        if (menuToggleGroup != null)
+        {
+            // CRITICAL: ToggleGroup needs allowSwitchOff = true to untoggle all buttons
+            if (!menuToggleGroup.allowSwitchOff)
+            {
+                menuToggleGroup.allowSwitchOff = true;
+                Debug.Log("✅ Enabled allowSwitchOff on menuToggleGroup");
+            }
+
+            menuToggleGroup.SetAllTogglesOff();
+            Debug.Log("✅ All menu toggles turned off");
+        }
+        else
+        {
+            Debug.LogWarning("UIController_Game: menuToggleGroup is null - cannot untoggle menu buttons!");
+        }
+    }
+
+    /// <summary>
+    /// Updates all UI displays from GameManager data
+    /// Called by GameManager whenever game state changes
+    /// </summary>
+    public void RefreshUI()
+    {
+        // Why: Update from GameManager
+        if (GameManager.Instance == null)
+        {
+            Debug.LogError("❌ UIController_Game.RefreshUI(): GameManager.Instance is null!");
+            return;
+        }
+
+        GameManager gm = GameManager.Instance;
+
+        // Why: Update resource displays
+        if (moneyText != null) moneyText.text = "$" + gm.money.ToString();
+        if (fansText != null) fansText.text = gm.fans.ToString();
+        if (unityText != null) unityText.text = gm.unity.ToString() + "%";
+
+        // Why: Update quarter/year display
+        if (quarterYearText != null)
+        {
+            int year = (gm.currentQuarter / 4) + 1; // Years 1-20
+            int quarter = (gm.currentQuarter % 4) + 1; // Quarters 1-4
+            quarterYearText.text = $"Q{quarter} YEAR {year}";
+        }
+
+        // Why: Update band name
+        if (bandNameText != null) bandNameText.text = gm.bandName;
+
+        // Why: Update character displays
+        RefreshCharacters();
+    }
+
+    /// <summary>
+    /// Wrapper method called by GameManager (for compatibility)
+    /// </summary>
+    public void RefreshDisplay()
+    {
         RefreshUI();
     }
 
+    // ============================================
+    // PRIVATE HELPER METHODS
+    // ============================================
+
     private void HideAllPanels()
     {
-        // Why: Start with all panels hidden
+        // Why: Hide all action menu panels
         if (practicePanel != null) practicePanel.SetActive(false);
         if (producePanel != null) producePanel.SetActive(false);
         if (tourPanel != null) tourPanel.SetActive(false);
@@ -66,67 +147,12 @@ public class UIController_Game : MonoBehaviour
         if (managingPanel != null) managingPanel.SetActive(false);
     }
 
-    // ============================================
-    // UI REFRESH (Updates all displays)
-    // ============================================
-
-    public void RefreshUI()
-    {
-        // Why: Update all stat displays from GameManager
-        RefreshStats();
-        RefreshCharacters();
-    }
-
-    public void RefreshDisplay()
-    {
-        // Why: Called by GameManager after actions, same as RefreshUI
-        RefreshUI();
-    }
-
-    private void RefreshStats()
-    {
-        // Why: Display resources only (stats are now per-character)
-        if (GameManager.Instance == null)
-        {
-            Debug.LogWarning("⚠️ GameManager.Instance is null - cannot refresh stats!");
-            return;
-        }
-
-        GameManager gm = GameManager.Instance;
-
-        // Update resource displays
-        if (moneyText != null)
-        {
-            moneyText.text = $"${gm.money}";
-        }
-
-        if (fansText != null)
-        {
-            fansText.text = $"{gm.fans}";
-        }
-
-        if (unityText != null)
-        {
-            unityText.text = $"{gm.unity}";
-        }
-
-        if (quarterYearText != null)
-        {
-            quarterYearText.text = $"YEAR {gm.currentYear}  QUARTER {(gm.currentQuarter % 4) + 1}";
-        }
-
-        if (bandNameText != null)
-        {
-            bandNameText.text = gm.bandName;
-        }
-    }
-
     private void RefreshCharacters()
     {
-        // Why: Update character portraits in slots
-        if (characterDisplays == null || characterDisplays.Length == 0)
+        // Why: Update character portraits and stats from GameManager
+        if (GameManager.Instance == null)
         {
-            Debug.LogWarning("⚠️ No CharacterDisplay components assigned in Inspector!");
+            Debug.LogError("❌ UIController_Game.RefreshCharacters(): GameManager.Instance is null!");
             return;
         }
 

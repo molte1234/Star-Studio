@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using DG.Tweening;
@@ -8,6 +8,7 @@ using System.Collections.Generic;
 /// Popup for selecting which band members participate in an action
 /// Matches Unity hierarchy: Panel - MemberSelectionPopup structure
 /// Handles material states (Unselected/Selected/Unavailable) and text colors
+/// UPDATED: Now closes all menus after confirming to return to main game view
 /// </summary>
 public class MemberSelectionPopup : MonoBehaviour
 {
@@ -515,6 +516,20 @@ public class MemberSelectionPopup : MonoBehaviour
 
         // Invoke callback
         OnConfirm?.Invoke(currentAction, selectedIndices);
+
+        // ============================================
+        // NEW: Close all menus after confirming action
+        // ============================================
+        UIController_Game uiController = FindObjectOfType<UIController_Game>();
+        if (uiController != null)
+        {
+            uiController.CloseAllMenus();
+            Debug.Log("✅ Closed all menus - returning to main game view");
+        }
+        else
+        {
+            Debug.LogWarning("⚠️ MemberSelectionPopup: Could not find UIController_Game to close menus!");
+        }
     }
 
     private void OnCancelClicked()
