@@ -3,56 +3,43 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// Displays a character's info in the Band Setup scene
-/// Shows portrait, name, real name, costs, bio, all 8 stats as BARS (no text needed), and trait
-/// Simplified: Bars show the values visually, no need for duplicate text
+/// Displays character details in Band Setup scene
+/// Shows: Portrait, name, stats (8-stat system), hire cost, trait, bio
 /// </summary>
 public class CharacterViewer : MonoBehaviour
 {
-    [Header("Character Info")]
+    [Header("Character Info Display")]
     public Image portraitImage;
-    public TextMeshProUGUI nameText;          // Display name / Stage name
-    public TextMeshProUGUI realNameText;      // Character's real name
-    public TextMeshProUGUI traitText;         // One-liner personality trait
-
-    [Header("Cost Display")]
-    [Tooltip("Shows one-time recruitment/hire cost")]
+    public TextMeshProUGUI nameText;
+    public TextMeshProUGUI realNameText;
+    public TextMeshProUGUI traitText;
     public TextMeshProUGUI hireCostText;
-    [Tooltip("Shows ongoing salary/upkeep per quarter")]
     public TextMeshProUGUI upkeepCostText;
+    public TextMeshProUGUI bioText;
 
-    [Header("Character Bio")]
-    [Tooltip("Multi-line text area for character backstory/description")]
-    public TextMeshProUGUI bioText;           // Character biography/backstory
+    [Header("8-Stat System Bars (NEW)")]
+    public HorizontalBar charismaBar;
+    public HorizontalBar stagePerformanceBar;
+    public HorizontalBar vocalBar;
+    public HorizontalBar instrumentBar;
+    public HorizontalBar songwritingBar;
+    public HorizontalBar productionBar;
+    public HorizontalBar managementBar;
+    public HorizontalBar practicalBar;
 
-    [Header("Stat Bars (0-10 Visual Display)")]
-    [Tooltip("Drag the HorizontalBar component for each stat here")]
-    public HorizontalBar charismaBar;         // Social, look, fan appeal
-    public HorizontalBar stagePerformanceBar; // Live show entertainment
-    public HorizontalBar vocalBar;            // Singing ability
-    public HorizontalBar instrumentBar;       // Playing instrument
-    public HorizontalBar songwritingBar;      // Creating music
-    public HorizontalBar productionBar;       // Studio/technical skills
-    public HorizontalBar managementBar;       // Business/organization
-    public HorizontalBar practicalBar;        // General utility
-
-    [Header("UI Feedback")]
-    public Image hiredStampImage;             // Shows when character is already in band
-
-    [Header("Animation Options")]
-    [Tooltip("Should bars animate when switching characters?")]
-    public bool animateBars = true;           // Toggle animation on/off
+    [Header("Visual Feedback")]
+    public Image hiredStampImage; // Shows "HIRED" if already in band
+    public bool animateBars = true; // Enable/disable bar animations
 
     /// <summary>
-    /// Display all character info - called when browsing characters
-    /// Simplified to use bars only (no redundant text)
+    /// Display a character's full details
     /// </summary>
-    public void DisplayCharacter(SlotData character, bool isAlreadyInBand)
+    public void DisplayCharacter(SlotData character, bool isAlreadyInBand = false)
     {
-        // Why: Safety check
         if (character == null)
         {
-            Debug.LogError("DisplayCharacter called with null character!");
+            Debug.LogWarning("⚠️ Tried to display null character!");
+            ClearDisplay();
             return;
         }
 
@@ -101,7 +88,8 @@ public class CharacterViewer : MonoBehaviour
                 : "No bio available.";
         }
 
-        // Why: Update all 8 stat BARS - bars show the values visually, no text needed!
+        // ⭐ NEW UNIFIED API - All stats use SetProgress(0-1)
+        // Convert 0-10 stat values to 0-1 progress
         UpdateStatBar(charismaBar, character.charisma, "Charisma");
         UpdateStatBar(stagePerformanceBar, character.stagePerformance, "Stage Performance");
         UpdateStatBar(vocalBar, character.vocal, "Vocal");
@@ -128,13 +116,16 @@ public class CharacterViewer : MonoBehaviour
 
     /// <summary>
     /// Helper to update bar display safely with optional animation
+    /// Uses NEW UNIFIED API: SetProgress(0-1)
     /// </summary>
     private void UpdateStatBar(HorizontalBar bar, int value, string statName)
     {
         if (bar != null)
         {
-            // Why: All stats are 0-10 range, bars show this visually
-            bar.SetValue(value, 10, instant: !animateBars);
+            // ⭐ NEW: Convert 0-10 stat to 0-1 progress
+            // Example: 7 out of 10 → 0.7 progress
+            float progress = value / 10f;
+            bar.SetProgress(progress, instant: !animateBars);
 
             // Debug only in verbose mode
 #if UNITY_EDITOR
@@ -179,15 +170,15 @@ public class CharacterViewer : MonoBehaviour
         if (bioText != null)
             bioText.text = "";
 
-        // Clear all bars (instant to 0)
-        if (charismaBar != null) charismaBar.SetValue(0, 10, instant: true);
-        if (stagePerformanceBar != null) stagePerformanceBar.SetValue(0, 10, instant: true);
-        if (vocalBar != null) vocalBar.SetValue(0, 10, instant: true);
-        if (instrumentBar != null) instrumentBar.SetValue(0, 10, instant: true);
-        if (songwritingBar != null) songwritingBar.SetValue(0, 10, instant: true);
-        if (productionBar != null) productionBar.SetValue(0, 10, instant: true);
-        if (managementBar != null) managementBar.SetValue(0, 10, instant: true);
-        if (practicalBar != null) practicalBar.SetValue(0, 10, instant: true);
+        // ⭐ NEW: Clear all bars using unified API (instant to 0)
+        if (charismaBar != null) charismaBar.SetProgress(0f, instant: true);
+        if (stagePerformanceBar != null) stagePerformanceBar.SetProgress(0f, instant: true);
+        if (vocalBar != null) vocalBar.SetProgress(0f, instant: true);
+        if (instrumentBar != null) instrumentBar.SetProgress(0f, instant: true);
+        if (songwritingBar != null) songwritingBar.SetProgress(0f, instant: true);
+        if (productionBar != null) productionBar.SetProgress(0f, instant: true);
+        if (managementBar != null) managementBar.SetProgress(0f, instant: true);
+        if (practicalBar != null) practicalBar.SetProgress(0f, instant: true);
 
         // Hide hired stamp
         if (hiredStampImage != null)
