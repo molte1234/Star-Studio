@@ -112,61 +112,9 @@ public class GameManager : MonoBehaviour
         if (characterStates[index] != null && characterStates[index].slotData != null)
         {
             string busyStatus = characterStates[index].isBusy ? " [BUSY]" : "";
-            return $"{characterStates[index].slotData.displayName}{busyStatus}";
+            return characterStates[index].slotData.displayName + busyStatus;
         }
         return "EMPTY";
-    }
-
-    /// <summary>
-    /// DEBUG: Print all band members to console
-    /// </summary>
-    [ContextMenu("🔍 DEBUG: Show Band Members")]
-    public void DEBUG_ShowBandMembers()
-    {
-        Debug.Log("========================================");
-        Debug.Log($"🎸 BAND: {bandName}");
-        Debug.Log("========================================");
-
-        for (int i = 0; i < characterStates.Length; i++)
-        {
-            if (characterStates[i] != null && characterStates[i].slotData != null)
-            {
-                SlotData data = characterStates[i].slotData;
-                Debug.Log($"   Slot {i}: {data.displayName}");
-                Debug.Log($"      Stats - CHA:{data.charisma} STAGE:{data.stagePerformance} VOC:{data.vocal} INST:{data.instrument}");
-                Debug.Log($"              SONG:{data.songwriting} PROD:{data.production} MGT:{data.management} PRAC:{data.practical}");
-            }
-            else
-            {
-                Debug.Log($"   Slot {i}: EMPTY");
-            }
-        }
-
-        Debug.Log("========================================");
-        Debug.Log($"📊 TOTAL BAND STATS:");
-        Debug.Log($"   CHA:{charisma} STAGE:{stagePerformance} VOC:{vocal} INST:{instrument}");
-        Debug.Log($"   SONG:{songwriting} PROD:{production} MGT:{management} PRAC:{practical}");
-        Debug.Log("========================================");
-    }
-
-    /// <summary>
-    /// DEBUG: Manually force create test band (useful when Start() order is wrong)
-    /// </summary>
-    [ContextMenu("🔧 DEBUG: Force Create Test Band")]
-    public void DEBUG_ForceCreateTestBand()
-    {
-        Debug.Log("🔧 Manually triggering TestBandHelper...");
-
-        TestBandHelper testHelper = GetComponent<TestBandHelper>();
-        if (testHelper != null)
-        {
-            testHelper.PopulateTestBandIfEnabled();
-            RefreshUI();
-        }
-        else
-        {
-            Debug.LogError("❌ TestBandHelper component not found on GameManager!");
-        }
     }
 
     /// <summary>
@@ -272,21 +220,7 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        Debug.Log($"📊 Band Stats: CHA:{charisma} STAGE:{stagePerformance} VOC:{vocal} INST:{instrument} SONG:{songwriting} PROD:{production} MGT:{management} PRAC:{practical}");
-    }
-
-    [ContextMenu("Force Check Events Now")]
-    public void DEBUG_ForceCheckEvents()
-    {
-        if (eventManager != null)
-        {
-            Debug.Log("🔧 DEBUG: Manual event check triggered");
-            eventManager.CheckForEvents();
-        }
-        else
-        {
-            Debug.LogError("❌ DEBUG: Cannot check events - EventManager is null!");
-        }
+        Debug.Log($"📊 Stats Recalculated: CHA {charisma}, STG {stagePerformance}, VOC {vocal}, INS {instrument}, SNG {songwriting}, PRD {production}, MGT {management}, PRA {practical}");
     }
 
     [ContextMenu("Show Welcome Screen")]
@@ -303,29 +237,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void DoAction(ActionType action)
-    {
-        switch (action)
-        {
-            case ActionType.Record:
-                DoRecord();
-                break;
-            case ActionType.Tour:
-                DoTour();
-                break;
-            case ActionType.Practice:
-                DoPractice();
-                break;
-            case ActionType.Rest:
-                DoRest();
-                break;
-            case ActionType.Release:
-                DoRelease();
-                break;
-        }
-
-        RefreshUI();
-    }
+    // Old DoAction removed - now using new action system with ActionData + ActionManager
 
     public void AdvanceQuarter()
     {
@@ -392,91 +304,188 @@ public class GameManager : MonoBehaviour
         RefreshUI();
     }
 
-    private void DoRecord()
-    {
-        int cost = 200;
-
-        if (money < cost)
-        {
-            Debug.Log("❌ RECORD: Not enough money!");
-            return;
-        }
-
-        money -= cost;
-        fans += 10 + (charisma / 3);
-
-        Debug.Log($"🎵 RECORD: -${cost}, +{10 + (charisma / 3)} fans");
-    }
-
-    private void DoTour()
-    {
-        int cost = rules.tourCost;
-
-        if (money < cost)
-        {
-            Debug.Log("❌ TOUR: Not enough money!");
-            return;
-        }
-
-        money -= cost;
-        int earnings = stagePerformance * rules.tourMoneyMultiplier;
-        money += earnings;
-        fans += rules.tourFanGain;
-        unity -= rules.tourUnityCost;
-
-        unity = Mathf.Clamp(unity, 0, 100);
-
-        Debug.Log($"🎤 TOUR: -${cost}, +${earnings}, +{rules.tourFanGain} fans, -{rules.tourUnityCost} unity");
-    }
-
-    private void DoPractice()
-    {
-        stagePerformance += rules.practiceStatGain;
-        vocal += rules.practiceStatGain;
-        instrument += rules.practiceStatGain;
-
-        Debug.Log($"🎸 PRACTICE: +{rules.practiceStatGain} to performance stats");
-    }
-
-    private void DoRest()
-    {
-        unity += rules.restUnityGain;
-        unity = Mathf.Clamp(unity, 0, 100);
-
-        Debug.Log($"😌 REST: +{rules.restUnityGain} unity");
-    }
-
-    private void DoRelease()
-    {
-        int fanGain = (songwriting + production + charisma) / 3;
-        fans += fanGain;
-
-        Debug.Log($"💿 RELEASE: +{fanGain} fans");
-    }
+    // Old action methods removed - now using ActionData + ActionManager system
 
     private void EndGame()
     {
-        Debug.Log("========================================");
-        Debug.Log("🎊 GAME OVER - Reached 10 years!");
-        Debug.Log($"   Final Stats: ${money}, {fans} fans");
-        Debug.Log("========================================");
+        Debug.Log("🎊 GAME OVER: 10 years complete!");
 
         if (SceneLoader.Instance != null)
         {
             SceneLoader.Instance.LoadGameOver();
         }
-        else
+    }
+
+    // ============================================
+    // ✅ NEW ORCHESTRATOR METHODS
+    // ============================================
+
+    /// <summary>
+    /// ORCHESTRATOR: Start an action for selected characters
+    /// Called from MemberSelectionPopup or ActionButton
+    /// Changes state, then tells ActionManager and UIController what to do
+    /// </summary>
+    public void StartAction(ActionData action, List<int> characterIndices)
+    {
+        if (action == null)
         {
-            Debug.LogError("❌ SceneLoader.Instance is null - cannot load GameOver scene!");
+            Debug.LogError("❌ GameManager.StartAction: action is null!");
+            return;
+        }
+
+        Debug.Log($"🎬 GameManager: Starting action '{action.actionName}' with {characterIndices.Count} characters");
+
+        // ============================================
+        // 1. VALIDATE & CHANGE STATE
+        // ============================================
+
+        // Validate member requirements
+        if (action.requiresMembers && characterIndices.Count < action.minMembers)
+        {
+            Debug.LogWarning($"⚠️ Not enough members! Need {action.minMembers}");
+            return;
+        }
+
+        // Validate money
+        if (money < action.baseCost)
+        {
+            Debug.LogWarning($"⚠️ Not enough money! Need ${action.baseCost}");
+            return;
+        }
+
+        // Pay cost
+        money -= action.baseCost;
+        Debug.Log($"   💰 Paid ${action.baseCost} → Balance: ${money}");
+
+        // Mark characters as busy
+        foreach (int index in characterIndices)
+        {
+            characterStates[index].isBusy = true;
+            characterStates[index].currentAction = action;
+            Debug.Log($"   🔒 Character {index} now BUSY");
+        }
+
+        // ============================================
+        // 2. TELL ACTIONMANAGER: "Start timer"
+        // ============================================
+
+        if (ActionManager.Instance != null)
+        {
+            ActionManager.Instance.StartTimer(action, characterIndices);
+        }
+
+        // ============================================
+        // 3. TELL UICONTROLLER: "Update display"
+        // ============================================
+
+        if (uiController != null)
+        {
+            uiController.RefreshUI();
         }
     }
-}
 
-public enum ActionType
-{
-    Record,
-    Tour,
-    Practice,
-    Rest,
-    Release
+    /// <summary>
+    /// ORCHESTRATOR: Complete an action
+    /// Called from ActionManager when timer finishes
+    /// Changes state, applies rewards, then tells UIController to update
+    /// </summary>
+    public void CompleteAction(int characterIndex)
+    {
+        CharacterSlotState charState = characterStates[characterIndex];
+        if (charState == null || !charState.isBusy)
+        {
+            Debug.LogWarning($"⚠️ Cannot complete - character {characterIndex} not busy");
+            return;
+        }
+
+        ActionData action = charState.currentAction;
+        List<int> groupIndices = new List<int>(charState.groupedWithSlots);
+
+        Debug.Log($"✅ GameManager: Completing action '{action.actionName}'");
+
+        // ============================================
+        // 1. APPLY REWARDS
+        // ============================================
+
+        money += action.rewardMoney;
+        fans += action.rewardFans;
+        Debug.Log($"   💰 Gained ${action.rewardMoney} | 👥 Gained {action.rewardFans} fans");
+
+        // ============================================
+        // 2. CHANGE STATE - UNLOCK CHARACTERS
+        // ============================================
+
+        foreach (int index in groupIndices)
+        {
+            characterStates[index].isBusy = false;
+            characterStates[index].currentAction = null;
+            characterStates[index].actionTimeRemaining = 0f;
+            characterStates[index].actionTotalDuration = 0f;
+            characterStates[index].groupedWithSlots.Clear();
+            Debug.Log($"   🔓 Character {index} now IDLE");
+        }
+
+        // ============================================
+        // 3. TELL UICONTROLLER: "Update display"
+        // ============================================
+
+        if (uiController != null)
+        {
+            uiController.RefreshUI();
+        }
+    }
+
+    /// <summary>
+    /// ORCHESTRATOR: Cancel an action
+    /// Called from CharacterDisplay cancel button
+    /// Changes state, then tells ActionManager to stop timer and UIController to update
+    /// </summary>
+    public void CancelAction(int characterIndex)
+    {
+        CharacterSlotState charState = characterStates[characterIndex];
+        if (charState == null || !charState.isBusy)
+        {
+            Debug.LogWarning($"⚠️ Cannot cancel - character {characterIndex} not busy");
+            return;
+        }
+
+        ActionData action = charState.currentAction;
+        List<int> groupIndices = new List<int>(charState.groupedWithSlots);
+
+        Debug.Log($"❌ GameManager: Canceling action '{action.actionName}'");
+
+        // ============================================
+        // 1. CHANGE STATE - UNLOCK CHARACTERS
+        // ============================================
+
+        foreach (int index in groupIndices)
+        {
+            characterStates[index].isBusy = false;
+            characterStates[index].currentAction = null;
+            characterStates[index].actionTimeRemaining = 0f;
+            characterStates[index].actionTotalDuration = 0f;
+            characterStates[index].groupedWithSlots.Clear();
+            Debug.Log($"   🔓 Character {index} now IDLE");
+        }
+
+        // ============================================
+        // 2. TELL ACTIONMANAGER: "Stop timer"
+        // ============================================
+
+        if (ActionManager.Instance != null)
+        {
+            ActionManager.Instance.StopTimer(groupIndices);
+        }
+
+        // ============================================
+        // 3. TELL UICONTROLLER: "Update display"
+        // ============================================
+
+        if (uiController != null)
+        {
+            uiController.RefreshUI();
+        }
+
+        // TODO: Refund costs?
+    }
 }

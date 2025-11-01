@@ -189,9 +189,9 @@ public class CharacterDisplay : MonoBehaviour
 
     private void OnCancelButtonClicked()
     {
-        if (ActionManager.Instance == null)
+        if (GameManager.Instance == null)
         {
-            Debug.LogError("❌ CharacterDisplay: ActionManager.Instance is null!");
+            Debug.LogError("❌ CharacterDisplay: GameManager.Instance is null!");
             return;
         }
 
@@ -203,8 +203,8 @@ public class CharacterDisplay : MonoBehaviour
 
         Debug.Log($"🚫 Cancel button clicked for character slot {currentCharacterIndex}");
 
-        // Call ActionManager to cancel this character's action
-        ActionManager.Instance.CancelAction(currentCharacterIndex);
+        // ✅ NEW: Call GameManager instead of ActionManager
+        GameManager.Instance.CancelAction(currentCharacterIndex);
 
         // Note: AudioManager call removed - UIButton already handles click sound
     }

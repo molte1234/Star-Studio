@@ -129,17 +129,18 @@ public class ActionButton : MonoBehaviour
 
     private void OnMembersConfirmed(ActionData action, System.Collections.Generic.List<int> selectedMemberIndices)
     {
-        if (ActionManager.Instance == null)
+        if (GameManager.Instance == null)
         {
-            Debug.LogError($"❌ ActionButton: ActionManager.Instance is null!");
+            Debug.LogError($"❌ ActionButton: GameManager.Instance is null!");
             return;
         }
 
         Debug.Log($"✅ Members confirmed: {selectedMemberIndices.Count} members selected for {action.actionName}");
 
-        // Why: Start action with selected members
-        ActionManager.Instance.StartAction(action, selectedMemberIndices);
+        // ✅ NEW: Call GameManager instead of ActionManager
+        GameManager.Instance.StartAction(action, selectedMemberIndices);
     }
+
 
     // ============================================
     // IMMEDIATE ACTION START (No members needed)
@@ -147,15 +148,16 @@ public class ActionButton : MonoBehaviour
 
     private void StartActionImmediately()
     {
-        if (ActionManager.Instance == null)
+        if (GameManager.Instance == null)
         {
-            Debug.LogError($"❌ ActionButton: ActionManager.Instance is null!");
+            Debug.LogError($"❌ ActionButton: GameManager.Instance is null!");
             return;
         }
 
-        // Why: Start action with empty member list (no characters needed)
-        ActionManager.Instance.StartAction(actionData, new System.Collections.Generic.List<int>());
+        // ✅ NEW: Call GameManager instead of ActionManager
+        GameManager.Instance.StartAction(actionData, new System.Collections.Generic.List<int>());
     }
+
 
     // ============================================
     // ODIN INSPECTOR - DEBUG VIEW
