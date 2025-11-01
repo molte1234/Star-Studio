@@ -503,7 +503,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1363976658437839668}
   m_Layer: 0
-  m_Name: Button
+  m_Name: Button - Cancel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

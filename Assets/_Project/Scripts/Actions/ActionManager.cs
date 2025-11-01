@@ -166,31 +166,61 @@ public class ActionManager : MonoBehaviour
     /// <summary>
     /// Stop a timer (for cancellation)
     /// Called by GameManager after it changes state
+    /// UPDATED: Removes only the canceled character, keeps timer running if others remain
     /// </summary>
     public void StopTimer(List<int> characterIndices)
     {
         if (characterIndices == null || characterIndices.Count == 0) return;
 
-        // Find and remove timer with any of these characters
+        Debug.Log($"🛑 ActionManager.StopTimer called for characters: [{string.Join(", ", characterIndices)}]");
+
+        // Find timers that involve any of these characters
         for (int i = activeTimers.Count - 1; i >= 0; i--)
         {
             ActionTimer timer = activeTimers[i];
 
             // Check if this timer involves any of the cancelled characters
-            bool matchesAny = false;
-            foreach (int index in characterIndices)
+            bool timerInvolved = false;
+            foreach (int canceledChar in characterIndices)
             {
-                if (timer.groupedCharacters.Contains(index))
+                if (timer.groupedCharacters.Contains(canceledChar))
                 {
-                    matchesAny = true;
+                    timerInvolved = true;
                     break;
                 }
             }
 
-            if (matchesAny)
+            if (!timerInvolved) continue; // This timer doesn't involve canceled characters
+
+            Debug.Log($"   📍 Found timer with {timer.groupedCharacters.Count} characters: [{string.Join(", ", timer.groupedCharacters)}]");
+
+            // ============================================
+            // REMOVE CANCELED CHARACTERS FROM TIMER
+            // ============================================
+
+            foreach (int canceledChar in characterIndices)
             {
-                Debug.Log($"   ⏰ Timer stopped for character {timer.characterIndex}");
+                if (timer.groupedCharacters.Contains(canceledChar))
+                {
+                    timer.groupedCharacters.Remove(canceledChar);
+                    Debug.Log($"      ➖ Removed character {canceledChar} from timer");
+                }
+            }
+
+            // ============================================
+            // CHECK IF TIMER SHOULD BE DELETED
+            // ============================================
+
+            if (timer.groupedCharacters.Count == 0)
+            {
+                // No characters left - remove timer completely
                 activeTimers.RemoveAt(i);
+                Debug.Log($"      🗑️ Timer removed - no characters remaining");
+            }
+            else
+            {
+                // Characters still working - keep timer running!
+                Debug.Log($"      ⏰ Timer continues with {timer.groupedCharacters.Count} characters: [{string.Join(", ", timer.groupedCharacters)}]");
             }
         }
     }

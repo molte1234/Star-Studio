@@ -78,15 +78,75 @@ public class HorizontalBar : MonoBehaviour
     // Private state
     private int lastDiscreteValue = -1;
     private float lastValue = -1f;
+    private string uniqueBarID; // ✅ NEW: Unique ID for this bar instance
 
-    void Start()
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+
+    private void Awake()
     {
-        // Setup proper GameObject states based on mode
-        SetupModeObjects();
+        // ✅ Generate unique ID for THIS specific bar instance
+        uniqueBarID = $"Bar_{GetInstanceID()}";
+    }
 
-        // Initialize bar to starting value
-        SetProgress(value, instant: true);
-        lastValue = value;
+    private void OnEnable()
+    {
+        // Reset to 0 instantly when bar is activated
+        // Overrides any previous state or animation settings
+        ResetBar();
+    }
+
+    private void Start()
+    {
+        SetupModeObjects();
+    }
+
+    /// <summary>
+    /// Reset bar to empty state instantly (no animations)
+    /// Called automatically when bar is enabled
+    /// </summary>
+    private void ResetBar()
+    {
+        value = 0f;
+        lastDiscreteValue = -1; // Reset tracking
+
+        // ✅ KILL ALL ANIMATIONS FOR THIS BAR
+        StopAllCoroutines();
+
+        if (mode == BarMode.Discrete)
+        {
+            // Clean up all segments
+            if (segments != null)
+            {
+                foreach (var seg in segments)
+                {
+                    if (seg != null)
+                    {
+                        // ✅ KILL ALL animations on this segment (both transform AND image component!)
+                        DOTween.Kill(seg.transform); // Kill scale animations
+                        DOTween.Kill(seg);           // Kill color animations on Image component
+
+                        // ✅ RESET visual state
+                        seg.color = fillColor; // Reset to default color
+                        seg.transform.localScale = Vector3.one; // Reset scale
+
+                        // Disable segment
+                        seg.gameObject.SetActive(false);
+                    }
+                }
+            }
+        }
+        else // Smooth mode
+        {
+            // Reset fill bar to empty
+            if (fillBar != null)
+            {
+                fillBar.fillAmount = 0f;
+                fillBar.gameObject.SetActive(true);
+                fillBar.color = fillColor;
+            }
+        }
     }
 
     void Update()
@@ -104,7 +164,8 @@ public class HorizontalBar : MonoBehaviour
     // ============================================
 
     /// <summary>
-    /// Enable/disable appropriate GameObjects based on current mode
+    /// Configure GameObjects based on selected mode
+    /// Called in Start() and from context menu
     /// </summary>
     private void SetupModeObjects()
     {
@@ -201,9 +262,9 @@ public class HorizontalBar : MonoBehaviour
             return;
         }
 
-        // Stop any ongoing animations
+        // Stop any ongoing animations FOR THIS BAR ONLY
         StopAllCoroutines();
-        DOTween.Kill(transform);
+        // ✅ REMOVED: DOTween.Kill(transform); // This was killing ALL animations!
 
         // Animate up or down
         if (targetSegments > lastDiscreteValue)
@@ -249,6 +310,10 @@ public class HorizontalBar : MonoBehaviour
         {
             if (i >= 0 && i < segments.Length && segments[i] != null)
             {
+                // ✅ KILL ALL animations on this segment (both transform AND image!)
+                DOTween.Kill(segments[i].transform); // Kill scale animations
+                DOTween.Kill(segments[i]);           // Kill color animations
+
                 // Enable GameObject FIRST
                 segments[i].gameObject.SetActive(true);
 
@@ -256,7 +321,9 @@ public class HorizontalBar : MonoBehaviour
                 if (useBurnEffect)
                 {
                     segments[i].color = burnInColor; // Start orange/red
-                    segments[i].DOColor(fillColor, 1f / burnSpeed); // Fade to fill color
+                    // ✅ UNIQUE ID: BarInstanceID_SegmentIndex_AnimationType
+                    segments[i].DOColor(fillColor, 1f / burnSpeed)
+                        .SetId($"{uniqueBarID}_seg{i}_color");
                 }
                 else
                 {
@@ -267,7 +334,13 @@ public class HorizontalBar : MonoBehaviour
                 if (useScalePunch)
                 {
                     segments[i].transform.localScale = Vector3.one;
-                    segments[i].transform.DOPunchScale(Vector3.one * (punchScale - 1f), 0.2f, 1, 0.5f);
+                    // ✅ UNIQUE ID: BarInstanceID_SegmentIndex_AnimationType
+                    segments[i].transform.DOPunchScale(
+                        Vector3.one * (punchScale - 1f),
+                        0.2f,
+                        1,
+                        0.5f
+                    ).SetId($"{uniqueBarID}_seg{i}_scale");
                 }
 
                 // Sequential delay
@@ -287,20 +360,26 @@ public class HorizontalBar : MonoBehaviour
         {
             if (i >= 0 && i < segments.Length && segments[i] != null)
             {
+                // ✅ KILL ALL animations on this segment (both transform AND image!)
+                DOTween.Kill(segments[i].transform); // Kill scale animations
+                DOTween.Kill(segments[i]);           // Kill color animations
+
                 // Burn effect: Fade from fill color to burn-out color, THEN disable
                 if (useBurnEffect)
                 {
                     float fadeDuration = 1f / burnSpeed;
 
-                    // Fade to dark/cooling color
-                    segments[i].DOColor(burnOutColor, fadeDuration).OnComplete(() =>
-                    {
-                        // Disable GameObject AFTER fade completes
-                        if (segments[i] != null)
+                    // ✅ UNIQUE ID: BarInstanceID_SegmentIndex_AnimationType
+                    segments[i].DOColor(burnOutColor, fadeDuration)
+                        .SetId($"{uniqueBarID}_seg{i}_color")
+                        .OnComplete(() =>
                         {
-                            segments[i].gameObject.SetActive(false);
-                        }
-                    });
+                            // Disable GameObject AFTER fade completes
+                            if (segments[i] != null)
+                            {
+                                segments[i].gameObject.SetActive(false);
+                            }
+                        });
                 }
                 else
                 {
@@ -312,7 +391,13 @@ public class HorizontalBar : MonoBehaviour
                 if (useScalePunch)
                 {
                     segments[i].transform.localScale = Vector3.one;
-                    segments[i].transform.DOPunchScale(Vector3.one * (punchScale - 1f) * 0.5f, 0.2f, 1, 0.5f);
+                    // ✅ UNIQUE ID: BarInstanceID_SegmentIndex_AnimationType
+                    segments[i].transform.DOPunchScale(
+                        Vector3.one * (punchScale - 1f) * 0.5f,
+                        0.2f,
+                        1,
+                        0.5f
+                    ).SetId($"{uniqueBarID}_seg{i}_scale");
                 }
 
                 // Sequential delay

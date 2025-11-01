@@ -1,29 +1,41 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
+/// <summary>
+/// CENTRAL GAME STATE MANAGER - Singleton pattern
+/// Holds all game state and orchestrates game systems
+/// Persists across scene changes (Bootstrap handles this)
+/// </summary>
 public class GameManager : MonoBehaviour
 {
-    public static GameManager Instance;
+    public static GameManager Instance { get; private set; }
 
     [Header("Game State")]
-    [Tooltip("Check this to trigger welcome screen on next game scene load (for testing)")]
-    public bool isNewGame = true;
+    public string bandName = "";
+    public int currentQuarter = 0; // 0-39 (40 quarters = 10 years)
+    public int currentYear = 1; // For display only
+    public bool isNewGame = true; // Used to show welcome screen once
+    public bool testingMode = false; // Keep welcome screen enabled for testing
 
-    [Tooltip("Enable to manually control 'Is New Game' - prevents code from changing it")]
-    public bool testingMode = false;
+    [Header("Resources")]
+    public int money = 500;
+    public int fans = 50;
 
-    [Header("Band Info")]
-    public string bandName;
+    [Header("✅ NEW 8-Stat System")]
+    public int charisma = 0;
+    public int stagePerformance = 0;
+    public int vocal = 0;
+    public int instrument = 0;
+    public int songwriting = 0;
+    public int production = 0;
+    public int management = 0;
+    public int practical = 0;
+    public int unity = 100;
 
-    /// <summary>
-    /// Runtime state wrappers for each slot (wraps SlotData + runtime info)
-    /// NOTE: This won't show in Inspector because it's a custom class
-    /// Use the debug buttons below to see band members
-    /// </summary>
+    [Header("Band Members")]
     public CharacterSlotState[] characterStates = new CharacterSlotState[6];
 
-    [Header("🔍 DEBUG: Current Band Members (Read-Only Display)")]
-    [Tooltip("These are automatically updated - just for viewing in Inspector")]
+    [Header("Debug Display (Read-Only)")]
     [SerializeField] private string slot0_Name = "EMPTY";
     [SerializeField] private string slot1_Name = "EMPTY";
     [SerializeField] private string slot2_Name = "EMPTY";
@@ -31,43 +43,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private string slot4_Name = "EMPTY";
     [SerializeField] private string slot5_Name = "EMPTY";
 
-    [Header("Time")]
-    public int currentQuarter = 0;
-    public int currentYear = 1;
-
-    [Header("Resources")]
-    public int money = 500;
-    public int fans = 50;
-
-    [Header("Band Stats - Total from All Members")]
-    [Tooltip("Sum of all band members' charisma")]
-    public int charisma = 0;
-
-    [Tooltip("Sum of all band members' stage performance")]
-    public int stagePerformance = 0;
-
-    [Tooltip("Sum of all band members' vocal")]
-    public int vocal = 0;
-
-    [Tooltip("Sum of all band members' instrument")]
-    public int instrument = 0;
-
-    [Tooltip("Sum of all band members' songwriting")]
-    public int songwriting = 0;
-
-    [Tooltip("Sum of all band members' production")]
-    public int production = 0;
-
-    [Tooltip("Sum of all band members' management")]
-    public int management = 0;
-
-    [Tooltip("Sum of all band members' practical")]
-    public int practical = 0;
-
-    [Tooltip("Band cohesion (0-100)")]
-    public int unity = 100;
-
-    [Header("Story Flags")]
+    [Header("Flags")]
     public List<string> flags = new List<string>();
 
     [Header("References")]
@@ -237,93 +213,14 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // Old DoAction removed - now using new action system with ActionData + ActionManager
-
-    public void AdvanceQuarter()
-    {
-        currentQuarter++;
-
-        if (currentQuarter % 4 == 0)
-        {
-            currentYear++;
-
-            if (audioManager != null)
-            {
-                audioManager.PlayYearAdvance();
-            }
-
-            Debug.Log($"📅 YEAR ADVANCED: Year {currentYear}");
-        }
-        else
-        {
-            if (audioManager != null)
-            {
-                audioManager.PlayQuarterAdvance();
-            }
-
-            Debug.Log($"📅 QUARTER ADVANCED: Year {currentYear}, Quarter {(currentQuarter % 4) + 1}");
-        }
-
-        if (currentQuarter >= 40)
-        {
-            EndGame();
-            return;
-        }
-
-        if (eventManager != null)
-        {
-            eventManager.CheckForEvents();
-        }
-        else
-        {
-            Debug.LogWarning("⚠️ EventManager is null - cannot check for events!");
-        }
-
-        RefreshUI();
-    }
-
-    private void RefreshUI()
-    {
-        if (uiController == null)
-        {
-            uiController = FindObjectOfType<UIController_Game>();
-        }
-
-        if (uiController != null)
-        {
-            uiController.RefreshDisplay();
-        }
-        else
-        {
-            Debug.LogWarning("UIController_Game not found - cannot update display");
-        }
-    }
-
-    public void ForceRefreshUI()
-    {
-        RefreshUI();
-    }
-
-    // Old action methods removed - now using ActionData + ActionManager system
-
-    private void EndGame()
-    {
-        Debug.Log("🎊 GAME OVER: 10 years complete!");
-
-        if (SceneLoader.Instance != null)
-        {
-            SceneLoader.Instance.LoadGameOver();
-        }
-    }
-
     // ============================================
-    // ✅ NEW ORCHESTRATOR METHODS
+    // ACTION SYSTEM ORCHESTRATION
     // ============================================
 
     /// <summary>
-    /// ORCHESTRATOR: Start an action for selected characters
+    /// ORCHESTRATOR: Start an action
     /// Called from MemberSelectionPopup or ActionButton
-    /// Changes state, then tells ActionManager and UIController what to do
+    /// Changes state, then tells ActionManager to start timer and UIController to update
     /// </summary>
     public void StartAction(ActionData action, List<int> characterIndices)
     {
@@ -436,9 +333,9 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ORCHESTRATOR: Cancel an action
+    /// ORCHESTRATOR: Cancel an action for a SPECIFIC character
     /// Called from CharacterDisplay cancel button
-    /// Changes state, then tells ActionManager to stop timer and UIController to update
+    /// Only removes THIS character from the action, other group members continue
     /// </summary>
     public void CancelAction(int characterIndex)
     {
@@ -450,35 +347,50 @@ public class GameManager : MonoBehaviour
         }
 
         ActionData action = charState.currentAction;
-        List<int> groupIndices = new List<int>(charState.groupedWithSlots);
+        List<int> originalGroup = new List<int>(charState.groupedWithSlots);
 
-        Debug.Log($"❌ GameManager: Canceling action '{action.actionName}'");
+        Debug.Log($"❌ GameManager: Canceling character {characterIndex} from action '{action.actionName}'");
+        Debug.Log($"   Original group: [{string.Join(", ", originalGroup)}]");
 
         // ============================================
-        // 1. CHANGE STATE - UNLOCK CHARACTERS
+        // 1. FREE THIS CHARACTER ONLY
         // ============================================
 
-        foreach (int index in groupIndices)
+        characterStates[characterIndex].isBusy = false;
+        characterStates[characterIndex].currentAction = null;
+        characterStates[characterIndex].actionTimeRemaining = 0f;
+        characterStates[characterIndex].actionTotalDuration = 0f;
+        characterStates[characterIndex].groupedWithSlots.Clear();
+        Debug.Log($"   🔓 Character {characterIndex} now IDLE");
+
+        // ============================================
+        // 2. UPDATE OTHER GROUP MEMBERS
+        // Remove this character from their groupedWithSlots lists
+        // ============================================
+
+        foreach (int otherIndex in originalGroup)
         {
-            characterStates[index].isBusy = false;
-            characterStates[index].currentAction = null;
-            characterStates[index].actionTimeRemaining = 0f;
-            characterStates[index].actionTotalDuration = 0f;
-            characterStates[index].groupedWithSlots.Clear();
-            Debug.Log($"   🔓 Character {index} now IDLE");
+            if (otherIndex == characterIndex) continue; // Skip self
+
+            if (characterStates[otherIndex] != null && characterStates[otherIndex].isBusy)
+            {
+                characterStates[otherIndex].groupedWithSlots.Remove(characterIndex);
+                Debug.Log($"   🔗 Removed {characterIndex} from character {otherIndex}'s group");
+                Debug.Log($"      New group for {otherIndex}: [{string.Join(", ", characterStates[otherIndex].groupedWithSlots)}]");
+            }
         }
 
         // ============================================
-        // 2. TELL ACTIONMANAGER: "Stop timer"
+        // 3. TELL ACTIONMANAGER: Stop timer for THIS character only
         // ============================================
 
         if (ActionManager.Instance != null)
         {
-            ActionManager.Instance.StopTimer(groupIndices);
+            ActionManager.Instance.StopTimer(new List<int> { characterIndex });
         }
 
         // ============================================
-        // 3. TELL UICONTROLLER: "Update display"
+        // 4. TELL UICONTROLLER: Update display
         // ============================================
 
         if (uiController != null)
@@ -486,6 +398,91 @@ public class GameManager : MonoBehaviour
             uiController.RefreshUI();
         }
 
+        Debug.Log($"✅ Cancel complete - {originalGroup.Count - 1} characters still working on '{action.actionName}'");
+
         // TODO: Refund costs?
+    }
+
+    // ============================================
+    // TIME SYSTEM
+    // ============================================
+
+    /// <summary>
+    /// Advance to next quarter
+    /// Called by TimeManager when quarter timer expires
+    /// </summary>
+    public void AdvanceQuarter()
+    {
+        currentQuarter++;
+
+        if (currentQuarter % 4 == 0)
+        {
+            currentYear++;
+
+            if (audioManager != null)
+            {
+                audioManager.PlayYearAdvance();
+            }
+
+            Debug.Log($"📅 YEAR ADVANCED: Year {currentYear}");
+        }
+        else
+        {
+            if (audioManager != null)
+            {
+                audioManager.PlayQuarterAdvance();
+            }
+
+            Debug.Log($"📅 QUARTER ADVANCED: Year {currentYear}, Quarter {(currentQuarter % 4) + 1}");
+        }
+
+        if (currentQuarter >= 40)
+        {
+            EndGame();
+            return;
+        }
+
+        if (eventManager != null)
+        {
+            eventManager.CheckForEvents();
+        }
+        else
+        {
+            Debug.LogWarning("⚠️ EventManager is null - cannot check for events!");
+        }
+
+        RefreshUI();
+    }
+
+    private void RefreshUI()
+    {
+        if (uiController == null)
+        {
+            uiController = FindObjectOfType<UIController_Game>();
+        }
+
+        if (uiController != null)
+        {
+            uiController.RefreshDisplay();
+        }
+        else
+        {
+            Debug.LogWarning("UIController_Game not found - cannot update display");
+        }
+    }
+
+    public void ForceRefreshUI()
+    {
+        RefreshUI();
+    }
+
+    private void EndGame()
+    {
+        Debug.Log("🎊 GAME OVER: 10 years complete!");
+
+        if (SceneLoader.Instance != null)
+        {
+            SceneLoader.Instance.LoadGameOver();
+        }
     }
 }
