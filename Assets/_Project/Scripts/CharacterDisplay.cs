@@ -6,7 +6,7 @@ using TMPro;
 /// Manages a single character portrait display
 /// Shows character portrait, action status, and time remaining
 /// Does NOT control its own GameObject active state - UIController handles that
-/// UPDATED: Uses unified HorizontalBar.SetProgress(0-1) API
+/// FIXED: Uses CanvasGroup on parent so cancel button + UIButton stay active for proper initialization
 /// </summary>
 public class CharacterDisplay : MonoBehaviour
 {
@@ -17,8 +17,11 @@ public class CharacterDisplay : MonoBehaviour
     [Tooltip("Text that shows action name like 'PRACTICING'")]
     public TextMeshProUGUI actionText;
 
-    [Tooltip("HorizontalBar that shows time remaining")]
+    [Tooltip("HorizontalBar that shows action progress (fills upwards 0→1)")]
     public HorizontalBar timeBar;
+
+    [Tooltip("Parent GameObject containing cancel button + shadow (CanvasGroup will be auto-added)")]
+    public GameObject cancelButtonRoot;
 
     [Header("Visual Settings")]
     [Tooltip("Color to tint portrait when character is busy")]
@@ -29,12 +32,46 @@ public class CharacterDisplay : MonoBehaviour
     // ============================================
     private Color originalPortraitColor = Color.white;
     private int currentCharacterIndex = -1;
+    private Button cancelButtonComponent; // Cached button component
+    private CanvasGroup cancelButtonCanvasGroup; // For hiding without SetActive
 
     void Awake()
     {
         if (portraitImage != null)
         {
             originalPortraitColor = portraitImage.color;
+        }
+
+        // ✅ Setup cancel button with CanvasGroup for visibility control
+        if (cancelButtonRoot != null)
+        {
+            // Get or add CanvasGroup to parent (keeps everything active for UIButton to work)
+            cancelButtonCanvasGroup = cancelButtonRoot.GetComponent<CanvasGroup>();
+            if (cancelButtonCanvasGroup == null)
+            {
+                cancelButtonCanvasGroup = cancelButtonRoot.AddComponent<CanvasGroup>();
+                Debug.Log("✅ Added CanvasGroup to CancelButtonRoot for proper visibility control");
+            }
+
+            // Find Button component in children
+            cancelButtonComponent = cancelButtonRoot.GetComponentInChildren<Button>();
+
+            if (cancelButtonComponent == null)
+            {
+                Debug.LogError("❌ CharacterDisplay: No Button component found in cancelButtonRoot children!");
+            }
+            else
+            {
+                // Wire up onClick
+                cancelButtonComponent.onClick.AddListener(OnCancelButtonClicked);
+
+                // Check if UIButton is attached
+                UIButton uiButton = cancelButtonComponent.GetComponent<UIButton>();
+                if (uiButton == null)
+                {
+                    Debug.LogWarning($"⚠️ Cancel button is missing UIButton component! Add it for hover/press animations.");
+                }
+            }
         }
 
         HideActionUI();
@@ -90,12 +127,15 @@ public class CharacterDisplay : MonoBehaviour
             if (timeBar != null)
             {
                 timeBar.gameObject.SetActive(true);
+                timeBar.SetProgress(progress);
+            }
 
-                // Progress = 0.0 (started) → 1.0 (complete)
-                // Bar shows TIME REMAINING, so invert: 1.0 (full) → 0.0 (empty)
-                float timeRemaining = 1f - progress;
-
-                timeBar.SetProgress(timeRemaining);
+            // ✅ Show cancel button using CanvasGroup (button+shadow stay active, UIButton works!)
+            if (cancelButtonCanvasGroup != null)
+            {
+                cancelButtonCanvasGroup.alpha = 1f;
+                cancelButtonCanvasGroup.interactable = true;
+                cancelButtonCanvasGroup.blocksRaycasts = true;
             }
 
             // Darken portrait
@@ -117,6 +157,32 @@ public class CharacterDisplay : MonoBehaviour
     }
 
     // ============================================
+    // CANCEL BUTTON HANDLER
+    // ============================================
+
+    private void OnCancelButtonClicked()
+    {
+        if (ActionManager.Instance == null)
+        {
+            Debug.LogError("❌ CharacterDisplay: ActionManager.Instance is null!");
+            return;
+        }
+
+        if (currentCharacterIndex < 0)
+        {
+            Debug.LogWarning("⚠️ CharacterDisplay: Cannot cancel - character index not set!");
+            return;
+        }
+
+        Debug.Log($"🚫 Cancel button clicked for character slot {currentCharacterIndex}");
+
+        // Call ActionManager to cancel this character's action
+        ActionManager.Instance.CancelAction(currentCharacterIndex);
+
+        // Note: AudioManager call removed - UIButton already handles click sound
+    }
+
+    // ============================================
     // HELPER METHODS
     // ============================================
 
@@ -130,6 +196,14 @@ public class CharacterDisplay : MonoBehaviour
         if (timeBar != null)
         {
             timeBar.gameObject.SetActive(false);
+        }
+
+        // ✅ Hide cancel button using CanvasGroup (keeps button+shadow active, UIButton keeps working!)
+        if (cancelButtonCanvasGroup != null)
+        {
+            cancelButtonCanvasGroup.alpha = 0f;
+            cancelButtonCanvasGroup.interactable = false;
+            cancelButtonCanvasGroup.blocksRaycasts = false;
         }
     }
 

@@ -5,6 +5,7 @@ using TMPro;
 /// <summary>
 /// Controls all UI elements on the main game screen
 /// Updates displays, handles button clicks
+/// FIXED: Progress bars fill upwards, character indices set for cancel buttons
 /// </summary>
 public class UIController_Game : MonoBehaviour
 {
@@ -69,6 +70,12 @@ public class UIController_Game : MonoBehaviour
         Debug.Log("🎨 Initializing character displays...");
         InitializeCharacterDisplays();
 
+        // STEP 3: Register this controller with GameManager
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.RegisterUIController(this);
+        }
+
         Debug.Log("========================================");
         Debug.Log("🎮 UIController_Game.Start() END");
         Debug.Log("========================================");
@@ -77,6 +84,7 @@ public class UIController_Game : MonoBehaviour
     /// <summary>
     /// Initialize character display GameObjects (active/inactive) based on GameManager data
     /// Called once at Start()
+    /// UPDATED: Now sets character index on each display for cancel button functionality
     /// </summary>
     private void InitializeCharacterDisplays()
     {
@@ -95,6 +103,9 @@ public class UIController_Game : MonoBehaviour
                 Debug.LogWarning($"characterDisplays[{i}] is null - not assigned in Inspector!");
                 continue;
             }
+
+            // ✅ NEW: Set character index so cancel button knows which character to cancel
+            characterDisplays[i].SetCharacterIndex(i);
 
             // Check if character exists in this slot
             bool hasCharacter = (i < gm.characterStates.Length &&
@@ -180,6 +191,10 @@ public class UIController_Game : MonoBehaviour
         if (managingPanel != null) managingPanel.SetActive(false);
     }
 
+    /// <summary>
+    /// Update character displays with current action states
+    /// Called every frame from ActionManager.Update() via RefreshUI()
+    /// </summary>
     private void RefreshCharacters()
     {
         if (GameManager.Instance == null)
@@ -199,12 +214,7 @@ public class UIController_Game : MonoBehaviour
                 continue;
             }
 
-            // Only update displays that are active (have characters)
-            if (!characterDisplays[i].gameObject.activeSelf)
-            {
-                continue; // Skip inactive displays
-            }
-
+            // Check if character exists in this slot
             if (i < gm.characterStates.Length && gm.characterStates[i] != null && gm.characterStates[i].slotData != null)
             {
                 // Update character data (in case it changed)
@@ -214,14 +224,12 @@ public class UIController_Game : MonoBehaviour
                 CharacterSlotState charState = gm.characterStates[i];
                 if (charState.isBusy && charState.currentAction != null)
                 {
-                    // OLD (WRONG - uses baseTime):
-                    // float totalTime = charState.currentAction.baseTime;
-
-                    // NEW (CORRECT - uses actual duration with stat bonuses):
+                    // Calculate progress using actual duration (with stat bonuses)
                     float totalTime = charState.actionTotalDuration;
                     float timeElapsed = totalTime - charState.actionTimeRemaining;
                     float progress = (totalTime > 0) ? (timeElapsed / totalTime) : 0f;
 
+                    // ✅ Progress now fills upwards (0→1) instead of counting down
                     characterDisplays[i].SetBusyState(true, charState.currentAction.actionName, progress);
                 }
                 else
