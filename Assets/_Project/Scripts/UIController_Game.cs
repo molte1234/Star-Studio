@@ -5,7 +5,8 @@ using TMPro;
 /// <summary>
 /// Controls all UI elements on the main game screen
 /// Updates displays, handles button clicks
-/// FIXED: Progress bars fill upwards, character indices set for cancel buttons
+/// ARCHITECTURE UPDATE: RefreshCharacters now calls UpdateProgress() instead of SetBusyState()
+/// SetBusyState is only called by ActionManager when actions start/complete/cancel
 /// </summary>
 public class UIController_Game : MonoBehaviour
 {
@@ -84,7 +85,7 @@ public class UIController_Game : MonoBehaviour
     /// <summary>
     /// Initialize character display GameObjects (active/inactive) based on GameManager data
     /// Called once at Start()
-    /// UPDATED: Now sets character index on each display for cancel button functionality
+    /// Sets character index on each display for cancel button functionality
     /// </summary>
     private void InitializeCharacterDisplays()
     {
@@ -104,7 +105,7 @@ public class UIController_Game : MonoBehaviour
                 continue;
             }
 
-            // ✅ NEW: Set character index so cancel button knows which character to cancel
+            // ✅ Set character index so cancel button knows which character to cancel
             characterDisplays[i].SetCharacterIndex(i);
 
             // Check if character exists in this slot
@@ -192,8 +193,9 @@ public class UIController_Game : MonoBehaviour
     }
 
     /// <summary>
-    /// Update character displays with current action states
+    /// Update character displays with current action progress
     /// Called every frame from ActionManager.Update() via RefreshUI()
+    /// ARCHITECTURE: Only updates progress bars, SetBusyState is called by ActionManager on state changes
     /// </summary>
     private void RefreshCharacters()
     {
@@ -220,7 +222,11 @@ public class UIController_Game : MonoBehaviour
                 // Update character data (in case it changed)
                 characterDisplays[i].SetCharacter(gm.characterStates[i].slotData);
 
-                // Update busy state for progress bars
+                // ============================================
+                // ✅ ARCHITECTURE FIX: Only update progress, not state
+                // SetBusyState is called by ActionManager when actions start/complete/cancel
+                // ============================================
+
                 CharacterSlotState charState = gm.characterStates[i];
                 if (charState.isBusy && charState.currentAction != null)
                 {
@@ -229,12 +235,9 @@ public class UIController_Game : MonoBehaviour
                     float timeElapsed = totalTime - charState.actionTimeRemaining;
                     float progress = (totalTime > 0) ? (timeElapsed / totalTime) : 0f;
 
-                    // ✅ Progress now fills upwards (0→1) instead of counting down
-                    characterDisplays[i].SetBusyState(true, charState.currentAction.actionName, progress);
-                }
-                else
-                {
-                    characterDisplays[i].SetBusyState(false);
+                    // ✅ Only call UpdateProgress (progress bar fill)
+                    // Don't call SetBusyState here - that's handled by ActionManager
+                    characterDisplays[i].UpdateProgress(progress);
                 }
             }
         }

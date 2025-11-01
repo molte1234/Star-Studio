@@ -7,6 +7,7 @@ using TMPro;
 /// Shows character portrait, action status, and time remaining
 /// Does NOT control its own GameObject active state - UIController handles that
 /// FIXED: Uses CanvasGroup on parent so cancel button + UIButton stay active for proper initialization
+/// ARCHITECTURE: SetBusyState called ONCE on state change, UpdateProgress called every frame
 /// </summary>
 public class CharacterDisplay : MonoBehaviour
 {
@@ -103,19 +104,23 @@ public class CharacterDisplay : MonoBehaviour
     }
 
     // ============================================
-    // BUSY STATE
+    // BUSY STATE - CALLED ONCE ON STATE CHANGE
     // ============================================
 
     /// <summary>
-    /// Shows/hides busy state with action name and progress bar
+    /// Show/hide busy UI elements when action starts/ends
+    /// Called ONCE from ActionManager when state changes
     /// </summary>
-    /// <param name="isBusy">Is character currently doing an action?</param>
+    /// <param name="isBusy">Is character now busy?</param>
     /// <param name="actionName">Name of action (e.g., "PRACTICING")</param>
-    /// <param name="progress">Progress from 0.0 (just started) to 1.0 (complete)</param>
-    public void SetBusyState(bool isBusy, string actionName = "", float progress = 0f)
+    public void SetBusyState(bool isBusy, string actionName = "")
     {
         if (isBusy)
         {
+            // ============================================
+            // BUSY STATE: Show action UI ONCE
+            // ============================================
+
             // Show action name
             if (actionText != null)
             {
@@ -123,14 +128,13 @@ public class CharacterDisplay : MonoBehaviour
                 actionText.gameObject.SetActive(true);
             }
 
-            // Show and update progress bar
+            // Show progress bar (don't set value yet - UpdateProgress will do that)
             if (timeBar != null)
             {
                 timeBar.gameObject.SetActive(true);
-                timeBar.SetProgress(progress);
             }
 
-            // ✅ Show cancel button using CanvasGroup (button+shadow stay active, UIButton works!)
+            // Show cancel button using CanvasGroup
             if (cancelButtonCanvasGroup != null)
             {
                 cancelButtonCanvasGroup.alpha = 1f;
@@ -143,16 +147,39 @@ public class CharacterDisplay : MonoBehaviour
             {
                 portraitImage.color = busyTintColor;
             }
+
+            Debug.Log($"✅ SetBusyState(true, '{actionName}') - UI shown for character {currentCharacterIndex}");
         }
         else
         {
-            // IDLE STATE
+            // ============================================
+            // IDLE STATE: Hide action UI ONCE
+            // ============================================
             HideActionUI();
 
             if (portraitImage != null)
             {
                 portraitImage.color = originalPortraitColor;
             }
+
+            Debug.Log($"✅ SetBusyState(false) - UI hidden for character {currentCharacterIndex}");
+        }
+    }
+
+    // ============================================
+    // UPDATE PROGRESS - CALLED EVERY FRAME
+    // ============================================
+
+    /// <summary>
+    /// Update the progress bar fill amount
+    /// Called every frame from UIController.RefreshCharacters()
+    /// </summary>
+    /// <param name="progress">Progress from 0.0 (just started) to 1.0 (complete)</param>
+    public void UpdateProgress(float progress)
+    {
+        if (timeBar != null && timeBar.gameObject.activeSelf)
+        {
+            timeBar.SetProgress(progress);
         }
     }
 

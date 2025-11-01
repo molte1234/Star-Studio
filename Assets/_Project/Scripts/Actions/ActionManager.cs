@@ -10,6 +10,9 @@ using Sirenix.OdinInspector;
 /// - GameManager holds GAME STATE (money, fans, character slots)
 /// - ActionManager handles ACTION LOGIC (timers, costs, rewards)
 /// - Keeps code organized and easier to understand
+/// 
+/// ARCHITECTURE UPDATE: Calls SetBusyState() on CharacterDisplays when actions start/complete/cancel (state changes)
+/// Progress updates still handled by UIController.RefreshCharacters() every frame
 /// </summary>
 public class ActionManager : MonoBehaviour
 {
@@ -79,7 +82,7 @@ public class ActionManager : MonoBehaviour
                         currentAction = charState.isBusy ? charState.currentAction.actionName : "---",
                         timeRemaining = charState.isBusy ? charState.actionTimeRemaining : 0f,
                         progress = charState.isBusy && charState.currentAction != null
-                            ? 1f - (charState.actionTimeRemaining / charState.currentAction.baseTime)
+                            ? 1f - (charState.actionTimeRemaining / charState.actionTotalDuration)
                             : 0f,
                         groupedWith = charState.isBusy ? string.Join(", ", charState.groupedWithSlots) : "---"
                     });
@@ -173,6 +176,10 @@ public class ActionManager : MonoBehaviour
     // UPDATE - TICK DOWN ALL ACTIVE TIMERS
     // ============================================
 
+    // Track previous frame's busy states to detect changes
+    private bool[] previousBusyStates = new bool[6];
+    private ActionData[] previousActions = new ActionData[6];
+
     private void Update()
     {
         // Why: Every frame, count down all active action timers
@@ -189,8 +196,46 @@ public class ActionManager : MonoBehaviour
         {
             CharacterSlotState charState = gm.characterStates[i];
 
-            // Skip empty slots or characters not doing anything
-            if (charState == null || !charState.isBusy) continue;
+            // Determine current state
+            bool currentlyBusy = (charState != null && charState.isBusy);
+            ActionData currentAction = currentlyBusy ? charState.currentAction : null;
+
+            // ============================================
+            // ✅ DETECT STATE CHANGES
+            // ============================================
+            bool stateChanged = (currentlyBusy != previousBusyStates[i]) || (currentAction != previousActions[i]);
+
+            if (stateChanged)
+            {
+                if (gm.uiController != null && gm.uiController.characterDisplays != null &&
+                    i < gm.uiController.characterDisplays.Length &&
+                    gm.uiController.characterDisplays[i] != null)
+                {
+                    if (currentlyBusy && currentAction != null)
+                    {
+                        // Action started or changed - show busy UI
+                        gm.uiController.characterDisplays[i].SetBusyState(true, currentAction.actionName);
+                        Debug.Log($"🔔 State change detected: Character {i} is now BUSY with {currentAction.actionName}");
+                    }
+                    else
+                    {
+                        // Action ended - hide busy UI
+                        gm.uiController.characterDisplays[i].SetBusyState(false);
+                        Debug.Log($"🔔 State change detected: Character {i} is now IDLE");
+                    }
+                }
+
+                // Update tracking
+                previousBusyStates[i] = currentlyBusy;
+                previousActions[i] = currentAction;
+            }
+
+            // ============================================
+            // COUNT DOWN TIMER
+            // ============================================
+
+            // Skip if not busy
+            if (!currentlyBusy || charState == null) continue;
 
             // Count down the timer
             charState.actionTimeRemaining -= Time.deltaTime;
@@ -202,7 +247,7 @@ public class ActionManager : MonoBehaviour
             }
         }
 
-        // Why: Refresh UI every frame to update timers on portraits
+        // Why: Refresh UI every frame to update progress bars
         if (gm.uiController != null)
         {
             gm.uiController.RefreshUI();
@@ -324,6 +369,23 @@ public class ActionManager : MonoBehaviour
         }
 
         // ============================================
+        // ✅ SHOW BUSY UI ON CHARACTER DISPLAYS (ONCE)
+        // ============================================
+
+        if (gm.uiController != null && gm.uiController.characterDisplays != null)
+        {
+            foreach (int index in selectedCharacterIndices)
+            {
+                if (index < gm.uiController.characterDisplays.Length &&
+                    gm.uiController.characterDisplays[index] != null)
+                {
+                    // Tell CharacterDisplay to show busy UI (called ONCE when action starts)
+                    gm.uiController.characterDisplays[index].SetBusyState(true, action.actionName);
+                }
+            }
+        }
+
+        // ============================================
         // REFRESH UI
         // ============================================
 
@@ -339,34 +401,30 @@ public class ActionManager : MonoBehaviour
     // CALCULATE ACTION DURATION
     // ============================================
 
-    private float CalculateActionDuration(ActionData action, List<int> selectedCharacterIndices)
+    private float CalculateActionDuration(ActionData action, List<int> selectedIndices)
     {
-        // Why: Start with base time
+        GameManager gm = GameManager.Instance;
         float duration = action.baseTime;
 
-        // Why: If time reduction is enabled, find highest relevant stat
-        if (action.timeReductionPerStatPoint > 0f)
-        {
-            int highestStat = GetHighestStatInGroup(action.timeEfficiencyStat, selectedCharacterIndices);
-            float timeReduction = highestStat * action.timeReductionPerStatPoint;
-            duration -= timeReduction;
+        // Get highest relevant stat among all participants
+        int highestStat = GetHighestRelevantStat(action.timeEfficiencyStat, selectedIndices);
 
-            Debug.Log($"⏱️ Time calculation: {action.baseTime}s base - ({highestStat} × {action.timeReductionPerStatPoint}s) = {duration}s");
-        }
+        // Apply time reduction based on stat (1 point = 5% faster, max 50% reduction at stat 10)
+        float timeReduction = highestStat * 0.05f;
+        timeReduction = Mathf.Min(timeReduction, 0.5f); // Cap at 50% reduction
+        duration *= (1f - timeReduction);
 
-        // Why: Enforce minimum time
-        duration = Mathf.Max(duration, action.minTime);
+        Debug.Log($"   ⏱️ Base time: {action.baseTime}s → Actual: {duration:F1}s (highest {action.timeEfficiencyStat}: {highestStat})");
 
         return duration;
     }
 
-    private int GetHighestStatInGroup(StatType statType, List<int> selectedCharacterIndices)
+    private int GetHighestRelevantStat(StatType statType, List<int> characterIndices)
     {
-        // Why: Find the highest value of the specified stat among selected characters
         GameManager gm = GameManager.Instance;
         int highest = 0;
 
-        foreach (int index in selectedCharacterIndices)
+        foreach (int index in characterIndices)
         {
             CharacterSlotState charState = gm.characterStates[index];
             if (charState == null || charState.slotData == null) continue;
@@ -374,7 +432,6 @@ public class ActionManager : MonoBehaviour
             SlotData data = charState.slotData;
             int statValue = 0;
 
-            // Get the appropriate stat value
             switch (statType)
             {
                 case StatType.Charisma: statValue = data.charisma; break;
@@ -433,6 +490,23 @@ public class ActionManager : MonoBehaviour
             {
                 state.CompleteAction();
                 Debug.Log($"   🔓 Unlocked character slot {index}");
+            }
+        }
+
+        // ============================================
+        // ✅ HIDE BUSY UI ON CHARACTER DISPLAYS (ONCE)
+        // ============================================
+
+        if (gm.uiController != null && gm.uiController.characterDisplays != null)
+        {
+            foreach (int index in groupIndices)
+            {
+                if (index < gm.uiController.characterDisplays.Length &&
+                    gm.uiController.characterDisplays[index] != null)
+                {
+                    // Tell CharacterDisplay to hide busy UI (called ONCE when action completes)
+                    gm.uiController.characterDisplays[index].SetBusyState(false);
+                }
             }
         }
 
@@ -512,9 +586,9 @@ public class ActionManager : MonoBehaviour
                 CharacterSlotState charState = gm.characterStates[index];
                 if (charState != null && charState.slotData != null)
                 {
-                    charState.slotData.morale += action.moraleGainAmount;
-                    charState.slotData.morale = Mathf.Min(10, charState.slotData.morale); // Cap at 10
-                    Debug.Log($"😊 {charState.slotData.displayName} gained +{action.moraleGainAmount} morale");
+                    charState.slotData.morale += 1; // Simple +1 morale for now
+                    charState.slotData.morale = Mathf.Min(10, charState.slotData.morale);
+                    Debug.Log($"😊 {charState.slotData.displayName} morale +1");
                 }
             }
         }
@@ -525,63 +599,78 @@ public class ActionManager : MonoBehaviour
         if (charState == null || charState.slotData == null) return;
 
         SlotData data = charState.slotData;
+        int amount = action.statGainAmount;
 
         switch (action.statGainType)
         {
+            case StatGainType.None:
+                // No stat improvement
+                break;
+
             case StatGainType.Specific:
                 // Improve one specific stat
-                ImproveStat(data, action.specificStatToImprove, action.statGainAmount);
+                ImproveStat(data, action.specificStatToImprove, amount);
                 break;
 
             case StatGainType.Random:
                 // Improve one random stat
                 StatType randomStat = (StatType)Random.Range(0, 8);
-                ImproveStat(data, randomStat, action.statGainAmount);
+                ImproveStat(data, randomStat, amount);
                 break;
 
             case StatGainType.AllStatsSmall:
                 // Improve all stats by a small amount
-                for (int i = 0; i < 8; i++)
-                {
-                    ImproveStat(data, (StatType)i, action.statGainAmount);
-                }
+                ImproveStat(data, StatType.Charisma, amount);
+                ImproveStat(data, StatType.StagePerformance, amount);
+                ImproveStat(data, StatType.Vocal, amount);
+                ImproveStat(data, StatType.Instrument, amount);
+                ImproveStat(data, StatType.Songwriting, amount);
+                ImproveStat(data, StatType.Production, amount);
+                ImproveStat(data, StatType.Management, amount);
+                ImproveStat(data, StatType.Practical, amount);
                 break;
         }
     }
 
     private void ImproveStat(SlotData data, StatType statType, int amount)
     {
-        // Why: Improve the specified stat and cap at 10
         switch (statType)
         {
             case StatType.Charisma:
                 data.charisma = Mathf.Min(10, data.charisma + amount);
                 Debug.Log($"📈 {data.displayName} Charisma +{amount} → {data.charisma}");
                 break;
+
             case StatType.StagePerformance:
                 data.stagePerformance = Mathf.Min(10, data.stagePerformance + amount);
                 Debug.Log($"📈 {data.displayName} Stage Performance +{amount} → {data.stagePerformance}");
                 break;
+
             case StatType.Vocal:
                 data.vocal = Mathf.Min(10, data.vocal + amount);
                 Debug.Log($"📈 {data.displayName} Vocal +{amount} → {data.vocal}");
                 break;
+
             case StatType.Instrument:
                 data.instrument = Mathf.Min(10, data.instrument + amount);
                 Debug.Log($"📈 {data.displayName} Instrument +{amount} → {data.instrument}");
                 break;
+
             case StatType.Songwriting:
                 data.songwriting = Mathf.Min(10, data.songwriting + amount);
                 Debug.Log($"📈 {data.displayName} Songwriting +{amount} → {data.songwriting}");
                 break;
+
             case StatType.Production:
                 data.production = Mathf.Min(10, data.production + amount);
                 Debug.Log($"📈 {data.displayName} Production +{amount} → {data.production}");
                 break;
+
             case StatType.Management:
                 data.management = Mathf.Min(10, data.management + amount);
                 Debug.Log($"📈 {data.displayName} Management +{amount} → {data.management}");
                 break;
+
             case StatType.Practical:
                 data.practical = Mathf.Min(10, data.practical + amount);
                 Debug.Log($"📈 {data.displayName} Practical +{amount} → {data.practical}");
@@ -612,7 +701,10 @@ public class ActionManager : MonoBehaviour
 
         Debug.Log($"❌ Canceling action: {action.actionName} for character {characterIndex}");
 
-        // Why: Unlock all characters in this action group
+        // ============================================
+        // UNLOCK ALL CHARACTERS IN THIS ACTION GROUP
+        // ============================================
+
         foreach (int index in groupIndices)
         {
             CharacterSlotState state = gm.characterStates[index];
@@ -623,7 +715,27 @@ public class ActionManager : MonoBehaviour
             }
         }
 
-        // Why: Refresh UI
+        // ============================================
+        // ✅ HIDE BUSY UI ON CHARACTER DISPLAYS (ONCE)
+        // ============================================
+
+        if (gm.uiController != null && gm.uiController.characterDisplays != null)
+        {
+            foreach (int index in groupIndices)
+            {
+                if (index < gm.uiController.characterDisplays.Length &&
+                    gm.uiController.characterDisplays[index] != null)
+                {
+                    // Tell CharacterDisplay to hide busy UI (called ONCE when action cancelled)
+                    gm.uiController.characterDisplays[index].SetBusyState(false);
+                }
+            }
+        }
+
+        // ============================================
+        // REFRESH UI
+        // ============================================
+
         if (gm.uiController != null)
         {
             gm.uiController.RefreshUI();
