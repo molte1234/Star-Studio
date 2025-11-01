@@ -4,40 +4,47 @@ using DG.Tweening;
 using System.Collections;
 
 /// <summary>
-/// Simple horizontal bar display with unified 0.0-1.0 interface
-/// Supports discrete segments (stats) or smooth fill (timers/progress)
+/// Horizontal bar display with unified 0.0-1.0 interface
 /// 
-/// UNIFIED API: SetProgress(float value) where value is 0.0 to 1.0
-/// - Discrete Mode: Converts to 10 segments internally
-/// - Smooth Mode: Uses value directly as fillAmount
+/// DISCRETE MODE:
+/// - Activates/deactivates segment GameObjects
+/// - fillBar GameObject is disabled
+/// - Each segment image should be cropped to show ONLY that blip
+/// - Optional "burn effect" for color transitions
 /// 
-/// KISS: One method to rule them all
+/// SMOOTH MODE:
+/// - Single filled image bar (fillBar active, segments disabled)
+/// 
+/// USAGE:
+/// - Discrete: Assign 10 segment GameObjects (Bar_10, Bar_09, ..., Bar_01)
+/// - Smooth: Assign ONE fillBar (shows full bar, fillAmount controls visibility)
+/// - Add "Frame" or "Overlay" as separate child (always visible)
 /// </summary>
 public class HorizontalBar : MonoBehaviour
 {
-    [Header("═══ TEST VALUE - Drag to Test ═══")]
-    [Tooltip("Drag this slider to test bar in Inspector (Play mode)")]
+    [Header("Value")]
     [Range(0f, 1f)]
-    public float currentValue = 0f;
+    [Tooltip("Current fill value (0.0 = empty, 1.0 = full)")]
+    public float value = 0f;
 
     [Header("Bar Mode")]
-    [Tooltip("Discrete = 10 segments for stats | Smooth = fill bar for timers")]
+    [Tooltip("Discrete = segments (enable/disable GameObjects) | Smooth = fill bar")]
     public BarMode mode = BarMode.Discrete;
 
     [Header("Discrete Mode (Stats)")]
-    [Tooltip("Drag 10 Image components here - each represents one stat point")]
+    [Tooltip("Drag Image components here - each shows ONE blip (cropped in Photoshop)")]
     public Image[] segments;
 
     [Header("Smooth Mode (Timers/Progress)")]
-    [Tooltip("Single Image with Fill type - for smooth progress bars")]
+    [Tooltip("Single Image with Fill type - shows full bar, fillAmount controls visibility")]
     public Image fillBar;
 
-    [Header("Visual Settings")]
-    [Tooltip("Color when bar is active/filled")]
-    public Color activeColor = Color.green;
+    [Header("Colors")]
+    [Tooltip("Fill color for active segments (Discrete) and fill bar (Smooth)")]
+    public Color fillColor = Color.green;
 
-    [Tooltip("Color when bar segment is inactive/empty")]
-    public Color inactiveColor = Color.gray;
+    [Tooltip("Inactive segment color (only used if burn effect disabled)")]
+    public Color inactiveColor = new Color(0.3f, 0.3f, 0.3f, 1f);
 
     [Header("Animation Effects (Discrete Mode Only)")]
     [Tooltip("Enable sequential wave fill animation")]
@@ -54,31 +61,91 @@ public class HorizontalBar : MonoBehaviour
     [Range(1.0f, 1.5f)]
     public float punchScale = 1.15f;
 
-    [Tooltip("Enable smooth color transition")]
-    public bool useColorLerp = true;
+    [Header("🔥 Burn Effect (Discrete Mode)")]
+    [Tooltip("Enable color fade effect (like embers glowing/cooling)")]
+    public bool useBurnEffect = false;
 
-    [Tooltip("Color transition speed")]
+    [Tooltip("Color segments START at when activating (e.g., orange/red)")]
+    public Color burnInColor = new Color(1f, 0.5f, 0f, 1f); // Orange
+
+    [Tooltip("Color segments FADE TO when deactivating (e.g., dark red)")]
+    public Color burnOutColor = new Color(0.5f, 0f, 0f, 1f); // Dark red
+
+    [Tooltip("Burn transition speed (higher = faster)")]
     [Range(1f, 20f)]
-    public float colorLerpSpeed = 10f;
+    public float burnSpeed = 8f;
 
     // Private state
     private int lastDiscreteValue = -1;
-    private float lastTestValue = -1f;
+    private float lastValue = -1f;
 
     void Start()
     {
+        // Setup proper GameObject states based on mode
+        SetupModeObjects();
+
         // Initialize bar to starting value
-        SetProgress(currentValue, instant: true);
-        lastTestValue = currentValue;
+        SetProgress(value, instant: true);
+        lastValue = value;
     }
 
     void Update()
     {
-        // Apply test slider changes during Play mode
-        if (Mathf.Abs(currentValue - lastTestValue) > 0.001f)
+        // Apply value changes during Play mode
+        if (Mathf.Abs(value - lastValue) > 0.001f)
         {
-            SetProgress(currentValue);
-            lastTestValue = currentValue;
+            SetProgress(value);
+            lastValue = value;
+        }
+    }
+
+    // ============================================
+    // MODE SETUP
+    // ============================================
+
+    /// <summary>
+    /// Enable/disable appropriate GameObjects based on current mode
+    /// </summary>
+    private void SetupModeObjects()
+    {
+        if (mode == BarMode.Discrete)
+        {
+            // DISCRETE: Enable segments, disable fillBar
+            if (segments != null)
+            {
+                foreach (var seg in segments)
+                {
+                    if (seg != null)
+                    {
+                        seg.gameObject.SetActive(false); // Start disabled
+                    }
+                }
+            }
+
+            if (fillBar != null)
+            {
+                fillBar.gameObject.SetActive(false); // Disable smooth bar
+            }
+        }
+        else // Smooth mode
+        {
+            // SMOOTH: Disable segments, enable fillBar
+            if (segments != null)
+            {
+                foreach (var seg in segments)
+                {
+                    if (seg != null)
+                    {
+                        seg.gameObject.SetActive(false); // Disable all segments
+                    }
+                }
+            }
+
+            if (fillBar != null)
+            {
+                fillBar.gameObject.SetActive(true); // Enable smooth bar
+                fillBar.color = fillColor; // Apply fill color
+            }
         }
     }
 
@@ -90,20 +157,17 @@ public class HorizontalBar : MonoBehaviour
     /// Set bar progress from 0.0 (empty) to 1.0 (full)
     /// Works for both Discrete and Smooth modes
     /// </summary>
-    /// <param name="value">Progress value 0.0-1.0</param>
-    /// <param name="instant">Skip animations (instant update)</param>
-    public void SetProgress(float value, bool instant = false)
+    public void SetProgress(float progressValue, bool instant = false)
     {
-        // Clamp to valid range
-        currentValue = Mathf.Clamp01(value);
+        value = Mathf.Clamp01(progressValue);
 
         if (mode == BarMode.Discrete)
         {
-            SetProgressDiscrete(currentValue, instant);
+            SetProgressDiscrete(value, instant);
         }
         else
         {
-            SetProgressSmooth(currentValue);
+            SetProgressSmooth(value);
         }
     }
 
@@ -111,21 +175,21 @@ public class HorizontalBar : MonoBehaviour
     // DISCRETE MODE IMPLEMENTATION
     // ============================================
 
-    private void SetProgressDiscrete(float value, bool instant)
+    private void SetProgressDiscrete(float progressValue, bool instant)
     {
-        // Safety check
         if (segments == null || segments.Length == 0)
         {
             Debug.LogError($"HorizontalBar '{name}' has no segments assigned!");
             return;
         }
 
-        // Convert 0.0-1.0 to 0-10 segments
-        int targetSegments = Mathf.RoundToInt(value * 10f);
-        targetSegments = Mathf.Clamp(targetSegments, 0, 10);
+        // Calculate target based on actual segment count
+        int maxSegments = segments.Length;
+        int targetSegments = Mathf.RoundToInt(progressValue * maxSegments);
+        targetSegments = Mathf.Clamp(targetSegments, 0, maxSegments);
 
         // If instant or no animations, update immediately
-        if (instant || (!useSequentialFill && !useScalePunch && !useColorLerp))
+        if (instant || (!useSequentialFill && !useScalePunch && !useBurnEffect))
         {
             SetDiscreteInstant(targetSegments);
             return;
@@ -163,26 +227,40 @@ public class HorizontalBar : MonoBehaviour
             if (segments[i] != null)
             {
                 bool shouldBeActive = (i < targetSegments);
-                segments[i].color = shouldBeActive ? activeColor : inactiveColor;
-                segments[i].transform.localScale = Vector3.one;
+
+                // Enable/disable entire GameObject
+                segments[i].gameObject.SetActive(shouldBeActive);
+
+                // Set color if active
+                if (shouldBeActive)
+                {
+                    segments[i].color = fillColor; // Use unified fill color
+                    segments[i].transform.localScale = Vector3.one;
+                }
             }
         }
     }
 
     private IEnumerator AnimateDiscreteUp(int startValue, int targetValue)
     {
-        for (int i = startValue; i < targetValue; i++)
+        int maxIndex = Mathf.Min(targetValue, segments.Length);
+
+        for (int i = startValue; i < maxIndex; i++)
         {
-            if (segments[i] != null)
+            if (i >= 0 && i < segments.Length && segments[i] != null)
             {
-                // Color lerp
-                if (useColorLerp)
+                // Enable GameObject FIRST
+                segments[i].gameObject.SetActive(true);
+
+                // Burn effect: Start at burn-in color, fade to fill color
+                if (useBurnEffect)
                 {
-                    segments[i].DOColor(activeColor, 1f / colorLerpSpeed);
+                    segments[i].color = burnInColor; // Start orange/red
+                    segments[i].DOColor(fillColor, 1f / burnSpeed); // Fade to fill color
                 }
                 else
                 {
-                    segments[i].color = activeColor;
+                    segments[i].color = fillColor; // Use unified fill color
                 }
 
                 // Scale punch
@@ -203,18 +281,31 @@ public class HorizontalBar : MonoBehaviour
 
     private IEnumerator AnimateDiscreteDown(int startValue, int targetValue)
     {
-        for (int i = startValue - 1; i >= targetValue; i--)
+        int maxIndex = Mathf.Min(startValue, segments.Length);
+
+        for (int i = maxIndex - 1; i >= targetValue; i--)
         {
-            if (segments[i] != null)
+            if (i >= 0 && i < segments.Length && segments[i] != null)
             {
-                // Color lerp to inactive
-                if (useColorLerp)
+                // Burn effect: Fade from fill color to burn-out color, THEN disable
+                if (useBurnEffect)
                 {
-                    segments[i].DOColor(inactiveColor, 1f / colorLerpSpeed);
+                    float fadeDuration = 1f / burnSpeed;
+
+                    // Fade to dark/cooling color
+                    segments[i].DOColor(burnOutColor, fadeDuration).OnComplete(() =>
+                    {
+                        // Disable GameObject AFTER fade completes
+                        if (segments[i] != null)
+                        {
+                            segments[i].gameObject.SetActive(false);
+                        }
+                    });
                 }
                 else
                 {
-                    segments[i].color = inactiveColor;
+                    // No burn effect - just disable immediately
+                    segments[i].gameObject.SetActive(false);
                 }
 
                 // Smaller scale punch when going down
@@ -237,25 +328,34 @@ public class HorizontalBar : MonoBehaviour
     // SMOOTH MODE IMPLEMENTATION
     // ============================================
 
-    private void SetProgressSmooth(float value)
+    private void SetProgressSmooth(float progressValue)
     {
-        // Safety check
         if (fillBar == null)
         {
             Debug.LogError($"HorizontalBar '{name}' has no fillBar assigned!");
             return;
         }
 
-        // Set fill amount directly
-        fillBar.fillAmount = value;
+        // Ensure fillBar is active and colored
+        if (!fillBar.gameObject.activeSelf)
+        {
+            fillBar.gameObject.SetActive(true);
+        }
 
-        // TODO: Color gradient based on value (red when low, green when high)
-        // TODO: Pulse effect when timer running low
+        fillBar.color = fillColor; // Use unified fill color
+        fillBar.fillAmount = progressValue;
     }
 
     // ============================================
     // CONTEXT MENU HELPERS
     // ============================================
+
+    [ContextMenu("Setup Mode Objects")]
+    private void SetupModeObjectsMenu()
+    {
+        SetupModeObjects();
+        Debug.Log($"✅ HorizontalBar '{name}' configured for {mode} mode");
+    }
 
     [ContextMenu("Test: Fill to Max")]
     private void TestFillMax()
@@ -283,10 +383,52 @@ public class HorizontalBar : MonoBehaviour
             SetProgress(0.5f);
         }
     }
+
+    [ContextMenu("Test: Burn Effect Demo")]
+    private void TestBurnEffect()
+    {
+        if (Application.isPlaying && mode == BarMode.Discrete)
+        {
+            StartCoroutine(BurnEffectDemo());
+        }
+    }
+
+    private IEnumerator BurnEffectDemo()
+    {
+        // Fill up
+        SetProgress(1f);
+        yield return new WaitForSeconds(2f);
+
+        // Empty
+        SetProgress(0f);
+        yield return new WaitForSeconds(2f);
+
+        // Fill halfway
+        SetProgress(0.5f);
+    }
+
+    // ============================================
+    // VALIDATION
+    // ============================================
+
+    private void OnValidate()
+    {
+        // Warn if segments array doesn't match expected count
+        if (mode == BarMode.Discrete && segments != null && segments.Length != 10)
+        {
+            Debug.LogWarning($"HorizontalBar '{name}': Discrete mode works best with 10 segments (found {segments.Length})", this);
+        }
+
+        // Apply fill color if in smooth mode (editor preview)
+        if (mode == BarMode.Smooth && fillBar != null && !Application.isPlaying)
+        {
+            fillBar.color = fillColor;
+        }
+    }
 }
 
 public enum BarMode
 {
-    Discrete,  // 10 segments for stats (0-10)
-    Smooth     // Smooth fill for timers/progress (0.0-1.0)
+    Discrete,  // Segments that enable/disable (typically 10 for 0-10 stats)
+    Smooth     // Smooth fill bar for timers/progress (0.0-1.0)
 }
