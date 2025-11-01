@@ -6,7 +6,9 @@ using System.Collections.Generic;
 /// 
 /// WHY: SlotData is a ScriptableObject (asset file), we can't change those at runtime
 /// CharacterSlotState wraps the data and adds runtime info we CAN change
-/// UPDATED: Now stores actionTotalDuration for accurate progress calculation
+/// 
+/// UPDATED: INDIVIDUAL TIMERS - No more groupedWithSlots tracking
+/// Each character lives in their own timespace completely independently
 /// </summary>
 public class CharacterSlotState
 {
@@ -46,12 +48,6 @@ public class CharacterSlotState
     /// </summary>
     public float actionTotalDuration = 0f;
 
-    /// <summary>
-    /// Which other character slots are in this action group with them?
-    /// Example: If slots 0, 1, 2 are all touring together, each would have [0,1,2] here
-    /// </summary>
-    public List<int> groupedWithSlots = new List<int>();
-
     // ============================================
     // CONSTRUCTOR
     // ============================================
@@ -78,14 +74,14 @@ public class CharacterSlotState
 
     /// <summary>
     /// Start a new action for this character
+    /// SIMPLIFIED: No group tracking - each character independent
     /// </summary>
-    public void StartAction(ActionData action, float duration, List<int> group)
+    public void StartAction(ActionData action, float duration)
     {
         isBusy = true;
         currentAction = action;
         actionTimeRemaining = duration;
         actionTotalDuration = duration; // Store total duration for progress calculation
-        groupedWithSlots = new List<int>(group); // Make a copy of the list
     }
 
     /// <summary>
@@ -97,7 +93,6 @@ public class CharacterSlotState
         currentAction = null;
         actionTimeRemaining = 0f;
         actionTotalDuration = 0f;
-        groupedWithSlots.Clear();
     }
 
     /// <summary>

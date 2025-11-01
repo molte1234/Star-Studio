@@ -5,6 +5,7 @@ using System.Collections.Generic;
 /// CENTRAL GAME STATE MANAGER - Singleton pattern
 /// Holds all game state and orchestrates game systems
 /// Persists across scene changes (Bootstrap handles this)
+/// UPDATED: Individual timer system - each character in their own timespace
 /// </summary>
 public class GameManager : MonoBehaviour
 {
@@ -52,6 +53,10 @@ public class GameManager : MonoBehaviour
     public UIController_Game uiController;
     public AudioManager audioManager;
 
+    // ============================================
+    // LIFECYCLE
+    // ============================================
+
     void Awake()
     {
         if (Instance == null)
@@ -69,6 +74,10 @@ public class GameManager : MonoBehaviour
         // Why: Update the debug display every frame so you can see band members in Inspector
         UpdateDebugDisplay();
     }
+
+    // ============================================
+    // DEBUG DISPLAY
+    // ============================================
 
     /// <summary>
     /// Updates the read-only debug fields in Inspector
@@ -92,6 +101,10 @@ public class GameManager : MonoBehaviour
         }
         return "EMPTY";
     }
+
+    // ============================================
+    // REGISTRATION (Called by managers in other scenes)
+    // ============================================
 
     /// <summary>
     /// Called by EventManager when it loads in Game scene
@@ -136,6 +149,10 @@ public class GameManager : MonoBehaviour
             }
         }
     }
+
+    // ============================================
+    // GAME SETUP
+    // ============================================
 
     public void SetupNewGame(SlotData[] selectedBand, string bandName)
     {
@@ -199,28 +216,16 @@ public class GameManager : MonoBehaviour
         Debug.Log($"📊 Stats Recalculated: CHA {charisma}, STG {stagePerformance}, VOC {vocal}, INS {instrument}, SNG {songwriting}, PRD {production}, MGT {management}, PRA {practical}");
     }
 
-    [ContextMenu("Show Welcome Screen")]
-    public void DEBUG_ShowWelcomeScreen()
-    {
-        if (eventManager != null)
-        {
-            Debug.Log("🔧 DEBUG: Manually showing welcome screen");
-            eventManager.ShowWelcomeScreen();
-        }
-        else
-        {
-            Debug.LogError("❌ DEBUG: Cannot show welcome screen - EventManager is null!");
-        }
-    }
-
     // ============================================
-    // ACTION SYSTEM ORCHESTRATION
+    // ACTION SYSTEM - INDIVIDUAL TIMERS
+    // Each character lives in their own timespace!
     // ============================================
 
     /// <summary>
     /// ORCHESTRATOR: Start an action
     /// Called from MemberSelectionPopup or ActionButton
     /// Changes state, then tells ActionManager to start timer and UIController to update
+    /// UPDATED: Simplified - no groupedWithSlots tracking
     /// </summary>
     public void StartAction(ActionData action, List<int> characterIndices)
     {
@@ -254,7 +259,7 @@ public class GameManager : MonoBehaviour
         money -= action.baseCost;
         Debug.Log($"   💰 Paid ${action.baseCost} → Balance: ${money}");
 
-        // Mark characters as busy
+        // Mark characters as busy - NO GROUP TRACKING
         foreach (int index in characterIndices)
         {
             characterStates[index].isBusy = true;
@@ -263,7 +268,7 @@ public class GameManager : MonoBehaviour
         }
 
         // ============================================
-        // 2. TELL ACTIONMANAGER: "Start timer"
+        // 2. TELL ACTIONMANAGER: "Start individual timers"
         // ============================================
 
         if (ActionManager.Instance != null)
@@ -282,9 +287,10 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ORCHESTRATOR: Complete an action
-    /// Called from ActionManager when timer finishes
+    /// ORCHESTRATOR: Complete an action for ONE character
+    /// Called from ActionManager when THIS character's timer finishes
     /// Changes state, applies rewards, then tells UIController to update
+    /// UPDATED: Individual completion - only handles THIS character
     /// </summary>
     public void CompleteAction(int characterIndex)
     {
@@ -296,31 +302,28 @@ public class GameManager : MonoBehaviour
         }
 
         ActionData action = charState.currentAction;
-        List<int> groupIndices = new List<int>(charState.groupedWithSlots);
 
-        Debug.Log($"✅ GameManager: Completing action '{action.actionName}'");
+        Debug.Log($"✅ GameManager: Character {characterIndex} completing action '{action.actionName}'");
 
         // ============================================
-        // 1. APPLY REWARDS
+        // 1. APPLY REWARDS (FOR THIS CHARACTER)
         // ============================================
 
         money += action.rewardMoney;
         fans += action.rewardFans;
         Debug.Log($"   💰 Gained ${action.rewardMoney} | 👥 Gained {action.rewardFans} fans");
 
+        // TODO: Apply stat gains to THIS character if action has stat rewards
+
         // ============================================
-        // 2. CHANGE STATE - UNLOCK CHARACTERS
+        // 2. CHANGE STATE - UNLOCK THIS CHARACTER
         // ============================================
 
-        foreach (int index in groupIndices)
-        {
-            characterStates[index].isBusy = false;
-            characterStates[index].currentAction = null;
-            characterStates[index].actionTimeRemaining = 0f;
-            characterStates[index].actionTotalDuration = 0f;
-            characterStates[index].groupedWithSlots.Clear();
-            Debug.Log($"   🔓 Character {index} now IDLE");
-        }
+        characterStates[characterIndex].isBusy = false;
+        characterStates[characterIndex].currentAction = null;
+        characterStates[characterIndex].actionTimeRemaining = 0f;
+        characterStates[characterIndex].actionTotalDuration = 0f;
+        Debug.Log($"   🔓 Character {characterIndex} now IDLE");
 
         // ============================================
         // 3. TELL UICONTROLLER: "Update display"
@@ -333,9 +336,10 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ORCHESTRATOR: Cancel an action for a SPECIFIC character
+    /// ORCHESTRATOR: Cancel an action for ONE character
     /// Called from CharacterDisplay cancel button
-    /// Only removes THIS character from the action, other group members continue
+    /// Stops THIS character's timer, other characters unaffected
+    /// UPDATED: Simplified - no group tracking to update
     /// </summary>
     public void CancelAction(int characterIndex)
     {
@@ -347,41 +351,21 @@ public class GameManager : MonoBehaviour
         }
 
         ActionData action = charState.currentAction;
-        List<int> originalGroup = new List<int>(charState.groupedWithSlots);
 
         Debug.Log($"❌ GameManager: Canceling character {characterIndex} from action '{action.actionName}'");
-        Debug.Log($"   Original group: [{string.Join(", ", originalGroup)}]");
 
         // ============================================
-        // 1. FREE THIS CHARACTER ONLY
+        // 1. FREE THIS CHARACTER
         // ============================================
 
         characterStates[characterIndex].isBusy = false;
         characterStates[characterIndex].currentAction = null;
         characterStates[characterIndex].actionTimeRemaining = 0f;
         characterStates[characterIndex].actionTotalDuration = 0f;
-        characterStates[characterIndex].groupedWithSlots.Clear();
         Debug.Log($"   🔓 Character {characterIndex} now IDLE");
 
         // ============================================
-        // 2. UPDATE OTHER GROUP MEMBERS
-        // Remove this character from their groupedWithSlots lists
-        // ============================================
-
-        foreach (int otherIndex in originalGroup)
-        {
-            if (otherIndex == characterIndex) continue; // Skip self
-
-            if (characterStates[otherIndex] != null && characterStates[otherIndex].isBusy)
-            {
-                characterStates[otherIndex].groupedWithSlots.Remove(characterIndex);
-                Debug.Log($"   🔗 Removed {characterIndex} from character {otherIndex}'s group");
-                Debug.Log($"      New group for {otherIndex}: [{string.Join(", ", characterStates[otherIndex].groupedWithSlots)}]");
-            }
-        }
-
-        // ============================================
-        // 3. TELL ACTIONMANAGER: Stop timer for THIS character only
+        // 2. TELL ACTIONMANAGER: Stop timer for THIS character
         // ============================================
 
         if (ActionManager.Instance != null)
@@ -390,7 +374,7 @@ public class GameManager : MonoBehaviour
         }
 
         // ============================================
-        // 4. TELL UICONTROLLER: Update display
+        // 3. TELL UICONTROLLER: Update display
         // ============================================
 
         if (uiController != null)
@@ -398,7 +382,7 @@ public class GameManager : MonoBehaviour
             uiController.RefreshUI();
         }
 
-        Debug.Log($"✅ Cancel complete - {originalGroup.Count - 1} characters still working on '{action.actionName}'");
+        Debug.Log($"✅ Cancel complete for character {characterIndex}");
 
         // TODO: Refund costs?
     }
@@ -483,6 +467,24 @@ public class GameManager : MonoBehaviour
         if (SceneLoader.Instance != null)
         {
             SceneLoader.Instance.LoadGameOver();
+        }
+    }
+
+    // ============================================
+    // DEBUG COMMANDS
+    // ============================================
+
+    [ContextMenu("Show Welcome Screen")]
+    public void DEBUG_ShowWelcomeScreen()
+    {
+        if (eventManager != null)
+        {
+            Debug.Log("🔧 DEBUG: Manually showing welcome screen");
+            eventManager.ShowWelcomeScreen();
+        }
+        else
+        {
+            Debug.LogError("❌ DEBUG: Cannot show welcome screen - EventManager is null!");
         }
     }
 }

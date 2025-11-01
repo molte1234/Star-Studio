@@ -21,7 +21,7 @@ MonoBehaviour:
   costPerCharacter: 0
   unityCost: 0
   moraleCostPerCharacter: 0
-  baseTime: 30
+  baseTime: 10
   timeEfficiencyStat: 7
   timeReductionPerStatPoint: 0
   minTime: 5

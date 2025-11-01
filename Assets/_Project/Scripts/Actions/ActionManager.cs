@@ -4,8 +4,15 @@ using Sirenix.OdinInspector;
 
 /// <summary>
 /// TIMER SERVICE - Counts down action timers
+/// Each character has their OWN independent timer - no grouping!
 /// Does NOT manage state, does NOT call UI directly
 /// Only receives instructions from GameManager and reports back when done
+/// 
+/// NEW SYSTEM: INDIVIDUAL TIMERS
+/// - Each character gets their own timer
+/// - Bonuses calculated once at START based on full group
+/// - Each character counts down independently
+/// - Each character completes and gets rewards independently
 /// </summary>
 public class ActionManager : MonoBehaviour
 {
@@ -24,17 +31,20 @@ public class ActionManager : MonoBehaviour
         }
 
         Instance = this;
-        Debug.Log("✅ ActionManager initialized (Timer Service)");
+        Debug.Log("✅ ActionManager initialized (Individual Timer Service)");
     }
 
     // ============================================
     // TIMER DATA
     // ============================================
 
+    /// <summary>
+    /// Each character has their OWN timer - no grouping
+    /// Each character lives in their own timespace
+    /// </summary>
     private class ActionTimer
     {
-        public int characterIndex; // Primary character for this timer
-        public List<int> groupedCharacters; // All characters in this action group
+        public int characterIndex; // THIS character ONLY
         public float timeRemaining;
     }
 
@@ -48,40 +58,52 @@ public class ActionManager : MonoBehaviour
     [ShowInInspector, ReadOnly]
     private int ActiveTimerCount => activeTimers.Count;
 
+    [ShowInInspector, ReadOnly]
+    [ListDrawerSettings(Expanded = true)]
+    private List<string> ActiveTimersDebug
+    {
+        get
+        {
+            List<string> debug = new List<string>();
+            foreach (var timer in activeTimers)
+            {
+                debug.Add($"Character {timer.characterIndex}: {timer.timeRemaining:F1}s");
+            }
+            return debug;
+        }
+    }
+
     // ============================================
-    // UPDATE - COUNT DOWN TIMERS
+    // UPDATE - COUNT DOWN TIMERS INDEPENDENTLY
     // ============================================
 
     private void Update()
     {
         if (activeTimers.Count == 0) return;
 
-        // Count down all timers
+        // Count down all timers INDEPENDENTLY
         for (int i = activeTimers.Count - 1; i >= 0; i--)
         {
             ActionTimer timer = activeTimers[i];
 
-            // Update time remaining in GameManager
+            // Update time remaining in GameManager for THIS character
             GameManager gm = GameManager.Instance;
             if (gm != null)
             {
-                foreach (int charIndex in timer.groupedCharacters)
+                if (timer.characterIndex < gm.characterStates.Length)
                 {
-                    if (charIndex < gm.characterStates.Length)
-                    {
-                        gm.characterStates[charIndex].actionTimeRemaining -= Time.deltaTime;
-                    }
+                    gm.characterStates[timer.characterIndex].actionTimeRemaining -= Time.deltaTime;
                 }
             }
 
             timer.timeRemaining -= Time.deltaTime;
 
-            // Timer finished?
+            // Timer finished for THIS character?
             if (timer.timeRemaining <= 0f)
             {
                 Debug.Log($"⏰ Timer finished for character {timer.characterIndex}");
 
-                // Tell GameManager: "Action complete"
+                // Tell GameManager: "Action complete for THIS character"
                 if (GameManager.Instance != null)
                 {
                     GameManager.Instance.CompleteAction(timer.characterIndex);
@@ -97,8 +119,9 @@ public class ActionManager : MonoBehaviour
     // ============================================
 
     /// <summary>
-    /// Start a timer for an action
-    /// Called by GameManager after it changes state
+    /// Start individual timers for each character in the action
+    /// Bonuses are calculated ONCE at the start based on the full group
+    /// Then each character gets their own independent timer
     /// </summary>
     public void StartTimer(ActionData action, List<int> characterIndices)
     {
@@ -116,17 +139,17 @@ public class ActionManager : MonoBehaviour
         }
 
         // ============================================
-        // CALCULATE DURATION (read stats from GameManager)
+        // CALCULATE DURATION ONCE (based on full group)
         // ============================================
 
         float duration = action.baseTime;
 
         if (action.requiresMembers && characterIndices.Count > 0)
         {
-            // Find highest relevant stat
+            // Find highest relevant stat from ALL characters in the group
             int highestStat = GetHighestRelevantStat(action.timeEfficiencyStat, characterIndices);
 
-            // Calculate time reduction
+            // Calculate time reduction based on group bonus
             float timeReduction = (highestStat / 10f) * 0.1f;
             duration *= (1f - timeReduction);
 
@@ -141,32 +164,35 @@ public class ActionManager : MonoBehaviour
         {
             gm.characterStates[index].actionTimeRemaining = duration;
             gm.characterStates[index].actionTotalDuration = duration;
-            gm.characterStates[index].groupedWithSlots = new List<int>(characterIndices);
         }
 
         // ============================================
-        // CREATE TIMER
+        // CREATE INDIVIDUAL TIMERS - ONE PER CHARACTER
         // ============================================
 
-        ActionTimer timer = new ActionTimer
+        foreach (int index in characterIndices)
         {
-            characterIndex = characterIndices[0], // Use first character as primary
-            groupedCharacters = new List<int>(characterIndices),
-            timeRemaining = duration
-        };
+            ActionTimer timer = new ActionTimer
+            {
+                characterIndex = index,
+                timeRemaining = duration
+            };
 
-        activeTimers.Add(timer);
-        Debug.Log($"   ⏰ Timer started: {duration:F1}s for {characterIndices.Count} characters");
+            activeTimers.Add(timer);
+            Debug.Log($"   ⏰ Individual timer created for character {index}: {duration:F1}s");
+        }
+
+        Debug.Log($"✅ Created {characterIndices.Count} individual timers (each character lives independently)");
     }
 
     // ============================================
-    // STOP TIMER (called by GameManager)
+    // STOP TIMER (called by GameManager for cancel)
     // ============================================
 
     /// <summary>
-    /// Stop a timer (for cancellation)
+    /// Stop a timer for a specific character (for cancellation)
     /// Called by GameManager after it changes state
-    /// UPDATED: Removes only the canceled character, keeps timer running if others remain
+    /// Simply removes THIS character's timer - other characters unaffected
     /// </summary>
     public void StopTimer(List<int> characterIndices)
     {
@@ -174,59 +200,25 @@ public class ActionManager : MonoBehaviour
 
         Debug.Log($"🛑 ActionManager.StopTimer called for characters: [{string.Join(", ", characterIndices)}]");
 
-        // Find timers that involve any of these characters
-        for (int i = activeTimers.Count - 1; i >= 0; i--)
+        // Remove timer for each canceled character
+        foreach (int canceledChar in characterIndices)
         {
-            ActionTimer timer = activeTimers[i];
-
-            // Check if this timer involves any of the cancelled characters
-            bool timerInvolved = false;
-            foreach (int canceledChar in characterIndices)
+            for (int i = activeTimers.Count - 1; i >= 0; i--)
             {
-                if (timer.groupedCharacters.Contains(canceledChar))
+                if (activeTimers[i].characterIndex == canceledChar)
                 {
-                    timerInvolved = true;
-                    break;
+                    activeTimers.RemoveAt(i);
+                    Debug.Log($"   🗑️ Removed timer for character {canceledChar}");
+                    break; // Each character has only one timer
                 }
-            }
-
-            if (!timerInvolved) continue; // This timer doesn't involve canceled characters
-
-            Debug.Log($"   📍 Found timer with {timer.groupedCharacters.Count} characters: [{string.Join(", ", timer.groupedCharacters)}]");
-
-            // ============================================
-            // REMOVE CANCELED CHARACTERS FROM TIMER
-            // ============================================
-
-            foreach (int canceledChar in characterIndices)
-            {
-                if (timer.groupedCharacters.Contains(canceledChar))
-                {
-                    timer.groupedCharacters.Remove(canceledChar);
-                    Debug.Log($"      ➖ Removed character {canceledChar} from timer");
-                }
-            }
-
-            // ============================================
-            // CHECK IF TIMER SHOULD BE DELETED
-            // ============================================
-
-            if (timer.groupedCharacters.Count == 0)
-            {
-                // No characters left - remove timer completely
-                activeTimers.RemoveAt(i);
-                Debug.Log($"      🗑️ Timer removed - no characters remaining");
-            }
-            else
-            {
-                // Characters still working - keep timer running!
-                Debug.Log($"      ⏰ Timer continues with {timer.groupedCharacters.Count} characters: [{string.Join(", ", timer.groupedCharacters)}]");
             }
         }
+
+        Debug.Log($"✅ Timers removed - {activeTimers.Count} timers still running");
     }
 
     // ============================================
-    // HELPER - GET HIGHEST STAT
+    // HELPER - GET HIGHEST STAT FROM GROUP
     // ============================================
 
     private int GetHighestRelevantStat(StatType statType, List<int> characterIndices)
