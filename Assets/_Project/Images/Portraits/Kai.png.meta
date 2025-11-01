@@ -24,7 +24,7 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
     flipGreenChannel: 0
-  isReadable: 0
+  isReadable: 1
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -48,7 +48,7 @@ TextureImporter:
   compressionQuality: 50
   spriteMode: 1
   spriteExtrude: 1
-  spriteMeshType: 0
+  spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 100
@@ -56,7 +56,7 @@ TextureImporter:
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
   alphaIsTransparency: 1
-  spriteTessellationDetail: -1
+  spriteTessellationDetail: 0.05
   textureType: 8
   textureShape: 1
   singleChannelComponent: 0
@@ -108,7 +108,7 @@ TextureImporter:
         width: 1012
         height: 1020
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -123,10 +123,47 @@ TextureImporter:
       weights: []
     outline: []
     customData: 
-    physicsShape: []
+    physicsShape:
+    - - {x: 507, y: -468}
+      - {x: 436, y: -129}
+      - {x: 382, y: -80}
+      - {x: 304, y: -50}
+      - {x: 295, y: -52}
+      - {x: 296, y: -31}
+      - {x: 318, y: 37}
+      - {x: 255, y: 33}
+      - {x: 259, y: 83}
+      - {x: 288, y: 183}
+      - {x: 284, y: 190}
+      - {x: 215, y: 284}
+      - {x: 151, y: 458}
+      - {x: 63, y: 509}
+      - {x: -59, y: 509}
+      - {x: -122, y: 485}
+      - {x: -194, y: 402}
+      - {x: -212, y: 319}
+      - {x: -243, y: 271}
+      - {x: -254, y: 191}
+      - {x: -325, y: 151}
+      - {x: -281, y: 139}
+      - {x: -288, y: 54}
+      - {x: -268, y: 37}
+      - {x: -259, y: 37}
+      - {x: -257, y: 43}
+      - {x: -259, y: 36}
+      - {x: -283, y: 17}
+      - {x: -316, y: 55}
+      - {x: -327, y: 38}
+      - {x: -340, y: -43}
+      - {x: -388, y: -70}
+      - {x: -444, y: -169}
+      - {x: -488, y: -382}
+      - {x: -505, y: -498}
+      - {x: -505, y: -512}
+      - {x: 507, y: -512}
     bones: []
     spriteID: 5e97eb03825dee720800000000000000
-    internalID: 0
+    internalID: 1537655665
     vertices: []
     indices: 
     edges: []

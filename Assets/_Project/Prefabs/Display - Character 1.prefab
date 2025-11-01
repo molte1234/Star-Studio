@@ -582,6 +582,9 @@ MonoBehaviour:
   timeBar: {fileID: 4838504387671483747}
   cancelButtonRoot: {fileID: 7595657153335719477}
   busyTintColor: {r: 0.33962262, g: 0.33962262, b: 0.33962262, a: 1}
+  hoverTintColor: {r: 0.9811321, g: 0.97386754, b: 0.92096835, a: 1}
+  selectedTintColor: {r: 0.5, g: 1, b: 1, a: 1}
+  hoverScaleMultiplier: 1.05
 --- !u!1 &8700214472499447295
 GameObject:
   m_ObjectHideFlags: 0
@@ -593,6 +596,7 @@ GameObject:
   - component: {fileID: 7416773546520116873}
   - component: {fileID: 4143531436571150353}
   - component: {fileID: 7780835304084014012}
+  - component: {fileID: 8453316120761974633}
   m_Layer: 5
   m_Name: Image - Portrait
   m_TagString: Untagged
@@ -639,7 +643,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 2100000, guid: bc4c31a47e2da824d827bc166cbb1cc5, type: 2}
+  m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
@@ -649,14 +653,27 @@ MonoBehaviour:
       m_Calls: []
   m_Sprite: {fileID: 21300000, guid: cdd47aa9fed8d9e4ebbe89fb17052e4f, type: 3}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
   m_FillClockwise: 1
   m_FillOrigin: 0
-  m_UseSpriteMesh: 0
+  m_UseSpriteMesh: 1
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &8453316120761974633
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8700214472499447295}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8aed378c01a1cdd4d8c10291f16c3b7e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AlphaRaycast
+  minimumAlpha: 0.1
 --- !u!1001 &6681702923791072179
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -665,13 +682,57 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 3569898035513302107}
     m_Modifications:
+    - target: {fileID: 512593417216500463, guid: f01eb8146fa596448863b397dfb06e4f, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1517635003968383922, guid: f01eb8146fa596448863b397dfb06e4f, type: 3}
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2278820804048363216, guid: f01eb8146fa596448863b397dfb06e4f, type: 3}
       propertyPath: useBurnEffect
-      value: 1
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2914053316467630583, guid: f01eb8146fa596448863b397dfb06e4f, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3036919529148043114, guid: f01eb8146fa596448863b397dfb06e4f, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3138190643711699627, guid: f01eb8146fa596448863b397dfb06e4f, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3841821291501332306, guid: f01eb8146fa596448863b397dfb06e4f, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4282933456018290700, guid: f01eb8146fa596448863b397dfb06e4f, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4852000275825082659, guid: f01eb8146fa596448863b397dfb06e4f, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5223096627712551762, guid: f01eb8146fa596448863b397dfb06e4f, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5524009542336360095, guid: f01eb8146fa596448863b397dfb06e4f, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5665783673526818510, guid: f01eb8146fa596448863b397dfb06e4f, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5963665675547154635, guid: f01eb8146fa596448863b397dfb06e4f, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7021863091079644183, guid: f01eb8146fa596448863b397dfb06e4f, type: 3}
       propertyPath: m_Pivot.x
@@ -752,6 +813,18 @@ PrefabInstance:
     - target: {fileID: 7021863091079644183, guid: f01eb8146fa596448863b397dfb06e4f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: -0.334
+      objectReference: {fileID: 0}
+    - target: {fileID: 7109673868807261800, guid: f01eb8146fa596448863b397dfb06e4f, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7183266979497929239, guid: f01eb8146fa596448863b397dfb06e4f, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7663922577182704772, guid: f01eb8146fa596448863b397dfb06e4f, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 9155143028250211283, guid: f01eb8146fa596448863b397dfb06e4f, type: 3}
       propertyPath: m_Name

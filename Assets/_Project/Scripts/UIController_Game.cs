@@ -5,10 +5,12 @@ using TMPro;
 /// <summary>
 /// Controls all UI elements on the main game screen
 /// 
-/// NEW ARCHITECTURE:
+/// ARCHITECTURE:
 /// - RefreshCharacters(): Loop through ALL, read state from GameManager, set UI for everyone
 /// - Update(): SEPARATELY update progress bars for busy characters only
-/// - NO state tracking, NO change detection - just display current state
+/// - SelectCharacter(): Manage "only one selected" rule
+/// - NO complex state tracking - just display current state
+/// UPDATED: Added hover tracking and MiniStats panel integration
 /// </summary>
 public class UIController_Game : MonoBehaviour
 {
@@ -39,6 +41,16 @@ public class UIController_Game : MonoBehaviour
     [Header("Test Band (Optional)")]
     [Tooltip("Drag TestBandHelper here if you want to use test band on scene load")]
     public TestBandHelper testBandHelper;
+
+    [Header("Stats Mini Panel")]
+    [Tooltip("MiniStats component - shows character stats on hover/select")]
+    public MiniStats miniStats;
+
+    // ============================================
+    // SELECTION & HOVER TRACKING
+    // ============================================
+    private int selectedCharacterIndex = -1; // -1 = none selected
+    private int hoveredCharacterIndex = -1;  // -1 = no hover
 
     void Start()
     {
@@ -106,7 +118,7 @@ public class UIController_Game : MonoBehaviour
                 continue;
             }
 
-            // ✅ Set character index so cancel button knows which character to cancel
+            // Set character index so cancel button knows which character to cancel
             characterDisplays[i].SetCharacterIndex(i);
 
             // Check if character exists in this slot
@@ -131,7 +143,7 @@ public class UIController_Game : MonoBehaviour
     }
 
     // ============================================
-    // ✅ SEPARATE UPDATE LOOP FOR PROGRESS BARS
+    // SEPARATE UPDATE LOOP FOR PROGRESS BARS
     // ============================================
 
     void Update()
@@ -168,6 +180,164 @@ public class UIController_Game : MonoBehaviour
                 characterDisplays[i].UpdateProgress(progress);
             }
         }
+    }
+
+    // ============================================
+    // HOVER TRACKING (for stats panel)
+    // ============================================
+
+    /// <summary>
+    /// Called by CharacterDisplay when mouse enters portrait
+    /// </summary>
+    public void SetHoveredCharacter(int characterIndex)
+    {
+        hoveredCharacterIndex = characterIndex;
+        UpdateStatsPanel();
+    }
+
+    /// <summary>
+    /// Called by CharacterDisplay when mouse exits portrait
+    /// </summary>
+    public void ClearHoveredCharacter()
+    {
+        hoveredCharacterIndex = -1;
+        UpdateStatsPanel();
+    }
+
+    // ============================================
+    // CHARACTER SELECTION
+    // ============================================
+
+    /// <summary>
+    /// Select a character (called by CharacterDisplay when clicked)
+    /// Enforces "only one selected at a time" rule
+    /// </summary>
+    public void SelectCharacter(int characterIndex)
+    {
+        Debug.Log($"🎯 UIController: SelectCharacter({characterIndex}) called");
+
+        // Why: Clicking same character again = deselect
+        if (selectedCharacterIndex == characterIndex)
+        {
+            Debug.Log($"   Same character clicked - deselecting");
+            DeselectAll();
+            return;
+        }
+
+        // Why: Deselect old character first
+        if (selectedCharacterIndex >= 0 && selectedCharacterIndex < characterDisplays.Length)
+        {
+            if (characterDisplays[selectedCharacterIndex] != null)
+            {
+                characterDisplays[selectedCharacterIndex].SetSelected(false);
+                Debug.Log($"   Deselected character {selectedCharacterIndex}");
+            }
+        }
+
+        // Why: Select new character
+        selectedCharacterIndex = characterIndex;
+
+        if (characterIndex >= 0 && characterIndex < characterDisplays.Length)
+        {
+            if (characterDisplays[characterIndex] != null)
+            {
+                characterDisplays[characterIndex].SetSelected(true);
+                Debug.Log($"   ✅ Selected character {characterIndex}");
+            }
+        }
+
+        // Update stats panel
+        UpdateStatsPanel();
+    }
+
+    /// <summary>
+    /// Deselect all characters
+    /// </summary>
+    public void DeselectAll()
+    {
+        if (selectedCharacterIndex >= 0 && selectedCharacterIndex < characterDisplays.Length)
+        {
+            if (characterDisplays[selectedCharacterIndex] != null)
+            {
+                characterDisplays[selectedCharacterIndex].SetSelected(false);
+                Debug.Log($"⚪ Deselected character {selectedCharacterIndex}");
+            }
+        }
+
+        selectedCharacterIndex = -1;
+
+        // Update stats panel
+        UpdateStatsPanel();
+    }
+
+    /// <summary>
+    /// Get currently selected character index (-1 if none)
+    /// </summary>
+    public int GetSelectedCharacterIndex()
+    {
+        return selectedCharacterIndex;
+    }
+
+    // ============================================
+    // STATS PANEL UPDATE
+    // ============================================
+
+    /// <summary>
+    /// Update stats panel based on priority: Hover > Selected > Hidden
+    /// </summary>
+    private void UpdateStatsPanel()
+    {
+        // Skip if no MiniStats assigned
+        if (miniStats == null) return;
+
+        GameManager gm = GameManager.Instance;
+        if (gm == null)
+        {
+            miniStats.Hide();
+            return;
+        }
+
+        // Priority 1: Show hovered character
+        if (hoveredCharacterIndex >= 0)
+        {
+            SlotData character = GetCharacterData(hoveredCharacterIndex);
+            if (character != null)
+            {
+                miniStats.ShowCharacter(character);
+                return;
+            }
+        }
+
+        // Priority 2: Show selected character
+        if (selectedCharacterIndex >= 0)
+        {
+            SlotData character = GetCharacterData(selectedCharacterIndex);
+            if (character != null)
+            {
+                miniStats.ShowCharacter(character);
+                return;
+            }
+        }
+
+        // Priority 3: Hide panel
+        miniStats.Hide();
+    }
+
+    /// <summary>
+    /// Helper: Get character data by index
+    /// </summary>
+    private SlotData GetCharacterData(int characterIndex)
+    {
+        GameManager gm = GameManager.Instance;
+        if (gm == null) return null;
+
+        if (characterIndex < 0 || characterIndex >= gm.characterStates.Length)
+            return null;
+
+        if (gm.characterStates[characterIndex] == null)
+            return null;
+
+        return gm.characterStates[characterIndex].slotData;
     }
 
     // ============================================
@@ -221,10 +391,7 @@ public class UIController_Game : MonoBehaviour
 
         GameManager gm = GameManager.Instance;
 
-        // ============================================
-        // LOOP THROUGH ALL CHARACTERS
-        // ============================================
-
+        // Loop through all characters
         for (int i = 0; i < characterDisplays.Length; i++)
         {
             if (characterDisplays[i] == null)
@@ -243,18 +410,13 @@ public class UIController_Game : MonoBehaviour
                 // Update character data
                 characterDisplays[i].SetCharacter(charState.slotData);
 
-                // ============================================
-                // SET UI STATE (no tracking, just read current state)
-                // ============================================
-
+                // Set busy state (action UI)
                 if (charState.isBusy && charState.currentAction != null)
                 {
-                    // Character is busy - show busy UI
                     characterDisplays[i].SetBusyState(true, charState.currentAction.actionName);
                 }
                 else
                 {
-                    // Character is idle - show idle UI
                     characterDisplays[i].SetBusyState(false);
                 }
             }
@@ -297,20 +459,42 @@ public class UIController_Game : MonoBehaviour
         if (managingPanel != null) managingPanel.SetActive(false);
     }
 
-    // Menu toggle handlers
-    public void OnPracticeMenuToggled(bool isOn) { ShowHidePanel(practicePanel, isOn); }
-    public void OnProduceMenuToggled(bool isOn) { ShowHidePanel(producePanel, isOn); }
-    public void OnTourMenuToggled(bool isOn) { ShowHidePanel(tourPanel, isOn); }
-    public void OnReleaseMenuToggled(bool isOn) { ShowHidePanel(releasePanel, isOn); }
-    public void OnFinanceMenuToggled(bool isOn) { ShowHidePanel(financePanel, isOn); }
-    public void OnMarketingMenuToggled(bool isOn) { ShowHidePanel(marketingPanel, isOn); }
-    public void OnManagingMenuToggled(bool isOn) { ShowHidePanel(managingPanel, isOn); }
+    // ============================================
+    // MENU TOGGLE HANDLERS (Called by Toggle buttons)
+    // ============================================
 
-    private void ShowHidePanel(GameObject panel, bool shouldShow)
+    public void OnPracticeToggle(bool isOn)
     {
-        if (panel != null)
-        {
-            panel.SetActive(shouldShow);
-        }
+        if (practicePanel != null) practicePanel.SetActive(isOn);
+    }
+
+    public void OnProduceToggle(bool isOn)
+    {
+        if (producePanel != null) producePanel.SetActive(isOn);
+    }
+
+    public void OnTourToggle(bool isOn)
+    {
+        if (tourPanel != null) tourPanel.SetActive(isOn);
+    }
+
+    public void OnReleaseToggle(bool isOn)
+    {
+        if (releasePanel != null) releasePanel.SetActive(isOn);
+    }
+
+    public void OnFinanceToggle(bool isOn)
+    {
+        if (financePanel != null) financePanel.SetActive(isOn);
+    }
+
+    public void OnMarketingToggle(bool isOn)
+    {
+        if (marketingPanel != null) marketingPanel.SetActive(isOn);
+    }
+
+    public void OnManagingToggle(bool isOn)
+    {
+        if (managingPanel != null) managingPanel.SetActive(isOn);
     }
 }

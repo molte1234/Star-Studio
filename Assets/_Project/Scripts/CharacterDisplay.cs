@@ -1,15 +1,14 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using TMPro;
 
 /// <summary>
 /// Manages a single character portrait display
-/// Shows character portrait, action status, and time remaining
-/// Does NOT control its own GameObject active state - UIController handles that
-/// FIXED: Uses CanvasGroup on parent so cancel button + UIButton stay active for proper initialization
-/// ARCHITECTURE: SetBusyState called ONCE on state change, UpdateProgress called every frame
+/// Shows character portrait, action status, time remaining, and handles mouse interactions
+/// UPDATED: Added mouse-over (hover) and selection (click) functionality + stats panel integration
 /// </summary>
-public class CharacterDisplay : MonoBehaviour
+public class CharacterDisplay : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
     [Header("Portrait")]
     public Image portraitImage;
@@ -28,25 +27,45 @@ public class CharacterDisplay : MonoBehaviour
     [Tooltip("Color to tint portrait when character is busy")]
     public Color busyTintColor = new Color(0.7f, 0.7f, 0.7f, 1f);
 
+    [Header("Mouse Interaction Colors")]
+    [Tooltip("Color multiplier when mouse hovers over portrait")]
+    public Color hoverTintColor = new Color(1.2f, 1.2f, 1.2f, 1f);
+
+    [Tooltip("Color tint when character is selected (clicked)")]
+    public Color selectedTintColor = new Color(0.5f, 1f, 1f, 1f); // Cyan-ish
+
+    [Header("Mouse Interaction Scale")]
+    [Tooltip("Scale multiplier on hover (e.g., 1.05 = 5% bigger)")]
+    [Range(1.0f, 1.2f)]
+    public float hoverScaleMultiplier = 1.05f;
+
     // ============================================
     // PRIVATE STATE
     // ============================================
     private Color originalPortraitColor = Color.white;
+    private Vector3 originalScale = Vector3.one;
     private int currentCharacterIndex = -1;
-    private Button cancelButtonComponent; // Cached button component
-    private CanvasGroup cancelButtonCanvasGroup; // For hiding without SetActive
+    private Button cancelButtonComponent;
+    private CanvasGroup cancelButtonCanvasGroup;
+
+    // Visual state tracking
+    private bool isHovered = false;
+    private bool isSelected = false;
+    private bool isBusy = false;
 
     void Awake()
     {
+        // Store original values
         if (portraitImage != null)
         {
             originalPortraitColor = portraitImage.color;
         }
 
-        // ✅ Setup cancel button with CanvasGroup for visibility control
+        originalScale = transform.localScale;
+
+        // Setup cancel button with CanvasGroup for visibility control
         if (cancelButtonRoot != null)
         {
-            // Get or add CanvasGroup to parent (keeps everything active for UIButton to work)
             cancelButtonCanvasGroup = cancelButtonRoot.GetComponent<CanvasGroup>();
             if (cancelButtonCanvasGroup == null)
             {
@@ -54,7 +73,6 @@ public class CharacterDisplay : MonoBehaviour
                 Debug.Log("✅ Added CanvasGroup to CancelButtonRoot for proper visibility control");
             }
 
-            // Find Button component in children
             cancelButtonComponent = cancelButtonRoot.GetComponentInChildren<Button>();
 
             if (cancelButtonComponent == null)
@@ -63,10 +81,8 @@ public class CharacterDisplay : MonoBehaviour
             }
             else
             {
-                // Wire up onClick
                 cancelButtonComponent.onClick.AddListener(OnCancelButtonClicked);
 
-                // Check if UIButton is attached
                 UIButton uiButton = cancelButtonComponent.GetComponent<UIButton>();
                 if (uiButton == null)
                 {
@@ -93,7 +109,7 @@ public class CharacterDisplay : MonoBehaviour
         if (portraitImage != null)
         {
             portraitImage.sprite = slotData.sprite;
-            portraitImage.color = originalPortraitColor;
+            UpdatePortraitColor(); // Apply current visual state to new sprite
         }
         else
         {
@@ -107,20 +123,12 @@ public class CharacterDisplay : MonoBehaviour
     // BUSY STATE - CALLED ONCE ON STATE CHANGE
     // ============================================
 
-    /// <summary>
-    /// Show/hide busy UI elements when action starts/ends
-    /// Called ONCE from ActionManager when state changes
-    /// </summary>
-    /// <param name="isBusy">Is character now busy?</param>
-    /// <param name="actionName">Name of action (e.g., "PRACTICING")</param>
-    public void SetBusyState(bool isBusy, string actionName = "")
+    public void SetBusyState(bool busy, string actionName = "")
     {
-        if (isBusy)
-        {
-            // ============================================
-            // BUSY STATE: Show action UI ONCE
-            // ============================================
+        isBusy = busy;
 
+        if (busy)
+        {
             // Show action name
             if (actionText != null)
             {
@@ -128,63 +136,155 @@ public class CharacterDisplay : MonoBehaviour
                 actionText.gameObject.SetActive(true);
             }
 
-            // Show progress bar (don't set value yet - UpdateProgress will do that)
+            // Show progress bar
             if (timeBar != null)
             {
                 timeBar.gameObject.SetActive(true);
             }
 
-            // Show cancel button using CanvasGroup
+            // Show cancel button
             if (cancelButtonCanvasGroup != null)
             {
                 cancelButtonCanvasGroup.alpha = 1f;
                 cancelButtonCanvasGroup.interactable = true;
                 cancelButtonCanvasGroup.blocksRaycasts = true;
             }
-
-            // Darken portrait
-            if (portraitImage != null)
-            {
-                portraitImage.color = busyTintColor;
-            }
-
-            Debug.Log($"✅ SetBusyState(true, '{actionName}') - UI shown for character {currentCharacterIndex}");
         }
         else
         {
-            // ============================================
-            // IDLE STATE: Hide action UI ONCE
-            // ============================================
+            // Hide all busy UI
             HideActionUI();
-
-            if (portraitImage != null)
-            {
-                portraitImage.color = originalPortraitColor;
-            }
-
-            Debug.Log($"✅ SetBusyState(false) - UI hidden for character {currentCharacterIndex}");
         }
+
+        // Update portrait color based on new busy state
+        UpdatePortraitColor();
     }
 
     // ============================================
-    // UPDATE PROGRESS - CALLED EVERY FRAME
+    // PROGRESS BAR UPDATE - CALLED EVERY FRAME
     // ============================================
 
-    /// <summary>
-    /// Update the progress bar fill amount
-    /// Called every frame from UIController.RefreshCharacters()
-    /// </summary>
-    /// <param name="progress">Progress from 0.0 (just started) to 1.0 (complete)</param>
     public void UpdateProgress(float progress)
     {
-        if (timeBar != null && timeBar.gameObject.activeSelf)
+        if (timeBar != null)
         {
             timeBar.SetProgress(progress);
         }
     }
 
     // ============================================
-    // CANCEL BUTTON HANDLER
+    // MOUSE INTERACTION
+    // ============================================
+
+    /// <summary>
+    /// Called when mouse enters portrait area
+    /// </summary>
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        isHovered = true;
+        UpdatePortraitColor();
+
+        // Scale up slightly (instant, no animation)
+        transform.localScale = originalScale * hoverScaleMultiplier;
+
+        // Notify UIController to show this character's stats
+        UIController_Game uiController = FindObjectOfType<UIController_Game>();
+        if (uiController != null)
+        {
+            uiController.SetHoveredCharacter(currentCharacterIndex);
+        }
+    }
+
+    /// <summary>
+    /// Called when mouse leaves portrait area
+    /// </summary>
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        isHovered = false;
+        UpdatePortraitColor();
+
+        // Scale back to original (instant, no animation)
+        transform.localScale = originalScale;
+
+        // Notify UIController hover ended
+        UIController_Game uiController = FindObjectOfType<UIController_Game>();
+        if (uiController != null)
+        {
+            uiController.ClearHoveredCharacter();
+        }
+    }
+
+    /// <summary>
+    /// Called when portrait is clicked
+    /// Notifies UIController to select this character
+    /// </summary>
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        // Tell UIController to select this character
+        UIController_Game uiController = FindObjectOfType<UIController_Game>();
+        if (uiController != null)
+        {
+            uiController.SelectCharacter(currentCharacterIndex);
+        }
+        else
+        {
+            Debug.LogError("❌ CharacterDisplay: Cannot find UIController_Game!");
+        }
+    }
+
+    // ============================================
+    // SELECTION STATE (Called by UIController)
+    // ============================================
+
+    /// <summary>
+    /// Set whether this character is selected (called by UIController)
+    /// </summary>
+    public void SetSelected(bool selected)
+    {
+        isSelected = selected;
+        UpdatePortraitColor();
+    }
+
+    // ============================================
+    // COLOR MANAGEMENT
+    // ============================================
+
+    /// <summary>
+    /// Update portrait color based on current state (busy, hover, selected)
+    /// Priority: Busy > Selected > Hover > Normal
+    /// </summary>
+    private void UpdatePortraitColor()
+    {
+        if (portraitImage == null) return;
+
+        Color targetColor = originalPortraitColor;
+
+        // Priority 1: Busy state (overrides everything)
+        if (isBusy)
+        {
+            targetColor = busyTintColor;
+        }
+        // Priority 2: Selected
+        else if (isSelected)
+        {
+            targetColor = selectedTintColor;
+        }
+        // Priority 3: Hover
+        else if (isHovered)
+        {
+            targetColor = originalPortraitColor * hoverTintColor; // Multiply for brightness boost
+        }
+        // Priority 4: Normal
+        else
+        {
+            targetColor = originalPortraitColor;
+        }
+
+        portraitImage.color = targetColor;
+    }
+
+    // ============================================
+    // CANCEL BUTTON
     // ============================================
 
     private void OnCancelButtonClicked()
@@ -202,11 +302,7 @@ public class CharacterDisplay : MonoBehaviour
         }
 
         Debug.Log($"🚫 Cancel button clicked for character slot {currentCharacterIndex}");
-
-        // ✅ NEW: Call GameManager instead of ActionManager
         GameManager.Instance.CancelAction(currentCharacterIndex);
-
-        // Note: AudioManager call removed - UIButton already handles click sound
     }
 
     // ============================================
@@ -225,7 +321,6 @@ public class CharacterDisplay : MonoBehaviour
             timeBar.gameObject.SetActive(false);
         }
 
-        // ✅ Hide cancel button using CanvasGroup (keeps button+shadow active, UIButton keeps working!)
         if (cancelButtonCanvasGroup != null)
         {
             cancelButtonCanvasGroup.alpha = 0f;

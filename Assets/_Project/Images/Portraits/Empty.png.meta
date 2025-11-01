@@ -24,7 +24,7 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
     flipGreenChannel: 0
-  isReadable: 0
+  isReadable: 1
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -48,7 +48,7 @@ TextureImporter:
   compressionQuality: 50
   spriteMode: 1
   spriteExtrude: 1
-  spriteMeshType: 0
+  spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 100
@@ -56,7 +56,7 @@ TextureImporter:
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
   alphaIsTransparency: 1
-  spriteTessellationDetail: -1
+  spriteTessellationDetail: 0.05
   textureType: 8
   textureShape: 1
   singleChannelComponent: 0
@@ -108,7 +108,7 @@ TextureImporter:
         width: 1014
         height: 994
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -123,10 +123,41 @@ TextureImporter:
       weights: []
     outline: []
     customData: 
-    physicsShape: []
+    physicsShape:
+    - - {x: 507, y: -493}
+      - {x: 491, y: -369}
+      - {x: 465, y: -261}
+      - {x: 445, y: -249}
+      - {x: 205, y: -150}
+      - {x: 112, y: -60}
+      - {x: 140, y: -6}
+      - {x: 174, y: 90}
+      - {x: 226, y: 191}
+      - {x: 203, y: 239}
+      - {x: 204, y: 307}
+      - {x: 185, y: 376}
+      - {x: 116, y: 436}
+      - {x: 34, y: 482}
+      - {x: -22, y: 482}
+      - {x: -175, y: 443}
+      - {x: -205, y: 396}
+      - {x: -246, y: 322}
+      - {x: -240, y: 267}
+      - {x: -270, y: 243}
+      - {x: -240, y: 176}
+      - {x: -166, y: 43}
+      - {x: -169, y: 1}
+      - {x: -134, y: -70}
+      - {x: -237, y: -160}
+      - {x: -459, y: -253}
+      - {x: -474, y: -280}
+      - {x: -501, y: -429}
+      - {x: -508, y: -491}
+      - {x: -508, y: -512}
+      - {x: 507, y: -512}
     bones: []
     spriteID: 5e97eb03825dee720800000000000000
-    internalID: 0
+    internalID: 1537655665
     vertices: []
     indices: 
     edges: []
