@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b47e55145e30a141b2d1f8a9d3448dc, type: 3}
+  m_Name: Treyor Knox
+  m_EditorClassIdentifier: Assembly-CSharp::SlotData
+  displayName: G Man
+  realName: Treyor Knox
+  sprite: {fileID: 21300000, guid: 5e2522c71a4919547a9d51c0502af6fd, type: 3}
+  slotType: 0
+  charisma: 2
+  stagePerformance: 2
+  vocal: 3
+  instrument: 0
+  songwriting: 6
+  production: 5
+  management: 0
+  practical: 3
+  morale: 5
+  trait: 
+  upkeepCost: 75
+  hireCost: 100
+  description: 

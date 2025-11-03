@@ -7,8 +7,7 @@ using System.Collections.Generic;
 /// WHY: SlotData is a ScriptableObject (asset file), we can't change those at runtime
 /// CharacterSlotState wraps the data and adds runtime info we CAN change
 /// 
-/// UPDATED: INDIVIDUAL TIMERS - No more groupedWithSlots tracking
-/// Each character lives in their own timespace completely independently
+/// UPDATED: Room-based system - tracks which room character is in
 /// </summary>
 public class CharacterSlotState
 {
@@ -24,6 +23,11 @@ public class CharacterSlotState
     // ============================================
     // RUNTIME STATE (changes during gameplay)
     // ============================================
+
+    /// <summary>
+    /// Which room is this character currently in? (null if not in any room yet)
+    /// </summary>
+    public RoomData currentRoom = null;
 
     /// <summary>
     /// Is this character currently doing an action?
@@ -70,36 +74,5 @@ public class CharacterSlotState
     public bool IsAvailable()
     {
         return !isBusy;
-    }
-
-    /// <summary>
-    /// Start a new action for this character
-    /// SIMPLIFIED: No group tracking - each character independent
-    /// </summary>
-    public void StartAction(ActionData action, float duration)
-    {
-        isBusy = true;
-        currentAction = action;
-        actionTimeRemaining = duration;
-        actionTotalDuration = duration; // Store total duration for progress calculation
-    }
-
-    /// <summary>
-    /// Complete the current action and reset to available
-    /// </summary>
-    public void CompleteAction()
-    {
-        isBusy = false;
-        currentAction = null;
-        actionTimeRemaining = 0f;
-        actionTotalDuration = 0f;
-    }
-
-    /// <summary>
-    /// Cancel the current action (same as complete, but might have different logic later)
-    /// </summary>
-    public void CancelAction()
-    {
-        CompleteAction(); // For now, same as complete
     }
 }

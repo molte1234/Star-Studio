@@ -31,7 +31,7 @@ MonoBehaviour:
   rewardFansPerCharacter: 0
   rewardUnity: 0
   statGainType: 1
-  statGainAmount: 1
+  statGainAmount: 5
   specificStatToImprove: 3
   fullTeamBonusMultiplier: 1
   improveMorale: 0

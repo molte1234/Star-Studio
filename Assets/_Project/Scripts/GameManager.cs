@@ -5,7 +5,7 @@ using System.Collections.Generic;
 /// CENTRAL GAME STATE MANAGER - Singleton pattern
 /// Holds all game state and orchestrates game systems
 /// Persists across scene changes (Bootstrap handles this)
-/// UPDATED: Individual timer system - each character in their own timespace
+/// UPDATED: Room-based system - characters move between physical rooms
 /// </summary>
 public class GameManager : MonoBehaviour
 {
@@ -53,6 +53,13 @@ public class GameManager : MonoBehaviour
     public UIController_Game uiController;
     public AudioManager audioManager;
 
+    [Header("Room System")]
+    [Tooltip("All room controllers in the game scene (assign manually or auto-find)")]
+    public RoomController[] roomControllers;
+
+    [Tooltip("Default room where characters spawn (usually Breakroom)")]
+    public RoomData defaultRoom;
+
     // ============================================
     // LIFECYCLE
     // ============================================
@@ -66,6 +73,16 @@ public class GameManager : MonoBehaviour
         else
         {
             Destroy(gameObject);
+        }
+    }
+
+    void Start()
+    {
+        // Auto-find room controllers if not assigned
+        if (roomControllers == null || roomControllers.Length == 0)
+        {
+            roomControllers = FindObjectsOfType<RoomController>();
+            Debug.Log($"🏠 Auto-found {roomControllers.Length} room controllers");
         }
     }
 
@@ -97,7 +114,8 @@ public class GameManager : MonoBehaviour
         if (characterStates[index] != null && characterStates[index].slotData != null)
         {
             string busyStatus = characterStates[index].isBusy ? " [BUSY]" : "";
-            return characterStates[index].slotData.displayName + busyStatus;
+            string roomName = characterStates[index].currentRoom != null ? $" ({characterStates[index].currentRoom.roomName})" : "";
+            return characterStates[index].slotData.displayName + busyStatus + roomName;
         }
         return "EMPTY";
     }
@@ -163,6 +181,12 @@ public class GameManager : MonoBehaviour
             if (selectedBand[i] != null)
             {
                 characterStates[i] = new CharacterSlotState(selectedBand[i]);
+
+                // Set default room
+                if (defaultRoom != null)
+                {
+                    characterStates[i].currentRoom = defaultRoom;
+                }
             }
             else
             {
@@ -184,6 +208,41 @@ public class GameManager : MonoBehaviour
             }
         }
         Debug.Log("========================================");
+
+        // Spawn characters in default room
+        if (defaultRoom != null)
+        {
+            SpawnCharactersInDefaultRoom();
+        }
+    }
+
+    /// <summary>
+    /// Spawn all characters in the default room at game start
+    /// </summary>
+    private void SpawnCharactersInDefaultRoom()
+    {
+        RoomController defaultRoomController = FindRoomController(defaultRoom);
+        if (defaultRoomController == null)
+        {
+            Debug.LogError($"❌ Cannot find RoomController for default room: {defaultRoom.roomName}");
+            return;
+        }
+
+        for (int i = 0; i < characterStates.Length; i++)
+        {
+            if (characterStates[i] != null && characterStates[i].slotData != null)
+            {
+                int emptySocket = defaultRoomController.FindEmptySocket();
+                if (emptySocket >= 0)
+                {
+                    defaultRoomController.AssignCharacterToSocket(emptySocket, characterStates[i]);
+                }
+                else
+                {
+                    Debug.LogWarning($"⚠️ No empty socket for character {i} in default room!");
+                }
+            }
+        }
     }
 
     public void RecalculateStats()
@@ -214,6 +273,122 @@ public class GameManager : MonoBehaviour
         }
 
         Debug.Log($"📊 Stats Recalculated: CHA {charisma}, STG {stagePerformance}, VOC {vocal}, INS {instrument}, SNG {songwriting}, PRD {production}, MGT {management}, PRA {practical}");
+    }
+
+    // ============================================
+    // ROOM MOVEMENT SYSTEM
+    // ============================================
+
+    /// <summary>
+    /// Move a character to a different room
+    /// Handles removing from old room, adding to new room, fade animations
+    /// </summary>
+    public void MoveCharacterToRoom(int characterIndex, RoomData targetRoom)
+    {
+        if (characterIndex < 0 || characterIndex >= characterStates.Length)
+        {
+            Debug.LogError($"❌ Invalid character index: {characterIndex}");
+            return;
+        }
+
+        CharacterSlotState character = characterStates[characterIndex];
+        if (character == null || character.slotData == null)
+        {
+            Debug.LogError($"❌ Character {characterIndex} is null or has no data!");
+            return;
+        }
+
+        // Cannot move if busy with action
+        if (character.isBusy)
+        {
+            Debug.LogWarning($"⚠️ Cannot move {character.slotData.displayName} - currently busy with action!");
+            return;
+        }
+
+        RoomData currentRoom = character.currentRoom;
+
+        // Already in target room?
+        if (currentRoom == targetRoom)
+        {
+            Debug.Log($"ℹ️ {character.slotData.displayName} already in {targetRoom.roomName}");
+            return;
+        }
+
+        // Find room controllers
+        RoomController currentRoomController = FindRoomController(currentRoom);
+        RoomController targetRoomController = FindRoomController(targetRoom);
+
+        if (targetRoomController == null)
+        {
+            Debug.LogError($"❌ Cannot find RoomController for {targetRoom.roomName}!");
+            return;
+        }
+
+        // Check if target room has space and find empty socket
+        int targetSocket = targetRoomController.FindEmptySocket();
+        if (targetSocket < 0)
+        {
+            Debug.LogWarning($"⚠️ {targetRoom.roomName} is full!");
+            return;
+        }
+
+        Debug.Log($"🚶 Moving {character.slotData.displayName}: {currentRoom?.roomName ?? "NOWHERE"} → {targetRoom.roomName}");
+
+        // ============================================
+        // REMOVE FROM OLD ROOM
+        // ============================================
+
+        if (currentRoomController != null)
+        {
+            int currentSocket = currentRoomController.FindCharacterSocket(character);
+            if (currentSocket >= 0)
+            {
+                // TODO: Fade out animation
+                currentRoomController.ClearSocket(currentSocket);
+            }
+        }
+
+        // ============================================
+        // ADD TO NEW ROOM
+        // ============================================
+
+        targetRoomController.AssignCharacterToSocket(targetSocket, character);
+
+        // Update character's current room
+        character.currentRoom = targetRoom;
+
+        Debug.Log($"✅ {character.slotData.displayName} successfully moved to {targetRoom.roomName}");
+    }
+
+    /// <summary>
+    /// Find the RoomController instance for a given RoomData
+    /// </summary>
+    private RoomController FindRoomController(RoomData roomData)
+    {
+        if (roomData == null) return null;
+
+        foreach (RoomController controller in roomControllers)
+        {
+            if (controller.roomData == roomData)
+            {
+                return controller;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Check if a room can be entered (not locked, has space)
+    /// </summary>
+    public bool CanEnterRoom(RoomData room)
+    {
+        if (room == null) return false;
+
+        RoomController controller = FindRoomController(room);
+        if (controller == null) return false;
+
+        return room.CanEnter();
     }
 
     // ============================================
@@ -290,7 +465,7 @@ public class GameManager : MonoBehaviour
     /// ORCHESTRATOR: Complete an action for ONE character
     /// Called from ActionManager when THIS character's timer finishes
     /// Changes state, applies rewards, then tells UIController to update
-    /// UPDATED: Individual completion - only handles THIS character
+    /// UPDATED: Returns character to Breakroom after action completes
     /// </summary>
     public void CompleteAction(int characterIndex)
     {
@@ -326,7 +501,16 @@ public class GameManager : MonoBehaviour
         Debug.Log($"   🔓 Character {characterIndex} now IDLE");
 
         // ============================================
-        // 3. TELL UICONTROLLER: "Update display"
+        // 3. RETURN TO BREAKROOM
+        // ============================================
+
+        if (defaultRoom != null && charState.currentRoom != defaultRoom)
+        {
+            MoveCharacterToRoom(characterIndex, defaultRoom);
+        }
+
+        // ============================================
+        // 4. TELL UICONTROLLER: "Update display"
         // ============================================
 
         if (uiController != null)

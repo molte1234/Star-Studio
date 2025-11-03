@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 5360faf9bfdb42b4d802654bfafe79e8
+guid: ac3b588c1a039f44588a1a0b9ea34f39
 TextureImporter:
   internalIDToNameTable:
   - first:
@@ -46,9 +46,9 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
-  spriteMeshType: 0
+  spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 100
@@ -103,10 +103,10 @@ TextureImporter:
       name: Fans_0
       rect:
         serializedVersion: 2
-        x: 83
-        y: 71
-        width: 870
-        height: 882
+        x: 171
+        y: 141
+        width: 1020
+        height: 1043
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -125,7 +125,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 5e97eb03825dee720800000000000000
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
