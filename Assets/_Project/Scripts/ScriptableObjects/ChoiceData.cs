@@ -2,7 +2,7 @@
 
 /// <summary>
 /// ✅ UPDATED: Data for a single choice in an event
-/// Replaced old 3-stat system with new 8-stat system
+/// Unity stat completely removed from the system
 /// </summary>
 [System.Serializable]
 public class ChoiceData
@@ -12,9 +12,9 @@ public class ChoiceData
     [Header("Resource Effects")]
     public int moneyChange;
     public int fansChange;
-    public int unityChange;
+    // REMOVED: unityChange (no longer in the game)
 
-    [Header("Stat Effects - NEW 8-Stat System")]
+    [Header("Stat Effects - 8-Stat System")]
     public int charismaChange;
     public int stagePerformanceChange;
     public int vocalChange;

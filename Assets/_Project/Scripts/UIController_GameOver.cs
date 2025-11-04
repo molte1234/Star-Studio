@@ -68,7 +68,7 @@ public class UIController_GameOver : MonoBehaviour
         gm.money = 500;
         gm.fans = 50;
 
-        // ✅ UPDATED: Reset NEW 8-stat system
+        // ✅ UPDATED: Reset 8-stat system (Unity removed)
         gm.charisma = 0;
         gm.stagePerformance = 0;
         gm.vocal = 0;
@@ -77,7 +77,7 @@ public class UIController_GameOver : MonoBehaviour
         gm.production = 0;
         gm.management = 0;
         gm.practical = 0;
-        gm.unity = 100;
+        // Unity stat removed completely
 
         // ✅ FIXED: Clear characterStates (not slots)
         if (gm.characterStates != null)

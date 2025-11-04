@@ -70,13 +70,13 @@ public class EventData : ScriptableObject
 
 /// <summary>
 /// ✅ UPDATED: Which stat to check for stat-based triggers
-/// Replaced old 3-stat system with new 8-stat system
+/// Unity stat completely removed from the enum
 /// </summary>
 public enum StatToCheck
 {
     Money,
     Fans,
-    // ✅ NEW 8-STAT SYSTEM:
+    // 8-STAT SYSTEM (Unity removed):
     Charisma,        // Social, look, fan appeal
     StagePerformance, // Live show entertainment
     Vocal,           // Singing ability
@@ -84,8 +84,7 @@ public enum StatToCheck
     Songwriting,     // Creating music
     Production,      // Studio/technical skills
     Management,      // Business/organization
-    Practical,       // General utility/getting stuff done
-    Unity            // Band cohesion (kept from old system)
+    Practical        // General utility/getting stuff done
 }
 
 /// <summary>

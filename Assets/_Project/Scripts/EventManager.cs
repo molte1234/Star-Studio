@@ -47,50 +47,32 @@ public class EventManager : MonoBehaviour
 
         Debug.Log("🎉 Showing welcome screen!");
         TriggerEvent(welcomeScreenEvent);
-
-        // Mark welcome screen as triggered so it won't show again
-        if (!triggeredEvents.Contains(welcomeScreenEvent))
-        {
-            triggeredEvents.Add(welcomeScreenEvent);
-        }
     }
 
     public void CheckForEvents()
     {
-        // Why: Called each quarter, see if any event should trigger
-        int currentYear = GameManager.Instance.currentYear;
-        int displayQuarter = (GameManager.Instance.currentQuarter % 4) + 1;
-
-        Debug.Log($"🔍 Checking for events... Year: {currentYear}, Quarter: {displayQuarter}");
-        Debug.Log($"📋 Total events in database: {allEvents.Count}");
+        // Why: Called each quarter to see if any events should trigger
+        Debug.Log($"🔍 Checking for events in Y{GameManager.Instance.currentYear} Q{(GameManager.Instance.currentQuarter % 4) + 1}");
 
         foreach (EventData evt in allEvents)
         {
-            // Skip welcome screen (it's triggered manually)
-            if (evt == welcomeScreenEvent)
-            {
-                Debug.Log($"   ⏭️ Skipping '{evt.eventTitle}' - this is the welcome screen");
-                continue;
-            }
-
             // Skip if already triggered
             if (triggeredEvents.Contains(evt))
             {
-                Debug.Log($"   ⏭️ Skipping '{evt.eventTitle}' - already triggered");
                 continue;
             }
 
-            // Check if this event should trigger
+            // Check if all conditions met
             if (ShouldTrigger(evt))
             {
-                Debug.Log($"   ✅ TRIGGERING EVENT: {evt.eventTitle}");
+                Debug.Log($"   ✅ Triggering event: {evt.eventTitle}");
                 TriggerEvent(evt);
                 triggeredEvents.Add(evt);
-                return; // Only show one event at a time
+                break; // Only trigger one event per quarter
             }
             else
             {
-                Debug.Log($"   ❌ '{evt.eventTitle}' conditions not met");
+                // Debug.Log($"   ❌ '{evt.eventTitle}' conditions not met");
             }
         }
 
@@ -146,6 +128,7 @@ public class EventManager : MonoBehaviour
     private int GetStatValue(StatToCheck stat, GameManager gm)
     {
         // Why: Get the current value of a stat from GameManager
+        // ✅ UPDATED: Removed Unity stat case
         switch (stat)
         {
             case StatToCheck.Money: return gm.money;
@@ -158,7 +141,6 @@ public class EventManager : MonoBehaviour
             case StatToCheck.Production: return gm.production;
             case StatToCheck.Management: return gm.management;
             case StatToCheck.Practical: return gm.practical;
-            case StatToCheck.Unity: return gm.unity;
             default: return 0;
         }
     }
@@ -210,39 +192,72 @@ public class EventManager : MonoBehaviour
             audioMgr.PlaySFX(evt.eventPopupSFX);
         }
 
-        // Play event music if provided
+        // Play event music if provided - FIXED: Using correct method name
         if (evt.eventMusic != null)
         {
             audioMgr.PlayEventMusic(evt.eventMusic);
         }
     }
 
+    // FIXED: Using correct method name that EventPanel calls
     public void PlayerChoseOption(int choiceIndex)
     {
         // Why: Player clicked a choice button, apply effects
-        if (currentEvent == null) return;
+        if (currentEvent == null)
+        {
+            Debug.LogError("❌ No current event!");
+            return;
+        }
+
+        if (choiceIndex < 0 || choiceIndex >= currentEvent.choices.Length)
+        {
+            Debug.LogError($"❌ Invalid choice index: {choiceIndex}");
+            return;
+        }
 
         ChoiceData choice = currentEvent.choices[choiceIndex];
+        Debug.Log($"💬 Player selected: '{choice.choiceText}'");
 
-        // Apply resource changes
-        GameManager.Instance.money += choice.moneyChange;
-        GameManager.Instance.fans += choice.fansChange;
-        GameManager.Instance.unity += choice.unityChange;
+        // Apply effects
+        GameManager gm = GameManager.Instance;
+
+        // Apply money change
+        if (choice.moneyChange != 0)
+        {
+            gm.money += choice.moneyChange;
+            Debug.Log($"   💰 Money {(choice.moneyChange > 0 ? "+" : "")}{choice.moneyChange} → Total: {gm.money}");
+        }
+
+        // FIXED: Using correct property name 'fansChange' not 'fanChange'
+        if (choice.fansChange != 0)
+        {
+            gm.fans += choice.fansChange;
+            Debug.Log($"   👥 Fans {(choice.fansChange > 0 ? "+" : "")}{choice.fansChange} → Total: {gm.fans}");
+        }
+
+        // REMOVED: Unity stat change (no longer exists)
 
         // Apply stat changes
-        GameManager.Instance.charisma += choice.charismaChange;
-        GameManager.Instance.stagePerformance += choice.stagePerformanceChange;
-        GameManager.Instance.vocal += choice.vocalChange;
-        GameManager.Instance.instrument += choice.instrumentChange;
-        GameManager.Instance.songwriting += choice.songwritingChange;
-        GameManager.Instance.production += choice.productionChange;
-        GameManager.Instance.management += choice.managementChange;
-        GameManager.Instance.practical += choice.practicalChange;
+        if (choice.charismaChange != 0) gm.charisma += choice.charismaChange;
+        if (choice.stagePerformanceChange != 0) gm.stagePerformance += choice.stagePerformanceChange;
+        if (choice.vocalChange != 0) gm.vocal += choice.vocalChange;
+        if (choice.instrumentChange != 0) gm.instrument += choice.instrumentChange;
+        if (choice.songwritingChange != 0) gm.songwriting += choice.songwritingChange;
+        if (choice.productionChange != 0) gm.production += choice.productionChange;
+        if (choice.managementChange != 0) gm.management += choice.managementChange;
+        if (choice.practicalChange != 0) gm.practical += choice.practicalChange;
 
-        // Add flags if any
-        foreach (string flag in choice.flagsToAdd)
+        // FIXED: Using correct property 'flagsToAdd' (array) not 'flagToAdd'
+        if (choice.flagsToAdd != null && choice.flagsToAdd.Length > 0)
         {
-            GameManager.Instance.flags.Add(flag);
+            foreach (string flag in choice.flagsToAdd)
+            {
+                if (!string.IsNullOrEmpty(flag) && !gm.flags.Contains(flag))
+                {
+                    gm.flags.Add(flag);
+                    Debug.Log($"   🚩 Added flag: '{flag}'");
+                }
+            }
         }
 
         // Resume regular music
@@ -251,12 +266,8 @@ public class EventManager : MonoBehaviour
             AudioManager.Instance.ResumeMusic();
         }
 
-        // Hide event
-        if (eventPanel != null)
-        {
-            eventPanel.HideEvent();
-        }
-
+        // Hide event panel
+        eventPanel.HideEvent();
         currentEvent = null;
 
         // Refresh UI to show stat changes
@@ -265,8 +276,9 @@ public class EventManager : MonoBehaviour
 
     public void ResetTriggeredEvents()
     {
-        // Why: Clear the history of triggered events (used when starting new game)
+        // Why: Clear history when restarting game
         triggeredEvents.Clear();
-        Debug.Log("🔄 Event history cleared");
+        currentEvent = null;
+        Debug.Log("✅ Event history cleared");
     }
 }
