@@ -83,6 +83,7 @@ public class CharacterObject : MonoBehaviour
     // ============================================
 
     private CharacterSlotState characterState;
+    private RoomController roomController; // Reference to the room this character is in
     private bool isHovered = false;
     private Tween breathingTween;
     private Tween currentTween;
@@ -158,6 +159,23 @@ public class CharacterObject : MonoBehaviour
         }
 
         Debug.Log($"🎭 CharacterObject: Set to {state.slotData.displayName}");
+    }
+
+    /// <summary>
+    /// Set the room controller this character belongs to
+    /// Called by RoomController when spawning
+    /// </summary>
+    public void SetRoomController(RoomController controller)
+    {
+        roomController = controller;
+    }
+
+    /// <summary>
+    /// Get the character state this object represents
+    /// </summary>
+    public CharacterSlotState GetCharacter()
+    {
+        return characterState;
     }
 
     // ============================================
@@ -343,22 +361,35 @@ public class CharacterObject : MonoBehaviour
     }
 
     /// <summary>
-    /// Handle character click - could open movement menu, show stats, etc.
+    /// Handle character click - opens the character menu with action buttons
     /// </summary>
     private void CharacterClicked()
     {
         Debug.Log($"👆 Clicked on {characterState?.slotData?.displayName}");
 
-        // TODO: Open character menu
-        // - Move to different room
-        // - View stats
-        // - Start action
-
-        // For now, just log
-        if (characterState != null && characterState.currentRoom != null)
+        // Check if character is busy - don't open menu if busy
+        if (characterState != null && characterState.isBusy)
         {
-            Debug.Log($"   Currently in: {characterState.currentRoom.roomName}");
-            Debug.Log($"   Is Busy: {characterState.isBusy}");
+            Debug.Log($"   Character is busy with: {characterState.currentAction?.actionName}");
+            // Could show a "busy" feedback here
+            return;
+        }
+
+        // Open character menu via CharacterMenuController
+        if (CharacterMenuController.Instance != null && roomController != null)
+        {
+            CharacterMenuController.Instance.OpenCharacterMenu(this, roomController);
+        }
+        else
+        {
+            if (CharacterMenuController.Instance == null)
+            {
+                Debug.LogWarning("CharacterMenuController instance not found!");
+            }
+            if (roomController == null)
+            {
+                Debug.LogWarning("RoomController reference not set for this character!");
+            }
         }
     }
 
