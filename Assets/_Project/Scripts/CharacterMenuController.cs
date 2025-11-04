@@ -442,7 +442,7 @@ public class CharacterMenuController : MonoBehaviour
 
     private void OnMoveToClicked()
     {
-        Debug.Log($"Move To clicked for character: {currentExpandedCharacter?.GetCharacter()?.characterName ?? "None"}");
+        Debug.Log($"Move To clicked for character: {currentExpandedCharacter?.GetCharacter()?.slotData?.displayName ?? "None"}");
 
         if (UIController_Game.Instance != null)
         {
@@ -454,7 +454,7 @@ public class CharacterMenuController : MonoBehaviour
 
     private void OnPracticeClicked()
     {
-        Debug.Log($"Practice clicked for character: {currentExpandedCharacter?.GetCharacter()?.characterName ?? "None"}");
+        Debug.Log($"Practice clicked for character: {currentExpandedCharacter?.GetCharacter()?.slotData?.displayName ?? "None"}");
 
         if (UIController_Game.Instance != null)
         {
@@ -466,7 +466,7 @@ public class CharacterMenuController : MonoBehaviour
 
     private void OnMusicClicked()
     {
-        Debug.Log($"Music clicked for character: {currentExpandedCharacter?.GetCharacter()?.characterName ?? "None"}");
+        Debug.Log($"Music clicked for character: {currentExpandedCharacter?.GetCharacter()?.slotData?.displayName ?? "None"}");
 
         if (UIController_Game.Instance != null)
         {
@@ -478,7 +478,7 @@ public class CharacterMenuController : MonoBehaviour
 
     private void OnActionClicked()
     {
-        Debug.Log($"Action clicked for character: {currentExpandedCharacter?.GetCharacter()?.characterName ?? "None"}");
+        Debug.Log($"Action clicked for character: {currentExpandedCharacter?.GetCharacter()?.slotData?.displayName ?? "None"}");
 
         if (UIController_Game.Instance != null)
         {

@@ -292,7 +292,7 @@ public class UIController_Game : MonoBehaviour
             return;
         }
 
-        Debug.Log($"🚶 Move To action for: {character.GetCharacter()?.characterName ?? "Unknown"}");
+        Debug.Log($"🚶 Move To action for: {character.GetCharacter()?.slotData?.displayName ?? "Unknown"}");
         // TODO: Open room selection UI
         // TODO: Move character to selected room
     }
@@ -309,7 +309,7 @@ public class UIController_Game : MonoBehaviour
             return;
         }
 
-        Debug.Log($"🎸 Practice action for: {character.GetCharacter()?.characterName ?? "Unknown"}");
+        Debug.Log($"🎸 Practice action for: {character.GetCharacter()?.slotData?.displayName ?? "Unknown"}");
         // TODO: Start practice activity
         // TODO: Improve character skill stats
     }
@@ -326,7 +326,7 @@ public class UIController_Game : MonoBehaviour
             return;
         }
 
-        Debug.Log($"🎵 Music action for: {character.GetCharacter()?.characterName ?? "Unknown"}");
+        Debug.Log($"🎵 Music action for: {character.GetCharacter()?.slotData?.displayName ?? "Unknown"}");
         // TODO: Open music/recording interface
         // TODO: Allow character to work on tracks
     }
@@ -343,7 +343,7 @@ public class UIController_Game : MonoBehaviour
             return;
         }
 
-        Debug.Log($"⚡ Action for: {character.GetCharacter()?.characterName ?? "Unknown"}");
+        Debug.Log($"⚡ Action for: {character.GetCharacter()?.slotData?.displayName ?? "Unknown"}");
         // TODO: Show action menu (train, socialize, etc.)
         // TODO: Implement various character activities
     }
