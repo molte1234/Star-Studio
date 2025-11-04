@@ -10,12 +10,14 @@ using TMPro;
 /// </summary>
 public class UIController_Game : MonoBehaviour
 {
-    [Header("Room Controllers - Assign in Inspector")]
+    [Header("Room Controllers - Assign in Inspector (9 total)")]
     // Why: References to room controllers for navigation
     public RoomController breakroomController;
+    public RoomController recordingRoomController;
     public RoomController practiceRoomController;
     public RoomController productionRoomController;
     public RoomController meetingRoomController;
+    public RoomController mediaRoomController;
     public RoomController headOfficeController;
     public RoomController outsideController;  // Default "no menu" view
     public RoomController lobbyController;
@@ -92,7 +94,7 @@ public class UIController_Game : MonoBehaviour
     }
 
     // ============================================
-    // ROOM NAVIGATION (replaces old panel toggles)
+    // ROOM NAVIGATION
     // ============================================
 
     /// <summary>
@@ -131,10 +133,34 @@ public class UIController_Game : MonoBehaviour
     }
 
     // ============================================
-    // MENU TOGGLE HANDLERS (Called by Toggle buttons - NOW SWITCHES ROOMS)
+    // ROOM TOGGLE HANDLERS (8 rooms + Outside when all OFF)
     // ============================================
 
-    public void OnPracticeToggle(bool isOn)
+    public void OnBreakRoomToggle(bool isOn)
+    {
+        if (isOn && breakroomController != null)
+        {
+            SwitchToRoom(breakroomController);
+        }
+        else if (!isOn)
+        {
+            ShowOutside();
+        }
+    }
+
+    public void OnRecordingRoomToggle(bool isOn)
+    {
+        if (isOn && recordingRoomController != null)
+        {
+            SwitchToRoom(recordingRoomController);
+        }
+        else if (!isOn)
+        {
+            ShowOutside();
+        }
+    }
+
+    public void OnPracticeRoomToggle(bool isOn)
     {
         if (isOn && practiceRoomController != null)
         {
@@ -146,7 +172,7 @@ public class UIController_Game : MonoBehaviour
         }
     }
 
-    public void OnProduceToggle(bool isOn)
+    public void OnProductionRoomToggle(bool isOn)
     {
         if (isOn && productionRoomController != null)
         {
@@ -158,44 +184,7 @@ public class UIController_Game : MonoBehaviour
         }
     }
 
-    public void OnTourToggle(bool isOn)
-    {
-        if (isOn && lobbyController != null)
-        {
-            SwitchToRoom(lobbyController);
-        }
-        else if (!isOn)
-        {
-            ShowOutside();
-        }
-    }
-
-    public void OnReleaseToggle(bool isOn)
-    {
-        // Why: Release might use lobby or production room - adjust as needed
-        if (isOn && productionRoomController != null)
-        {
-            SwitchToRoom(productionRoomController);
-        }
-        else if (!isOn)
-        {
-            ShowOutside();
-        }
-    }
-
-    public void OnFinanceToggle(bool isOn)
-    {
-        if (isOn && headOfficeController != null)
-        {
-            SwitchToRoom(headOfficeController);
-        }
-        else if (!isOn)
-        {
-            ShowOutside();
-        }
-    }
-
-    public void OnMarketingToggle(bool isOn)
+    public void OnMeetingRoomToggle(bool isOn)
     {
         if (isOn && meetingRoomController != null)
         {
@@ -207,11 +196,35 @@ public class UIController_Game : MonoBehaviour
         }
     }
 
-    public void OnManagingToggle(bool isOn)
+    public void OnMediaRoomToggle(bool isOn)
+    {
+        if (isOn && mediaRoomController != null)
+        {
+            SwitchToRoom(mediaRoomController);
+        }
+        else if (!isOn)
+        {
+            ShowOutside();
+        }
+    }
+
+    public void OnHeadOfficeToggle(bool isOn)
     {
         if (isOn && headOfficeController != null)
         {
             SwitchToRoom(headOfficeController);
+        }
+        else if (!isOn)
+        {
+            ShowOutside();
+        }
+    }
+
+    public void OnLobbyToggle(bool isOn)
+    {
+        if (isOn && lobbyController != null)
+        {
+            SwitchToRoom(lobbyController);
         }
         else if (!isOn)
         {

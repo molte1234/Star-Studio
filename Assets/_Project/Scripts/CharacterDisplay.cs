@@ -6,7 +6,7 @@ using TMPro;
 /// <summary>
 /// Manages a single character portrait display
 /// Shows character portrait, action status, time remaining, and handles mouse interactions
-/// UPDATED: Added mouse-over (hover) and selection (click) functionality + stats panel integration
+/// NOTE: This script is DEPRECATED and will be replaced by CharacterObject.cs in the room-based system
 /// </summary>
 public class CharacterDisplay : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
@@ -27,17 +27,15 @@ public class CharacterDisplay : MonoBehaviour, IPointerEnterHandler, IPointerExi
     [Tooltip("Color to tint portrait when character is busy")]
     public Color busyTintColor = new Color(0.7f, 0.7f, 0.7f, 1f);
 
-    [Header("Mouse Interaction Colors")]
+    [Header("Mouse Interaction")]
+    [Tooltip("Scale multiplier when hovering over portrait")]
+    public float hoverScaleMultiplier = 1.05f;
+
     [Tooltip("Color multiplier when mouse hovers over portrait")]
     public Color hoverTintColor = new Color(1.2f, 1.2f, 1.2f, 1f);
 
     [Tooltip("Color tint when character is selected (clicked)")]
     public Color selectedTintColor = new Color(0.5f, 1f, 1f, 1f); // Cyan-ish
-
-    [Header("Mouse Interaction Scale")]
-    [Tooltip("Scale multiplier on hover (e.g., 1.05 = 5% bigger)")]
-    [Range(1.0f, 1.2f)]
-    public float hoverScaleMultiplier = 1.05f;
 
     // ============================================
     // PRIVATE STATE
@@ -115,30 +113,29 @@ public class CharacterDisplay : MonoBehaviour, IPointerEnterHandler, IPointerExi
         {
             Debug.LogWarning("portraitImage is not assigned in CharacterDisplay Inspector!");
         }
-
-        HideActionUI();
     }
 
     // ============================================
-    // BUSY STATE - CALLED ONCE ON STATE CHANGE
+    // ACTION STATE UPDATES (Called by UIController)
     // ============================================
 
-    public void SetBusyState(bool busy, string actionName = "")
+    public void SetBusyState(bool busy, ActionData action, float timeRemaining, float totalDuration)
     {
         isBusy = busy;
 
-        if (busy)
+        if (busy && action != null)
         {
-            // Show action name
+            // Show action UI
             if (actionText != null)
             {
-                actionText.text = actionName.ToUpper();
+                actionText.text = action.actionName.ToUpper();
                 actionText.gameObject.SetActive(true);
             }
 
-            // Show progress bar
             if (timeBar != null)
             {
+                float progress = 1f - (timeRemaining / totalDuration);
+                timeBar.SetProgress(progress);
                 timeBar.gameObject.SetActive(true);
             }
 
@@ -152,92 +149,79 @@ public class CharacterDisplay : MonoBehaviour, IPointerEnterHandler, IPointerExi
         }
         else
         {
-            // Hide all busy UI
+            // Hide action UI
             HideActionUI();
         }
 
-        // Update portrait color based on new busy state
         UpdatePortraitColor();
     }
 
-    // ============================================
-    // PROGRESS BAR UPDATE - CALLED EVERY FRAME
-    // ============================================
-
-    public void UpdateProgress(float progress)
+    public void UpdateActionProgress(float timeRemaining, float totalDuration)
     {
-        if (timeBar != null)
+        if (timeBar != null && isBusy)
         {
+            float progress = 1f - (timeRemaining / totalDuration);
             timeBar.SetProgress(progress);
         }
     }
 
     // ============================================
-    // MOUSE INTERACTION
+    // MOUSE INTERACTION (IPointerHandler)
     // ============================================
 
     /// <summary>
-    /// Called when mouse enters portrait area
+    /// Mouse enters portrait → apply hover tint + scale up
     /// </summary>
     public void OnPointerEnter(PointerEventData eventData)
     {
         isHovered = true;
         UpdatePortraitColor();
-
-        // Scale up slightly (instant, no animation)
         transform.localScale = originalScale * hoverScaleMultiplier;
 
-        // Notify UIController to show this character's stats
-        UIController_Game uiController = FindObjectOfType<UIController_Game>();
-        if (uiController != null)
-        {
-            uiController.SetHoveredCharacter(currentCharacterIndex);
-        }
+        // COMMENTED OUT - UIController_Game doesn't have this method anymore
+        // UIController_Game uiController = FindObjectOfType<UIController_Game>();
+        // if (uiController != null)
+        // {
+        //     uiController.SetHoveredCharacter(currentCharacterIndex);
+        // }
     }
 
     /// <summary>
-    /// Called when mouse leaves portrait area
+    /// Mouse exits portrait → remove hover tint + scale back to normal
     /// </summary>
     public void OnPointerExit(PointerEventData eventData)
     {
         isHovered = false;
         UpdatePortraitColor();
-
-        // Scale back to original (instant, no animation)
         transform.localScale = originalScale;
 
-        // Notify UIController hover ended
-        UIController_Game uiController = FindObjectOfType<UIController_Game>();
-        if (uiController != null)
-        {
-            uiController.ClearHoveredCharacter();
-        }
+        // COMMENTED OUT - UIController_Game doesn't have this method anymore
+        // UIController_Game uiController = FindObjectOfType<UIController_Game>();
+        // if (uiController != null)
+        // {
+        //     uiController.ClearHoveredCharacter();
+        // }
     }
 
     /// <summary>
-    /// Called when portrait is clicked
-    /// Notifies UIController to select this character
+    /// Mouse clicks portrait → tell UIController to select this character
     /// </summary>
     public void OnPointerClick(PointerEventData eventData)
     {
-        // Tell UIController to select this character
-        UIController_Game uiController = FindObjectOfType<UIController_Game>();
-        if (uiController != null)
-        {
-            uiController.SelectCharacter(currentCharacterIndex);
-        }
-        else
-        {
-            Debug.LogError("❌ CharacterDisplay: Cannot find UIController_Game!");
-        }
+        // COMMENTED OUT - UIController_Game doesn't have this method anymore
+        // UIController_Game uiController = FindObjectOfType<UIController_Game>();
+        // if (uiController != null)
+        // {
+        //     uiController.SelectCharacter(currentCharacterIndex);
+        // }
+        // else
+        // {
+        //     Debug.LogError("❌ CharacterDisplay: Cannot find UIController_Game!");
+        // }
     }
 
-    // ============================================
-    // SELECTION STATE (Called by UIController)
-    // ============================================
-
     /// <summary>
-    /// Set whether this character is selected (called by UIController)
+    /// Called by UIController when selection changes
     /// </summary>
     public void SetSelected(bool selected)
     {
@@ -245,12 +229,8 @@ public class CharacterDisplay : MonoBehaviour, IPointerEnterHandler, IPointerExi
         UpdatePortraitColor();
     }
 
-    // ============================================
-    // COLOR MANAGEMENT
-    // ============================================
-
     /// <summary>
-    /// Update portrait color based on current state (busy, hover, selected)
+    /// Updates portrait color based on current state (hover, selection, busy)
     /// Priority: Busy > Selected > Hover > Normal
     /// </summary>
     private void UpdatePortraitColor()
@@ -259,39 +239,34 @@ public class CharacterDisplay : MonoBehaviour, IPointerEnterHandler, IPointerExi
 
         Color targetColor = originalPortraitColor;
 
-        // Priority 1: Busy state (overrides everything)
         if (isBusy)
         {
+            // Busy state = darken portrait
             targetColor = busyTintColor;
         }
-        // Priority 2: Selected
         else if (isSelected)
         {
+            // Selected = highlight with selected color
             targetColor = selectedTintColor;
         }
-        // Priority 3: Hover
         else if (isHovered)
         {
-            targetColor = originalPortraitColor * hoverTintColor; // Multiply for brightness boost
-        }
-        // Priority 4: Normal
-        else
-        {
-            targetColor = originalPortraitColor;
+            // Hover = slight brightness boost
+            targetColor = originalPortraitColor * hoverTintColor;
         }
 
         portraitImage.color = targetColor;
     }
 
     // ============================================
-    // CANCEL BUTTON
+    // CANCEL BUTTON HANDLER
     // ============================================
 
     private void OnCancelButtonClicked()
     {
         if (GameManager.Instance == null)
         {
-            Debug.LogError("❌ CharacterDisplay: GameManager.Instance is null!");
+            Debug.LogError("❌ CharacterDisplay: Cannot find GameManager!");
             return;
         }
 
