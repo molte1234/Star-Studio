@@ -1036,7 +1036,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: ROOM
+  m_text: Action
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 7312e55b48a5d514b9c54aa4986e4348, type: 2}
   m_sharedMaterial: {fileID: 1048749672136591959, guid: 7312e55b48a5d514b9c54aa4986e4348, type: 2}
@@ -14741,6 +14741,7 @@ GameObject:
   - component: {fileID: 1606034581}
   - component: {fileID: 1606034583}
   - component: {fileID: 1606034582}
+  - component: {fileID: 1606034584}
   m_Layer: 5
   m_Name: Panel - CharacterSelect
   m_TagString: Untagged
@@ -14807,6 +14808,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1606034580}
   m_CullTransparentMesh: 1
+--- !u!225 &1606034584
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1606034580}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1615719806
 GameObject:
   m_ObjectHideFlags: 0
@@ -17048,7 +17061,7 @@ GameObject:
   - component: {fileID: 1860188929}
   - component: {fileID: 1860188928}
   m_Layer: 5
-  m_Name: Button - Room
+  m_Name: Button - Action
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -17839,7 +17852,7 @@ GameObject:
   - component: {fileID: 1912670070}
   - component: {fileID: 1912670069}
   m_Layer: 5
-  m_Name: Shadow - Room
+  m_Name: Shadow - Action
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
