@@ -3,7 +3,7 @@ using Sirenix.OdinInspector;
 using DG.Tweening;
 
 /// <summary>
-/// Room positioning direction for comic panel transitions
+/// Room positioning direction for panel transitions
 /// </summary>
 public enum RoomDirection
 {
@@ -21,24 +21,13 @@ public enum RoomDirection
 /// - Tracks which characters are in which sockets
 /// - Controls universal color tint for all characters in room
 /// - Spawns/manages CharacterObject prefabs at sockets
-/// - Handles comic-style panel transitions between rooms
+/// - Handles panel slide transitions between rooms
 /// 
 /// USAGE:
 /// - Attach one to each room panel/GameObject
 /// - Manually assign socket transforms in inspector
 /// - Set roomLightingTint for this room's lighting color
 /// - Set roomDirection for where this room slides in from
-/// - Assign horizontal/vertical gutter images for transitions
-/// 
-/// NOTE:
-/// - Alpha is controlled per-character via CharacterObject.FadeIn/FadeOut
-/// - Not controlled at room level
-/// 
-/// HIERARCHY:
-/// Room GameObject (this script)
-///   ├─ Socket_01 (empty Transform)
-///   ├─ Socket_02 (empty Transform)
-///   └─ Socket_03 (empty Transform)
 /// </summary>
 public class RoomController : MonoBehaviour
 {
@@ -58,17 +47,11 @@ public class RoomController : MonoBehaviour
     // ============================================
 
     [Title("Transitions", bold: true)]
-    [Tooltip("Horizontal comic gutter image (appears between vertical transitions)")]
-    public GameObject horizontalGutter;
-
-    [Tooltip("Vertical comic gutter image (appears between horizontal transitions)")]
-    public GameObject verticalGutter;
-
     [Tooltip("Distance to offset room when positioning (e.g., screen height/width)")]
     public float transitionDistance = 1920f; // Default for 1080p height
 
-    // Track current centered room (static so all rooms know which is active)
-    private static RoomController currentCenteredRoom = null;
+    [Tooltip("Duration of slide animation in seconds")]
+    public float transitionDuration = 0.5f;
 
     // ============================================
     // SOCKET SETUP
@@ -79,58 +62,35 @@ public class RoomController : MonoBehaviour
     [InfoBox("Manually assign empty GameObjects as socket positions. Characters spawn here.")]
     public Transform[] sockets;
 
-    [Tooltip("Flip character horizontally at each socket (faces opposite direction)")]
-    [InfoBox("Check boxes to flip characters at specific sockets (scale.x = -1)")]
+    [Tooltip("Per-socket X flip settings - check box to flip character sprite at that socket")]
+    [InfoBox("Use this to make characters face different directions at different sockets")]
     public bool[] socketFlipX;
 
     // ============================================
-    // CHARACTER TRACKING
+    // VISUAL SETUP
     // ============================================
 
-    [Title("Character Tracking", bold: true)]
-    [ShowInInspector, ReadOnly, ListDrawerSettings(Expanded = true)]
-    [Tooltip("Visual display of which character is in each socket")]
-    private string[] SocketOccupancyDisplay
-    {
-        get
-        {
-            if (socketOccupants == null || sockets == null) return new string[0];
-
-            string[] display = new string[socketOccupants.Length];
-            for (int i = 0; i < socketOccupants.Length; i++)
-            {
-                if (socketOccupants[i] != null && socketOccupants[i].slotData != null)
-                {
-                    display[i] = $"Socket {i}: {socketOccupants[i].slotData.displayName}";
-                }
-                else
-                {
-                    display[i] = $"Socket {i}: EMPTY";
-                }
-            }
-            return display;
-        }
-    }
-
-    // Internal tracking arrays
-    private CharacterSlotState[] socketOccupants;
-    private CharacterObject[] characterVisuals;
-
-    [Required, Tooltip("CharacterObject prefab to spawn")]
+    [Title("Visuals", bold: true)]
+    [Tooltip("CharacterObject prefab to spawn at sockets")]
     public GameObject characterPrefab;
 
+    [Tooltip("Room lighting tint applied to all characters in this room")]
+    [ColorUsage(false)]
+    public Color roomLightingTint = Color.white;
+
     [Title("Editor Testing", bold: true)]
-    [Tooltip("Test character to use for populating sockets in editor")]
+    [Tooltip("Test character to populate sockets with (editor only)")]
     public SlotData testCharacter;
 
     // ============================================
-    // VISUAL SETTINGS
+    // RUNTIME STATE
     // ============================================
 
-    [Title("Room Lighting", bold: true)]
-    [Tooltip("Universal color tint applied to all characters in this room")]
-    [OnValueChanged("UpdateRoomLighting")]
-    public Color roomLightingTint = Color.white;
+    // Why: Track which characters are in which sockets
+    private CharacterSlotState[] socketOccupants;
+
+    // Why: Track visual GameObjects (CharacterObject components)
+    private CharacterObject[] characterVisuals;
 
     // ============================================
     // INITIALIZATION
@@ -138,102 +98,35 @@ public class RoomController : MonoBehaviour
 
     void Awake()
     {
-        // Initialize arrays based on socket count
+        // Why: Initialize arrays to match socket count
         if (sockets != null)
         {
-            int socketCount = sockets.Length;
-            socketOccupants = new CharacterSlotState[socketCount];
-            characterVisuals = new CharacterObject[socketCount];
+            socketOccupants = new CharacterSlotState[sockets.Length];
+            characterVisuals = new CharacterObject[sockets.Length];
 
-            // Initialize flip array if needed
-            if (socketFlipX == null || socketFlipX.Length != socketCount)
+            // Initialize socketFlipX array if not set
+            if (socketFlipX == null || socketFlipX.Length != sockets.Length)
             {
-                socketFlipX = new bool[socketCount];
+                socketFlipX = new bool[sockets.Length];
             }
-
-            Debug.Log($"🏠 RoomController initialized: {socketCount} sockets");
         }
         else
         {
-            Debug.LogError("❌ RoomController: No sockets assigned!");
+            Debug.LogWarning($"⚠️ {gameObject.name}: No sockets assigned!");
         }
     }
 
     // ============================================
-    // CHARACTER MANAGEMENT
+    // SOCKET QUERIES
     // ============================================
 
     /// <summary>
-    /// Assign a character to a specific socket
-    /// Spawns CharacterObject prefab at socket position
-    /// </summary>
-    public void AssignCharacterToSocket(int socketIndex, CharacterSlotState character)
-    {
-        if (!IsValidSocketIndex(socketIndex)) return;
-
-        // Check if socket already occupied
-        if (socketOccupants[socketIndex] != null)
-        {
-            Debug.LogWarning($"⚠️ Socket {socketIndex} already occupied by {socketOccupants[socketIndex].slotData.displayName}!");
-            return;
-        }
-
-        // Track character in socket
-        socketOccupants[socketIndex] = character;
-
-        // Spawn visual
-        SpawnCharacterVisual(socketIndex, character);
-
-        Debug.Log($"✅ Assigned {character.slotData.displayName} to socket {socketIndex}");
-    }
-
-    /// <summary>
-    /// Remove character from socket
-    /// Destroys CharacterObject prefab
-    /// </summary>
-    public void ClearSocket(int socketIndex)
-    {
-        if (!IsValidSocketIndex(socketIndex)) return;
-
-        // Destroy visual if exists
-        if (characterVisuals[socketIndex] != null)
-        {
-            Destroy(characterVisuals[socketIndex].gameObject);
-            characterVisuals[socketIndex] = null;
-        }
-
-        // Clear tracking
-        CharacterSlotState clearedCharacter = socketOccupants[socketIndex];
-        socketOccupants[socketIndex] = null;
-
-        if (clearedCharacter != null)
-        {
-            Debug.Log($"🧹 Cleared {clearedCharacter.slotData.displayName} from socket {socketIndex}");
-        }
-    }
-
-    /// <summary>
-    /// Find which socket a character is in
-    /// Returns -1 if not found
-    /// </summary>
-    public int FindCharacterSocket(CharacterSlotState character)
-    {
-        for (int i = 0; i < socketOccupants.Length; i++)
-        {
-            if (socketOccupants[i] == character)
-            {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    /// <summary>
-    /// Find first empty socket
-    /// Returns -1 if all full
+    /// Find first empty socket index (-1 if all full)
     /// </summary>
     public int FindEmptySocket()
     {
+        if (socketOccupants == null) return -1;
+
         for (int i = 0; i < socketOccupants.Length; i++)
         {
             if (socketOccupants[i] == null)
@@ -241,11 +134,30 @@ public class RoomController : MonoBehaviour
                 return i;
             }
         }
+
+        return -1; // All sockets full
+    }
+
+    /// <summary>
+    /// Find which socket a specific character is in (-1 if not found)
+    /// </summary>
+    public int FindCharacterSocket(CharacterSlotState character)
+    {
+        if (socketOccupants == null || character == null) return -1;
+
+        for (int i = 0; i < socketOccupants.Length; i++)
+        {
+            if (socketOccupants[i] == character)
+            {
+                return i;
+            }
+        }
+
         return -1;
     }
 
     /// <summary>
-    /// Is this socket currently occupied?
+    /// Check if socket is occupied
     /// </summary>
     public bool IsSocketOccupied(int socketIndex)
     {
@@ -253,49 +165,88 @@ public class RoomController : MonoBehaviour
         return socketOccupants[socketIndex] != null;
     }
 
+    /// <summary>
+    /// Get character at specific socket (null if empty)
+    /// </summary>
+    public CharacterSlotState GetCharacterAtSocket(int socketIndex)
+    {
+        if (!IsValidSocketIndex(socketIndex)) return null;
+        return socketOccupants[socketIndex];
+    }
+
     // ============================================
-    // VISUAL SPAWNING
+    // SOCKET MANAGEMENT
     // ============================================
 
     /// <summary>
-    /// Spawn CharacterObject prefab at socket position
+    /// Assign a character to a specific socket
+    /// Spawns CharacterObject prefab and positions it
+    /// </summary>
+    public void AssignCharacterToSocket(int socketIndex, CharacterSlotState character)
+    {
+        if (!IsValidSocketIndex(socketIndex))
+        {
+            Debug.LogError($"❌ Invalid socket index: {socketIndex}");
+            return;
+        }
+
+        if (character == null)
+        {
+            Debug.LogError("❌ Cannot assign null character to socket!");
+            return;
+        }
+
+        if (socketOccupants[socketIndex] != null)
+        {
+            Debug.LogWarning($"⚠️ Socket {socketIndex} already occupied! Clearing first.");
+            ClearSocket(socketIndex);
+        }
+
+        // Update socket occupancy
+        socketOccupants[socketIndex] = character;
+
+        // Spawn visual
+        SpawnCharacterVisual(socketIndex, character);
+
+        Debug.Log($"✅ {character.slotData.displayName} assigned to socket {socketIndex} in {roomData.roomName}");
+    }
+
+    /// <summary>
+    /// Clear a socket (removes character and destroys visual)
+    /// </summary>
+    public void ClearSocket(int socketIndex)
+    {
+        if (!IsValidSocketIndex(socketIndex)) return;
+
+        // Destroy visual GameObject
+        if (characterVisuals[socketIndex] != null)
+        {
+            Destroy(characterVisuals[socketIndex].gameObject);
+            characterVisuals[socketIndex] = null;
+        }
+
+        // Clear occupancy
+        socketOccupants[socketIndex] = null;
+
+        Debug.Log($"🧹 Socket {socketIndex} cleared");
+    }
+
+    /// <summary>
+    /// Spawns CharacterObject prefab at socket position
     /// </summary>
     private void SpawnCharacterVisual(int socketIndex, CharacterSlotState character)
     {
         if (characterPrefab == null)
         {
-            Debug.LogError("❌ RoomController: No characterPrefab assigned!");
+            Debug.LogError("❌ No character prefab assigned!");
             return;
         }
 
+        // Get socket transform
         Transform socketTransform = sockets[socketIndex];
 
-        // Instantiate prefab
-        GameObject instance = Instantiate(characterPrefab);
-
-        // Parent to socket FIRST
-        instance.transform.SetParent(socketTransform, false);
-
-        // Reset local transform
-        instance.transform.localPosition = Vector3.zero;
-        instance.transform.localRotation = Quaternion.identity;
-        instance.transform.localScale = Vector3.one;
-
-        // Apply flip if needed
-        if (socketFlipX != null && socketIndex < socketFlipX.Length && socketFlipX[socketIndex])
-        {
-            Vector3 flippedScale = instance.transform.localScale;
-            flippedScale.x *= -1f;
-            instance.transform.localScale = flippedScale;
-        }
-
-        // Copy socket RectTransform size to character
-        RectTransform socketRect = socketTransform.GetComponent<RectTransform>();
-        RectTransform charRect = instance.GetComponent<RectTransform>();
-        if (socketRect != null && charRect != null)
-        {
-            charRect.sizeDelta = socketRect.sizeDelta; // Match socket size!
-        }
+        // Instantiate prefab at socket position
+        GameObject instance = Instantiate(characterPrefab, socketTransform.position, Quaternion.identity, socketTransform);
 
         // Get CharacterObject component
         CharacterObject charObj = instance.GetComponent<CharacterObject>();
@@ -306,6 +257,14 @@ public class RoomController : MonoBehaviour
 
             // Apply room lighting
             charObj.SetRoomLighting(roomLightingTint);
+
+            // Apply socket flip if needed (using transform scale, not a method)
+            if (socketFlipX != null && socketIndex < socketFlipX.Length && socketFlipX[socketIndex])
+            {
+                Vector3 flippedScale = instance.transform.localScale;
+                flippedScale.x *= -1f;
+                instance.transform.localScale = flippedScale;
+            }
 
             // Store reference
             characterVisuals[socketIndex] = charObj;
@@ -370,123 +329,91 @@ public class RoomController : MonoBehaviour
     }
 
     // ============================================
-    // ROOM TRANSITIONS (Comic Panel Style)
+    // ROOM TRANSITIONS (Panel Slide Style)
     // ============================================
 
     /// <summary>
-    /// Transition from current centered room to this room
-    /// Positions this room in specified direction, then slides both panels
+    /// Show this room with slide transition
+    /// Called by UIController_Game when switching rooms
     /// </summary>
-    public void TransitionToThisRoom(float duration = 0.5f)
+    /// <param name="previousRoom">Room that was previously shown (can be null)</param>
+    public void ShowRoom(RoomController previousRoom)
     {
-        // If this is already centered, do nothing
-        if (currentCenteredRoom == this)
-        {
-            Debug.Log($"ℹ️ {roomData.roomName} already centered");
-            return;
-        }
-
-        RoomController oldRoom = currentCenteredRoom;
-
-        Debug.Log($"🎬 Transitioning: {oldRoom?.roomData.roomName ?? "NONE"} → {roomData.roomName}");
+        Debug.Log($"🚪 ShowRoom: {roomData?.roomName ?? "UNKNOWN"}");
 
         // ============================================
-        // 1. POSITION THIS ROOM IN SPECIFIED DIRECTION
+        // ENABLE THIS ROOM
+        // ============================================
+
+        gameObject.SetActive(true);
+
+        // ============================================
+        // POSITION THIS ROOM OFF-SCREEN BASED ON DIRECTION
         // ============================================
 
         RectTransform thisRect = GetComponent<RectTransform>();
         Vector2 startPosition = Vector2.zero;
-        Vector2 slideDirection = Vector2.zero;
-        bool useHorizontalGutter = false;
 
         switch (roomDirection)
         {
             case RoomDirection.Top:
                 startPosition = new Vector2(0, transitionDistance);
-                slideDirection = Vector2.down;
-                useHorizontalGutter = true;
                 break;
 
             case RoomDirection.Bottom:
                 startPosition = new Vector2(0, -transitionDistance);
-                slideDirection = Vector2.up;
-                useHorizontalGutter = true;
                 break;
 
             case RoomDirection.Left:
                 startPosition = new Vector2(-transitionDistance, 0);
-                slideDirection = Vector2.right;
-                useHorizontalGutter = false;
                 break;
 
             case RoomDirection.Right:
                 startPosition = new Vector2(transitionDistance, 0);
-                slideDirection = Vector2.left;
-                useHorizontalGutter = false;
                 break;
         }
 
         thisRect.anchoredPosition = startPosition;
 
         // ============================================
-        // 2. POSITION & SHOW GUTTER IMAGE
+        // SLIDE THIS ROOM TO CENTER
         // ============================================
 
-        GameObject activeGutter = useHorizontalGutter ? horizontalGutter : verticalGutter;
-        if (activeGutter != null)
+        thisRect.DOAnchorPos(Vector2.zero, transitionDuration).SetEase(Ease.OutCubic);
+
+        // ============================================
+        // SLIDE OLD ROOM OUT AND DISABLE IT
+        // ============================================
+
+        if (previousRoom != null)
         {
-            activeGutter.SetActive(true);
-            RectTransform gutterRect = activeGutter.GetComponent<RectTransform>();
+            RectTransform oldRect = previousRoom.GetComponent<RectTransform>();
 
-            // Position gutter between current center and this room
-            gutterRect.anchoredPosition = startPosition * 0.5f; // Halfway between
+            // Calculate opposite direction
+            Vector2 exitDirection = -startPosition;
 
-            // TODO: Make gutter follow during slide animation
+            // Slide out
+            oldRect.DOAnchorPos(exitDirection, transitionDuration)
+                .SetEase(Ease.OutCubic)
+                .OnComplete(() => {
+                    // Disable old room after animation completes
+                    previousRoom.gameObject.SetActive(false);
+                    Debug.Log($"⚫ Disabled: {previousRoom.roomData?.roomName ?? "UNKNOWN"}");
+                });
         }
 
-        // ============================================
-        // 3. SLIDE BOTH PANELS (using DOTween)
-        // ============================================
-
-        // Slide this room to center
-        thisRect.DOAnchorPos(Vector2.zero, duration).SetEase(Ease.OutCubic);
-
-        // Slide old room out
-        if (oldRoom != null)
-        {
-            RectTransform oldRect = oldRoom.GetComponent<RectTransform>();
-            Vector2 oldTargetPosition = slideDirection * transitionDistance;
-            oldRect.DOAnchorPos(oldTargetPosition, duration).SetEase(Ease.OutCubic);
-        }
-
-        // Hide gutter after animation
-        DOVirtual.DelayedCall(duration + 0.1f, () => {
-            if (activeGutter != null) activeGutter.SetActive(false);
-        });
-
-        // ============================================
-        // 4. UPDATE CENTERED ROOM TRACKING
-        // ============================================
-
-        currentCenteredRoom = this;
-
-        Debug.Log($"✅ Transition complete: {roomData.roomName} now centered");
-
-        // TODO: Hide gutter after animation completes
+        Debug.Log($"✅ {roomData?.roomName ?? "UNKNOWN"} now visible");
     }
 
     /// <summary>
-    /// Set this room as the initial centered room (no animation)
-    /// Call this for the starting room (usually Breakroom)
+    /// Set this room as visible without animation (for initial setup)
     /// </summary>
-    public void SetAsCenteredRoom()
+    public void ShowRoomImmediate()
     {
+        gameObject.SetActive(true);
         RectTransform thisRect = GetComponent<RectTransform>();
         thisRect.anchoredPosition = Vector2.zero;
-
-        currentCenteredRoom = this;
-
-        Debug.Log($"📍 {roomData.roomName} set as centered room");
+        Debug.Log($"📍 {roomData?.roomName ?? "UNKNOWN"} set as visible (no animation)");
     }
 
     // ============================================
@@ -516,61 +443,35 @@ public class RoomController : MonoBehaviour
             return;
         }
 
-        // Initialize arrays if needed
-        if (socketOccupants == null || socketOccupants.Length != sockets.Length)
-        {
-            socketOccupants = new CharacterSlotState[sockets.Length];
-            characterVisuals = new CharacterObject[sockets.Length];
-        }
+        // Create runtime state wrapper for test character
+        CharacterSlotState testState = new CharacterSlotState(testCharacter);
 
         int populatedCount = 0;
 
-        // Populate all empty sockets
+        // Populate empty sockets
         for (int i = 0; i < sockets.Length; i++)
         {
-            if (socketOccupants[i] == null) // Only fill empty sockets
+            if (sockets[i] != null)
             {
-                // Create CharacterSlotState from test character
-                CharacterSlotState testState = new CharacterSlotState(testCharacter);
-
-                // Spawn visual
-                Transform socketTransform = sockets[i];
-                GameObject instance = UnityEditor.PrefabUtility.InstantiatePrefab(characterPrefab) as GameObject;
+                // Spawn prefab
+                GameObject instance = (GameObject)UnityEditor.PrefabUtility.InstantiatePrefab(characterPrefab, sockets[i]);
 
                 if (instance != null)
                 {
-                    // Parent to socket
-                    instance.transform.SetParent(socketTransform, false);
-
-                    // Reset local transform
-                    instance.transform.localPosition = Vector3.zero;
-                    instance.transform.localRotation = Quaternion.identity;
-                    instance.transform.localScale = Vector3.one;
-
-                    // Apply flip if needed
-                    if (socketFlipX != null && i < socketFlipX.Length && socketFlipX[i])
-                    {
-                        Vector3 flippedScale = instance.transform.localScale;
-                        flippedScale.x *= -1f;
-                        instance.transform.localScale = flippedScale;
-                    }
-
-                    // Copy socket RectTransform size to character
-                    RectTransform socketRect = socketTransform.GetComponent<RectTransform>();
-                    RectTransform charRect = instance.GetComponent<RectTransform>();
-                    if (socketRect != null && charRect != null)
-                    {
-                        charRect.sizeDelta = socketRect.sizeDelta; // Match socket size!
-                    }
-
+                    // Get CharacterObject component
                     CharacterObject charObj = instance.GetComponent<CharacterObject>();
                     if (charObj != null)
                     {
                         charObj.SetCharacter(testState);
-                        charObj.SetRoomLighting(roomLightingTint); // Apply room tint!
+                        charObj.SetRoomLighting(roomLightingTint);
 
-                        socketOccupants[i] = testState;
-                        characterVisuals[i] = charObj;
+                        // Apply flip if needed (using transform scale)
+                        if (socketFlipX != null && i < socketFlipX.Length && socketFlipX[i])
+                        {
+                            Vector3 flippedScale = instance.transform.localScale;
+                            flippedScale.x *= -1f;
+                            instance.transform.localScale = flippedScale;
+                        }
 
                         populatedCount++;
                     }
@@ -587,150 +488,22 @@ public class RoomController : MonoBehaviour
     [Button("Clear All Sockets"), PropertyOrder(-1)]
     private void EditorClearAllSockets()
     {
-        if (characterVisuals == null) return;
+        if (sockets == null) return;
 
-        for (int i = 0; i < characterVisuals.Length; i++)
+        // Find and destroy all child CharacterObject instances
+        for (int i = 0; i < sockets.Length; i++)
         {
-            if (characterVisuals[i] != null)
+            if (sockets[i] != null)
             {
-                DestroyImmediate(characterVisuals[i].gameObject);
-                characterVisuals[i] = null;
-            }
-        }
-
-        if (socketOccupants != null)
-        {
-            for (int i = 0; i < socketOccupants.Length; i++)
-            {
-                socketOccupants[i] = null;
+                // Destroy all children of socket
+                while (sockets[i].childCount > 0)
+                {
+                    DestroyImmediate(sockets[i].GetChild(0).gameObject);
+                }
             }
         }
 
         Debug.Log("🧹 All sockets cleared (editor mode)");
-        UnityEditor.EditorUtility.SetDirty(gameObject);
-    }
-
-    [Button("Test Transition To This Room"), PropertyOrder(-1)]
-    [InfoBox("Preview full transition animation in editor (uses DOTween)")]
-    private void EditorTestTransition()
-    {
-        if (Application.isPlaying)
-        {
-            // In play mode, use the real transition
-            TransitionToThisRoom();
-            return;
-        }
-
-        // EDITOR MODE PREVIEW
-        Debug.Log($"🎬 Testing transition to {roomData?.roomName ?? "this room"}");
-
-        RectTransform thisRect = GetComponent<RectTransform>();
-
-        // Find a room to simulate as "current centered" (any room at center position)
-        RoomController simulatedOldRoom = null;
-        RoomController[] allRooms = FindObjectsOfType<RoomController>();
-        foreach (var room in allRooms)
-        {
-            if (room != this && room.GetComponent<RectTransform>().anchoredPosition == Vector2.zero)
-            {
-                simulatedOldRoom = room;
-                break;
-            }
-        }
-
-        // Calculate positions
-        Vector2 startPosition = Vector2.zero;
-        Vector2 slideDirection = Vector2.zero;
-        bool useHorizontalGutter = false;
-
-        switch (roomDirection)
-        {
-            case RoomDirection.Top:
-                startPosition = new Vector2(0, transitionDistance);
-                slideDirection = Vector2.down;
-                useHorizontalGutter = true;
-                break;
-            case RoomDirection.Bottom:
-                startPosition = new Vector2(0, -transitionDistance);
-                slideDirection = Vector2.up;
-                useHorizontalGutter = true;
-                break;
-            case RoomDirection.Left:
-                startPosition = new Vector2(-transitionDistance, 0);
-                slideDirection = Vector2.right;
-                useHorizontalGutter = false;
-                break;
-            case RoomDirection.Right:
-                startPosition = new Vector2(transitionDistance, 0);
-                slideDirection = Vector2.left;
-                useHorizontalGutter = false;
-                break;
-        }
-
-        // Position this room at start
-        thisRect.anchoredPosition = startPosition;
-
-        // Show appropriate gutter
-        if (horizontalGutter != null && useHorizontalGutter)
-        {
-            horizontalGutter.SetActive(true);
-            horizontalGutter.GetComponent<RectTransform>().anchoredPosition = startPosition * 0.5f;
-        }
-        if (verticalGutter != null && !useHorizontalGutter)
-        {
-            verticalGutter.SetActive(true);
-            verticalGutter.GetComponent<RectTransform>().anchoredPosition = startPosition * 0.5f;
-        }
-
-        // ANIMATE using DOTween (works in edit mode!)
-#if UNITY_EDITOR
-        DOTween.Init();
-        DOTween.defaultAutoPlay = AutoPlay.All;
-
-        // Slide this room to center
-        var thisTween = thisRect.DOAnchorPos(Vector2.zero, 0.5f).SetEase(Ease.OutCubic);
-        thisTween.SetUpdate(true); // Works in edit mode
-
-        // Slide old room out (if exists)
-        if (simulatedOldRoom != null)
-        {
-            RectTransform oldRect = simulatedOldRoom.GetComponent<RectTransform>();
-            Vector2 oldTargetPosition = slideDirection * transitionDistance;
-            var oldTween = oldRect.DOAnchorPos(oldTargetPosition, 0.5f).SetEase(Ease.OutCubic);
-            oldTween.SetUpdate(true);
-
-            Debug.Log($"   Sliding out: {simulatedOldRoom.roomData?.roomName ?? "old room"}");
-        }
-
-        // Hide gutter after animation
-        if (useHorizontalGutter && horizontalGutter != null)
-        {
-            DOVirtual.DelayedCall(0.6f, () => {
-                if (horizontalGutter != null) horizontalGutter.SetActive(false);
-            }).SetUpdate(true);
-        }
-        if (!useHorizontalGutter && verticalGutter != null)
-        {
-            DOVirtual.DelayedCall(0.6f, () => {
-                if (verticalGutter != null) verticalGutter.SetActive(false);
-            }).SetUpdate(true);
-        }
-
-        UnityEditor.EditorUtility.SetDirty(gameObject);
-        if (simulatedOldRoom != null) UnityEditor.EditorUtility.SetDirty(simulatedOldRoom.gameObject);
-#endif
-    }
-
-    [Button("Reset To Center"), PropertyOrder(-1)]
-    private void EditorResetToCenter()
-    {
-        RectTransform thisRect = GetComponent<RectTransform>();
-        thisRect.anchoredPosition = Vector2.zero;
-
-        // Hide gutters
-        if (horizontalGutter != null) horizontalGutter.SetActive(false);
-        if (verticalGutter != null) verticalGutter.SetActive(false);
-
         UnityEditor.EditorUtility.SetDirty(gameObject);
     }
 #endif

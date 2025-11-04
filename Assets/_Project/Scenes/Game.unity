@@ -654,9 +654,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RoomController
   roomData: {fileID: 11400000, guid: 75d51a563c216c949a87c4f85a80a2d8, type: 2}
   roomDirection: 2
-  horizontalGutter: {fileID: 749835057}
-  verticalGutter: {fileID: 677606964}
   transitionDistance: 1920
+  transitionDuration: 0.5
   sockets:
   - {fileID: 1466435504}
   - {fileID: 1886678500}
@@ -666,8 +665,8 @@ MonoBehaviour:
   - {fileID: 1076490014}
   socketFlipX: 
   characterPrefab: {fileID: 6036196631904538872, guid: ad3c55fa88567084198359452ba4fe66, type: 3}
-  testCharacter: {fileID: 11400000, guid: 3825fe6c5dbca4b4dabcb4655e0ca55e, type: 2}
   roomLightingTint: {r: 0.79886085, g: 0.90453357, b: 0.9056604, a: 1}
+  testCharacter: {fileID: 11400000, guid: 3825fe6c5dbca4b4dabcb4655e0ca55e, type: 2}
 --- !u!114 &81180637
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1267,11 +1266,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5235793350737969879, guid: e979c1468329ea1498fbb40fb8e62ca9, type: 3}
       propertyPath: m_text
-      value: PRODUCE
+      value: PRACTICE
       objectReference: {fileID: 0}
     - target: {fileID: 8313834724880278180, guid: e979c1468329ea1498fbb40fb8e62ca9, type: 3}
       propertyPath: m_Name
-      value: Menu Button - Produce
+      value: Menu Button - Practice
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2850,9 +2849,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RoomController
   roomData: {fileID: 11400000, guid: 75d51a563c216c949a87c4f85a80a2d8, type: 2}
   roomDirection: 2
-  horizontalGutter: {fileID: 749835057}
-  verticalGutter: {fileID: 677606964}
   transitionDistance: 1920
+  transitionDuration: 0.5
   sockets:
   - {fileID: 110928940}
   - {fileID: 2004021541}
@@ -2862,8 +2860,8 @@ MonoBehaviour:
   - {fileID: 1120096124}
   socketFlipX: 
   characterPrefab: {fileID: 6036196631904538872, guid: ad3c55fa88567084198359452ba4fe66, type: 3}
-  testCharacter: {fileID: 11400000, guid: 3825fe6c5dbca4b4dabcb4655e0ca55e, type: 2}
   roomLightingTint: {r: 0.79886085, g: 0.90453357, b: 0.9056604, a: 1}
+  testCharacter: {fileID: 11400000, guid: 3825fe6c5dbca4b4dabcb4655e0ca55e, type: 2}
 --- !u!114 &259705958
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3319,9 +3317,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RoomController
   roomData: {fileID: 11400000, guid: 75d51a563c216c949a87c4f85a80a2d8, type: 2}
   roomDirection: 2
-  horizontalGutter: {fileID: 749835057}
-  verticalGutter: {fileID: 677606964}
   transitionDistance: 1920
+  transitionDuration: 0.5
   sockets:
   - {fileID: 792450689}
   - {fileID: 190262386}
@@ -3331,8 +3328,8 @@ MonoBehaviour:
   - {fileID: 93673534}
   socketFlipX: 
   characterPrefab: {fileID: 6036196631904538872, guid: ad3c55fa88567084198359452ba4fe66, type: 3}
-  testCharacter: {fileID: 11400000, guid: 3825fe6c5dbca4b4dabcb4655e0ca55e, type: 2}
   roomLightingTint: {r: 0.79886085, g: 0.90453357, b: 0.9056604, a: 1}
+  testCharacter: {fileID: 11400000, guid: 3825fe6c5dbca4b4dabcb4655e0ca55e, type: 2}
 --- !u!114 &314120168
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3768,9 +3765,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RoomController
   roomData: {fileID: 11400000, guid: 75d51a563c216c949a87c4f85a80a2d8, type: 2}
   roomDirection: 2
-  horizontalGutter: {fileID: 749835057}
-  verticalGutter: {fileID: 677606964}
   transitionDistance: 1920
+  transitionDuration: 0.5
   sockets:
   - {fileID: 822339447}
   - {fileID: 1360244778}
@@ -3780,8 +3776,8 @@ MonoBehaviour:
   - {fileID: 656332996}
   socketFlipX: 
   characterPrefab: {fileID: 6036196631904538872, guid: ad3c55fa88567084198359452ba4fe66, type: 3}
-  testCharacter: {fileID: 11400000, guid: 3825fe6c5dbca4b4dabcb4655e0ca55e, type: 2}
   roomLightingTint: {r: 0.9433962, g: 0.91036606, b: 0.86774653, a: 1}
+  testCharacter: {fileID: 11400000, guid: 3825fe6c5dbca4b4dabcb4655e0ca55e, type: 2}
 --- !u!1 &329347764
 GameObject:
   m_ObjectHideFlags: 0
@@ -5687,7 +5683,7 @@ GameObject:
   m_Component:
   - component: {fileID: 529992135}
   m_Layer: 5
-  m_Name: Menu Button - Marketing
+  m_Name: Menu Button - Production
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9099,7 +9095,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Release
+  m_text: 'MEETING ROOM
 
 '
   m_isRightToLeft: 0
@@ -9913,7 +9909,7 @@ GameObject:
   m_Component:
   - component: {fileID: 857057827}
   m_Layer: 5
-  m_Name: Menu Button - Finance
+  m_Name: Menu Button - Recording
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -11164,9 +11160,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RoomController
   roomData: {fileID: 11400000, guid: 75d51a563c216c949a87c4f85a80a2d8, type: 2}
   roomDirection: 2
-  horizontalGutter: {fileID: 749835057}
-  verticalGutter: {fileID: 677606964}
   transitionDistance: 1920
+  transitionDuration: 0.5
   sockets:
   - {fileID: 1556742830}
   - {fileID: 477748685}
@@ -11176,8 +11171,8 @@ MonoBehaviour:
   - {fileID: 177104973}
   socketFlipX: 
   characterPrefab: {fileID: 6036196631904538872, guid: ad3c55fa88567084198359452ba4fe66, type: 3}
-  testCharacter: {fileID: 11400000, guid: 3825fe6c5dbca4b4dabcb4655e0ca55e, type: 2}
   roomLightingTint: {r: 0.79886085, g: 0.90453357, b: 0.9056604, a: 1}
+  testCharacter: {fileID: 11400000, guid: 3825fe6c5dbca4b4dabcb4655e0ca55e, type: 2}
 --- !u!114 &1017771300
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13009,11 +13004,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d447feeaa4c9f674b84df3e2b2f7132f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIController_Game
-  bandNameText: {fileID: 1335861737}
-  moneyText: {fileID: 809884376}
-  fansText: {fileID: 31587328}
-  unityText: {fileID: 0}
-  quarterYearText: {fileID: 0}
+  breakroomController: {fileID: 320924756}
+  practiceRoomController: {fileID: 1964179128}
+  productionRoomController: {fileID: 1710398030}
+  meetingRoomController: {fileID: 1017771299}
+  headOfficeController: {fileID: 1899759283}
+  outsideController: {fileID: 1675393724}
+  lobbyController: {fileID: 314120167}
+  menuToggleGroup: {fileID: 1904710439}
   characterDisplays:
   - {fileID: 0}
   - {fileID: 0}
@@ -13021,15 +13019,13 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
-  practicePanel: {fileID: 320924752}
-  producePanel: {fileID: 0}
-  tourPanel: {fileID: 0}
-  releasePanel: {fileID: 0}
-  financePanel: {fileID: 0}
-  marketingPanel: {fileID: 0}
-  managingPanel: {fileID: 0}
-  menuToggleGroup: {fileID: 1904710439}
-  testBandHelper: {fileID: 1665180857}
+  moneyText: {fileID: 809884376}
+  fansText: {fileID: 31587328}
+  unityText: {fileID: 0}
+  bandNameText: {fileID: 1335861737}
+  quarterText: {fileID: 1023936615}
+  yearText: {fileID: 1634718388}
+  miniStatsPanel: {fileID: 1011676741}
   miniStats: {fileID: 1011676745}
 --- !u!4 &1236340058
 Transform:
@@ -13940,9 +13936,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Marketing
-
-'
+  m_text: PRODUCTION
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 7312e55b48a5d514b9c54aa4986e4348, type: 2}
   m_sharedMaterial: {fileID: 1048749672136591959, guid: 7312e55b48a5d514b9c54aa4986e4348, type: 2}
@@ -14291,7 +14285,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Finance
+  m_text: RECORDING
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 7312e55b48a5d514b9c54aa4986e4348, type: 2}
   m_sharedMaterial: {fileID: 1048749672136591959, guid: 7312e55b48a5d514b9c54aa4986e4348, type: 2}
@@ -15925,7 +15919,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Tour
+  m_text: MARKETING
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 7312e55b48a5d514b9c54aa4986e4348, type: 2}
   m_sharedMaterial: {fileID: 1048749672136591959, guid: 7312e55b48a5d514b9c54aa4986e4348, type: 2}
@@ -17067,7 +17061,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -121.38, y: -44.852}
+  m_AnchoredPosition: {x: -121.38, y: -55}
   m_SizeDelta: {x: 242.75842, y: 89.70459}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1665180856
@@ -17312,9 +17306,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RoomController
   roomData: {fileID: 11400000, guid: 75d51a563c216c949a87c4f85a80a2d8, type: 2}
   roomDirection: 2
-  horizontalGutter: {fileID: 749835057}
-  verticalGutter: {fileID: 677606964}
   transitionDistance: 1920
+  transitionDuration: 0.5
   sockets:
   - {fileID: 1321635063}
   - {fileID: 270071909}
@@ -17324,8 +17317,8 @@ MonoBehaviour:
   - {fileID: 1423076397}
   socketFlipX: 
   characterPrefab: {fileID: 6036196631904538872, guid: ad3c55fa88567084198359452ba4fe66, type: 3}
-  testCharacter: {fileID: 11400000, guid: 3825fe6c5dbca4b4dabcb4655e0ca55e, type: 2}
   roomLightingTint: {r: 0.79886085, g: 0.90453357, b: 0.9056604, a: 1}
+  testCharacter: {fileID: 11400000, guid: 3825fe6c5dbca4b4dabcb4655e0ca55e, type: 2}
 --- !u!114 &1675393725
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17650,9 +17643,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RoomController
   roomData: {fileID: 11400000, guid: 75d51a563c216c949a87c4f85a80a2d8, type: 2}
   roomDirection: 2
-  horizontalGutter: {fileID: 749835057}
-  verticalGutter: {fileID: 677606964}
   transitionDistance: 1920
+  transitionDuration: 0.5
   sockets:
   - {fileID: 701907216}
   - {fileID: 403259309}
@@ -17662,8 +17654,8 @@ MonoBehaviour:
   - {fileID: 195597826}
   socketFlipX: 
   characterPrefab: {fileID: 6036196631904538872, guid: ad3c55fa88567084198359452ba4fe66, type: 3}
-  testCharacter: {fileID: 11400000, guid: 3825fe6c5dbca4b4dabcb4655e0ca55e, type: 2}
   roomLightingTint: {r: 0.79886085, g: 0.90453357, b: 0.9056604, a: 1}
+  testCharacter: {fileID: 11400000, guid: 3825fe6c5dbca4b4dabcb4655e0ca55e, type: 2}
 --- !u!114 &1710398031
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17712,7 +17704,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1722613641}
   m_Layer: 5
-  m_Name: Menu Button - Release (1)
+  m_Name: Menu Button - Lobby
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -17736,7 +17728,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 423.3102, y: -44.852}
+  m_AnchoredPosition: {x: 423.31024, y: -54.999992}
   m_SizeDelta: {x: 242.75842, y: 89.70459}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1735067379
@@ -18238,7 +18230,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1792869274}
   m_Layer: 5
-  m_Name: Menu Button - Tour
+  m_Name: Menu Button - Media
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -18809,9 +18801,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Release
-
-'
+  m_text: LOBBY
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 7312e55b48a5d514b9c54aa4986e4348, type: 2}
   m_sharedMaterial: {fileID: 1048749672136591959, guid: 7312e55b48a5d514b9c54aa4986e4348, type: 2}
@@ -19512,9 +19502,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RoomController
   roomData: {fileID: 11400000, guid: 75d51a563c216c949a87c4f85a80a2d8, type: 2}
   roomDirection: 2
-  horizontalGutter: {fileID: 749835057}
-  verticalGutter: {fileID: 677606964}
   transitionDistance: 1920
+  transitionDuration: 0.5
   sockets:
   - {fileID: 677291977}
   - {fileID: 1303356661}
@@ -19524,8 +19513,8 @@ MonoBehaviour:
   - {fileID: 2143513129}
   socketFlipX: 
   characterPrefab: {fileID: 6036196631904538872, guid: ad3c55fa88567084198359452ba4fe66, type: 3}
-  testCharacter: {fileID: 11400000, guid: 3825fe6c5dbca4b4dabcb4655e0ca55e, type: 2}
   roomLightingTint: {r: 0.79886085, g: 0.90453357, b: 0.9056604, a: 1}
+  testCharacter: {fileID: 11400000, guid: 3825fe6c5dbca4b4dabcb4655e0ca55e, type: 2}
 --- !u!114 &1899759284
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20088,7 +20077,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1959240624}
   m_Layer: 5
-  m_Name: Menu Button - Release
+  m_Name: Menu Button - Meeting
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -20112,7 +20101,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 156, y: -44.852}
+  m_AnchoredPosition: {x: 156, y: -54.999992}
   m_SizeDelta: {x: 242.75842, y: 89.70459}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1962370477
@@ -20245,9 +20234,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RoomController
   roomData: {fileID: 11400000, guid: 75d51a563c216c949a87c4f85a80a2d8, type: 2}
   roomDirection: 2
-  horizontalGutter: {fileID: 749835057}
-  verticalGutter: {fileID: 677606964}
   transitionDistance: 1920
+  transitionDuration: 0.5
   sockets:
   - {fileID: 1233280688}
   - {fileID: 834394516}
@@ -20257,8 +20245,8 @@ MonoBehaviour:
   - {fileID: 1001059628}
   socketFlipX: 
   characterPrefab: {fileID: 6036196631904538872, guid: ad3c55fa88567084198359452ba4fe66, type: 3}
-  testCharacter: {fileID: 11400000, guid: 3825fe6c5dbca4b4dabcb4655e0ca55e, type: 2}
   roomLightingTint: {r: 0.79886085, g: 0.90453357, b: 0.9056604, a: 1}
+  testCharacter: {fileID: 11400000, guid: 3825fe6c5dbca4b4dabcb4655e0ca55e, type: 2}
 --- !u!114 &1964179129
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21730,9 +21718,13 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5235793350737969879, guid: e979c1468329ea1498fbb40fb8e62ca9, type: 3}
+      propertyPath: m_text
+      value: BREAKROOM
+      objectReference: {fileID: 0}
     - target: {fileID: 8313834724880278180, guid: e979c1468329ea1498fbb40fb8e62ca9, type: 3}
       propertyPath: m_Name
-      value: Menu Button - Practice
+      value: Menu Button - BreakRoom
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
