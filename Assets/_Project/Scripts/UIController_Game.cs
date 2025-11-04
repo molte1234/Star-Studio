@@ -5,11 +5,12 @@ using TMPro;
 /// <summary>
 /// Why: Main UI controller for the Game scene - ROOM NAVIGATION SYSTEM
 /// Handles room switching, stats display, and menu controls
-/// 
+///
 /// CLEANED UP: Removed old CharacterDisplay system - now uses RoomController + CharacterObject
 /// </summary>
 public class UIController_Game : MonoBehaviour
 {
+    public static UIController_Game Instance { get; private set; }
     [Header("Room Controllers - Assign in Inspector (9 total)")]
     // Why: References to room controllers for navigation
     public RoomController breakroomController;
@@ -39,6 +40,20 @@ public class UIController_Game : MonoBehaviour
 
     // Why: Track current active room
     private RoomController currentRoom;
+
+    void Awake()
+    {
+        // Singleton pattern
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Debug.LogWarning("Multiple UIController_Game instances detected. Destroying duplicate.");
+            Destroy(gameObject);
+        }
+    }
 
     void Start()
     {
@@ -259,5 +274,77 @@ public class UIController_Game : MonoBehaviour
 
         // Why: Show outside view when all menus are closed
         ShowOutside();
+    }
+
+    // ============================================
+    // CHARACTER ACTION HANDLERS
+    // ============================================
+
+    /// <summary>
+    /// Called when "Move To" button is clicked on a character
+    /// TODO: Implement room selection and character movement logic
+    /// </summary>
+    public void OnCharacterAction_MoveTo(CharacterObject character)
+    {
+        if (character == null)
+        {
+            Debug.LogWarning("OnCharacterAction_MoveTo: character is null");
+            return;
+        }
+
+        Debug.Log($"🚶 Move To action for: {character.GetCharacter()?.characterName ?? "Unknown"}");
+        // TODO: Open room selection UI
+        // TODO: Move character to selected room
+    }
+
+    /// <summary>
+    /// Called when "Practice" button is clicked on a character
+    /// TODO: Implement practice activity logic
+    /// </summary>
+    public void OnCharacterAction_Practice(CharacterObject character)
+    {
+        if (character == null)
+        {
+            Debug.LogWarning("OnCharacterAction_Practice: character is null");
+            return;
+        }
+
+        Debug.Log($"🎸 Practice action for: {character.GetCharacter()?.characterName ?? "Unknown"}");
+        // TODO: Start practice activity
+        // TODO: Improve character skill stats
+    }
+
+    /// <summary>
+    /// Called when "Music" button is clicked on a character
+    /// TODO: Implement music/recording logic
+    /// </summary>
+    public void OnCharacterAction_Music(CharacterObject character)
+    {
+        if (character == null)
+        {
+            Debug.LogWarning("OnCharacterAction_Music: character is null");
+            return;
+        }
+
+        Debug.Log($"🎵 Music action for: {character.GetCharacter()?.characterName ?? "Unknown"}");
+        // TODO: Open music/recording interface
+        // TODO: Allow character to work on tracks
+    }
+
+    /// <summary>
+    /// Called when "Action" button is clicked on a character
+    /// TODO: Implement general character actions
+    /// </summary>
+    public void OnCharacterAction_Action(CharacterObject character)
+    {
+        if (character == null)
+        {
+            Debug.LogWarning("OnCharacterAction_Action: character is null");
+            return;
+        }
+
+        Debug.Log($"⚡ Action for: {character.GetCharacter()?.characterName ?? "Unknown"}");
+        // TODO: Show action menu (train, socialize, etc.)
+        // TODO: Implement various character activities
     }
 }

@@ -2,34 +2,106 @@ using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
 using System.Collections.Generic;
+#if UNITY_EDITOR
+using Sirenix.OdinInspector;
+#endif
 
 /// <summary>
-/// Manages the expanded character menu that appears when clicking on a character.
-/// Handles moving the character to the focus position, showing action buttons, and returning the character.
+/// Manages the character selection panel that appears when clicking on a character.
+/// Shows action buttons with Persona 5-style popup animations.
+/// Character is moved temporarily to the socket without affecting room data.
 /// </summary>
 public class CharacterMenuController : MonoBehaviour
 {
     public static CharacterMenuController Instance { get; private set; }
 
-    [Header("References")]
-    [SerializeField] private RoomController currentRoomController;
-    [SerializeField] private Transform menuButtonsContainer;
-    [SerializeField] private List<UIButton> actionButtons = new List<UIButton>(4);
+#if UNITY_EDITOR
+    [FoldoutGroup("Panel References")]
+#endif
+    [SerializeField] private GameObject characterSelectPanel;
+
+#if UNITY_EDITOR
+    [FoldoutGroup("Panel References")]
+#endif
+    [SerializeField] private Transform characterSocket;
+
+#if UNITY_EDITOR
+    [FoldoutGroup("Panel References")]
+#endif
+    [SerializeField] private RectTransform buttonsSubPanel;
+
+#if UNITY_EDITOR
+    [FoldoutGroup("Action Buttons")]
+    [Tooltip("Assign buttons in order: Move To, Practice, Music, Action")]
+#endif
+    [SerializeField] private UIButton moveToButton;
+
+#if UNITY_EDITOR
+    [FoldoutGroup("Action Buttons")]
+#endif
+    [SerializeField] private UIButton practiceButton;
+
+#if UNITY_EDITOR
+    [FoldoutGroup("Action Buttons")]
+#endif
+    [SerializeField] private UIButton musicButton;
+
+#if UNITY_EDITOR
+    [FoldoutGroup("Action Buttons")]
+#endif
+    [SerializeField] private UIButton actionButton;
+
+#if UNITY_EDITOR
+    [FoldoutGroup("Action Buttons")]
+#endif
     [SerializeField] private UIButton closeButton;
 
-    [Header("Animation Settings")]
-    [SerializeField] private float buttonAnimationDuration = 0.3f;
-    [SerializeField] private float buttonSpacing = 100f;
-    [SerializeField] private Ease buttonEase = Ease.OutBack;
+#if UNITY_EDITOR
+    [FoldoutGroup("Animation Settings")]
+    [Tooltip("Persona 5-style quick popup animation")]
+#endif
+    [SerializeField] private float panelFadeInDuration = 0.3f;
 
-    [Header("Character Movement")]
+#if UNITY_EDITOR
+    [FoldoutGroup("Animation Settings")]
+#endif
+    [SerializeField] private float buttonPopDuration = 0.4f;
+
+#if UNITY_EDITOR
+    [FoldoutGroup("Animation Settings")]
+#endif
+    [SerializeField] private float buttonStaggerDelay = 0.05f;
+
+#if UNITY_EDITOR
+    [FoldoutGroup("Animation Settings")]
+#endif
+    [SerializeField] private Ease buttonPopEase = Ease.OutBack;
+
+#if UNITY_EDITOR
+    [FoldoutGroup("Animation Settings")]
+#endif
+    [SerializeField] private float buttonRotationAmount = 15f;
+
+#if UNITY_EDITOR
+    [FoldoutGroup("Character Movement")]
+#endif
     [SerializeField] private float characterMoveDuration = 0.5f;
+
+#if UNITY_EDITOR
+    [FoldoutGroup("Character Movement")]
+#endif
     [SerializeField] private Ease characterMoveEase = Ease.OutCubic;
 
     // State tracking
     private CharacterObject currentExpandedCharacter;
+    private Vector3 originalCharacterPosition;
+    private Vector3 originalCharacterScale;
+    private Transform originalCharacterParent;
     private int originalSocketIndex = -1;
+    private RoomController currentRoomController;
     private bool isMenuOpen = false;
+
+    private List<UIButton> allActionButtons;
 
     private void Awake()
     {
@@ -44,26 +116,58 @@ public class CharacterMenuController : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+
+        // Build action buttons list
+        allActionButtons = new List<UIButton>();
+        if (moveToButton != null) allActionButtons.Add(moveToButton);
+        if (practiceButton != null) allActionButtons.Add(practiceButton);
+        if (musicButton != null) allActionButtons.Add(musicButton);
+        if (actionButton != null) allActionButtons.Add(actionButton);
     }
 
     private void Start()
     {
-        // Hide menu buttons initially
-        if (menuButtonsContainer != null)
+        // Hide character select panel initially
+        if (characterSelectPanel != null)
         {
-            menuButtonsContainer.gameObject.SetActive(false);
+            characterSelectPanel.SetActive(false);
         }
 
-        // Setup close button
-        if (closeButton != null)
+        // Setup button listeners
+        SetupButtonListeners();
+    }
+
+    private void SetupButtonListeners()
+    {
+        if (closeButton != null && closeButton.onClick != null)
         {
             closeButton.onClick.AddListener(CloseMenu);
+        }
+
+        if (moveToButton != null && moveToButton.onClick != null)
+        {
+            moveToButton.onClick.AddListener(() => OnMoveToClicked());
+        }
+
+        if (practiceButton != null && practiceButton.onClick != null)
+        {
+            practiceButton.onClick.AddListener(() => OnPracticeClicked());
+        }
+
+        if (musicButton != null && musicButton.onClick != null)
+        {
+            musicButton.onClick.AddListener(() => OnMusicClicked());
+        }
+
+        if (actionButton != null && actionButton.onClick != null)
+        {
+            actionButton.onClick.AddListener(() => OnActionClicked());
         }
     }
 
     /// <summary>
     /// Opens the character menu for the specified character.
-    /// Moves the character to the focus socket and animates in the action buttons.
+    /// Moves the character to the socket and shows action buttons with Persona 5-style animation.
     /// </summary>
     public void OpenCharacterMenu(CharacterObject character, RoomController roomController)
     {
@@ -83,7 +187,10 @@ public class CharacterMenuController : MonoBehaviour
         currentRoomController = roomController;
         isMenuOpen = true;
 
-        // Store original socket position
+        // Store original character data (so we can restore without affecting room data)
+        originalCharacterPosition = character.transform.position;
+        originalCharacterScale = character.transform.localScale;
+        originalCharacterParent = character.transform.parent;
         originalSocketIndex = roomController.FindCharacterSocket(character.GetCharacter());
 
         if (originalSocketIndex == -1)
@@ -93,100 +200,116 @@ public class CharacterMenuController : MonoBehaviour
             return;
         }
 
-        // Move character to focus socket
-        MoveCharacterToFocusSocket(character);
+        // Show panel and animate character
+        ShowPanelWithAnimation();
+        MoveCharacterToSocket(character);
+    }
 
-        // Animate in buttons
+    /// <summary>
+    /// Shows the character select panel with a quick fade-in
+    /// </summary>
+    private void ShowPanelWithAnimation()
+    {
+        if (characterSelectPanel == null)
+        {
+            Debug.LogError("Character select panel not assigned!");
+            return;
+        }
+
+        // Show panel
+        characterSelectPanel.SetActive(true);
+
+        // Fade in panel with CanvasGroup
+        CanvasGroup panelCanvasGroup = characterSelectPanel.GetComponent<CanvasGroup>();
+        if (panelCanvasGroup == null)
+        {
+            panelCanvasGroup = characterSelectPanel.AddComponent<CanvasGroup>();
+        }
+
+        panelCanvasGroup.alpha = 0f;
+        panelCanvasGroup.DOFade(1f, panelFadeInDuration).SetEase(Ease.OutQuad);
+
+        // Animate buttons in with stagger
         AnimateButtonsIn();
     }
 
     /// <summary>
-    /// Moves the character to the focus socket position with animation.
-    /// </summary>
-    private void MoveCharacterToFocusSocket(CharacterObject character)
-    {
-        if (currentRoomController == null || currentRoomController.focusSocket == null)
-        {
-            Debug.LogError("Focus socket not set in RoomController!");
-            return;
-        }
-
-        // Get the focus socket position
-        Vector3 focusPosition = currentRoomController.focusSocket.position;
-
-        // Animate character movement
-        character.transform.DOMove(focusPosition, characterMoveDuration)
-            .SetEase(characterMoveEase);
-
-        // Optional: Scale up slightly for emphasis
-        character.transform.DOScale(1.1f, characterMoveDuration)
-            .SetEase(characterMoveEase);
-    }
-
-    /// <summary>
-    /// Animates the action buttons expanding from the character's position.
+    /// Persona 5-style button popup animation
+    /// Quick, snappy, with rotation and overshoot
     /// </summary>
     private void AnimateButtonsIn()
     {
-        if (menuButtonsContainer == null)
+        for (int i = 0; i < allActionButtons.Count; i++)
         {
-            Debug.LogError("Menu buttons container not assigned!");
-            return;
-        }
+            if (allActionButtons[i] == null) continue;
 
-        // Position the container at the character's position
-        if (currentExpandedCharacter != null)
-        {
-            menuButtonsContainer.position = currentExpandedCharacter.transform.position;
-        }
+            GameObject buttonObj = allActionButtons[i].gameObject;
+            RectTransform buttonRect = buttonObj.GetComponent<RectTransform>();
 
-        // Show the container
-        menuButtonsContainer.gameObject.SetActive(true);
+            // Store original rotation
+            Vector3 originalRotation = buttonRect.localEulerAngles;
 
-        // Animate each button
-        for (int i = 0; i < actionButtons.Count; i++)
-        {
-            if (actionButtons[i] == null) continue;
+            // Start invisible, scaled down, and rotated
+            buttonRect.localScale = Vector3.zero;
+            buttonRect.localEulerAngles = originalRotation + new Vector3(0, 0, buttonRotationAmount);
 
-            GameObject buttonObj = actionButtons[i].gameObject;
+            float delay = i * buttonStaggerDelay;
 
-            // Start from scale 0
-            buttonObj.transform.localScale = Vector3.zero;
-
-            // Calculate target position (spread horizontally)
-            float xOffset = (i - (actionButtons.Count - 1) / 2f) * buttonSpacing;
-            Vector3 targetLocalPos = new Vector3(xOffset, 0, 0);
-
-            // Store original position
-            Vector3 originalLocalPos = buttonObj.transform.localPosition;
-            buttonObj.transform.localPosition = Vector3.zero;
-
-            // Animate to target position and scale
-            float delay = i * 0.05f; // Stagger the animations
-
-            buttonObj.transform.DOLocalMove(targetLocalPos, buttonAnimationDuration)
+            // Pop in with scale
+            buttonRect.DOScale(1f, buttonPopDuration)
                 .SetDelay(delay)
-                .SetEase(buttonEase);
+                .SetEase(buttonPopEase);
 
-            buttonObj.transform.DOScale(1f, buttonAnimationDuration)
+            // Rotate back to normal
+            buttonRect.DOLocalRotate(originalRotation, buttonPopDuration)
                 .SetDelay(delay)
-                .SetEase(buttonEase);
+                .SetEase(buttonPopEase);
         }
 
-        // Animate close button (positioned above the action buttons)
+        // Animate close button last
         if (closeButton != null)
         {
-            GameObject closeButtonObj = closeButton.gameObject;
-            closeButtonObj.transform.localScale = Vector3.zero;
+            GameObject closeObj = closeButton.gameObject;
+            RectTransform closeRect = closeObj.GetComponent<RectTransform>();
+            Vector3 originalRotation = closeRect.localEulerAngles;
 
-            closeButtonObj.transform.DOScale(1f, buttonAnimationDuration)
-                .SetDelay(actionButtons.Count * 0.05f)
-                .SetEase(buttonEase);
+            closeRect.localScale = Vector3.zero;
+            closeRect.localEulerAngles = originalRotation + new Vector3(0, 0, -buttonRotationAmount);
+
+            float delay = allActionButtons.Count * buttonStaggerDelay;
+
+            closeRect.DOScale(1f, buttonPopDuration)
+                .SetDelay(delay)
+                .SetEase(buttonPopEase);
+
+            closeRect.DOLocalRotate(originalRotation, buttonPopDuration)
+                .SetDelay(delay)
+                .SetEase(buttonPopEase);
         }
     }
 
     /// <summary>
-    /// Animates the buttons out and returns the character to their original socket.
+    /// Moves the character to the socket position (temporarily, without affecting room data)
+    /// </summary>
+    private void MoveCharacterToSocket(CharacterObject character)
+    {
+        if (characterSocket == null)
+        {
+            Debug.LogError("Character socket not assigned!");
+            return;
+        }
+
+        // Animate character to socket
+        character.transform.DOMove(characterSocket.position, characterMoveDuration)
+            .SetEase(characterMoveEase);
+
+        // Optional: Scale up slightly for emphasis
+        character.transform.DOScale(originalCharacterScale * 1.1f, characterMoveDuration)
+            .SetEase(characterMoveEase);
+    }
+
+    /// <summary>
+    /// Closes the menu and returns the character to their original position
     /// </summary>
     public void CloseMenu()
     {
@@ -195,109 +318,110 @@ public class CharacterMenuController : MonoBehaviour
             return;
         }
 
-        // Animate buttons out
-        AnimateButtonsOut(() =>
+        // Animate out
+        AnimatePanelOut(() =>
         {
-            // After buttons are hidden, move character back
-            ReturnCharacterToOriginalSocket();
+            // After animation completes, restore character
+            ReturnCharacterToOriginalPosition();
         });
     }
 
     /// <summary>
-    /// Animates buttons scaling down and hiding.
+    /// Animates the panel fading out with buttons popping out
     /// </summary>
-    private void AnimateButtonsOut(System.Action onComplete)
+    private void AnimatePanelOut(System.Action onComplete)
     {
-        int completedAnimations = 0;
-        int totalAnimations = actionButtons.Count + 1; // +1 for close button
-
-        // Animate action buttons
-        for (int i = 0; i < actionButtons.Count; i++)
+        if (characterSelectPanel == null)
         {
-            if (actionButtons[i] == null) continue;
+            onComplete?.Invoke();
+            return;
+        }
 
-            GameObject buttonObj = actionButtons[i].gameObject;
-            float delay = i * 0.03f;
+        // Animate buttons out (reverse order)
+        for (int i = allActionButtons.Count - 1; i >= 0; i--)
+        {
+            if (allActionButtons[i] == null) continue;
 
-            buttonObj.transform.DOScale(0f, buttonAnimationDuration * 0.7f)
+            GameObject buttonObj = allActionButtons[i].gameObject;
+            RectTransform buttonRect = buttonObj.GetComponent<RectTransform>();
+
+            float delay = (allActionButtons.Count - 1 - i) * buttonStaggerDelay * 0.5f;
+
+            buttonRect.DOScale(0f, buttonPopDuration * 0.7f)
                 .SetDelay(delay)
-                .SetEase(Ease.InBack)
-                .OnComplete(() =>
-                {
-                    completedAnimations++;
-                    if (completedAnimations >= totalAnimations)
-                    {
-                        menuButtonsContainer.gameObject.SetActive(false);
-                        onComplete?.Invoke();
-                    }
-                });
+                .SetEase(Ease.InBack);
+
+            buttonRect.DOLocalRotate(buttonRect.localEulerAngles + new Vector3(0, 0, -buttonRotationAmount), buttonPopDuration * 0.7f)
+                .SetDelay(delay)
+                .SetEase(Ease.InBack);
         }
 
         // Animate close button
         if (closeButton != null)
         {
-            closeButton.transform.DOScale(0f, buttonAnimationDuration * 0.7f)
-                .SetEase(Ease.InBack)
+            closeButton.transform.DOScale(0f, buttonPopDuration * 0.7f)
+                .SetEase(Ease.InBack);
+        }
+
+        // Fade out panel
+        CanvasGroup panelCanvasGroup = characterSelectPanel.GetComponent<CanvasGroup>();
+        if (panelCanvasGroup != null)
+        {
+            panelCanvasGroup.DOFade(0f, panelFadeInDuration)
+                .SetDelay(buttonPopDuration * 0.5f)
                 .OnComplete(() =>
                 {
-                    completedAnimations++;
-                    if (completedAnimations >= totalAnimations)
-                    {
-                        menuButtonsContainer.gameObject.SetActive(false);
-                        onComplete?.Invoke();
-                    }
+                    characterSelectPanel.SetActive(false);
+                    onComplete?.Invoke();
                 });
+        }
+        else
+        {
+            characterSelectPanel.SetActive(false);
+            onComplete?.Invoke();
         }
     }
 
     /// <summary>
-    /// Returns the character to their original socket position.
+    /// Returns the character to their original position without affecting room data
     /// </summary>
-    private void ReturnCharacterToOriginalSocket()
+    private void ReturnCharacterToOriginalPosition()
     {
-        if (currentExpandedCharacter == null || currentRoomController == null)
+        if (currentExpandedCharacter == null)
         {
             ResetMenuState();
             return;
         }
 
-        // Get original socket position
-        if (originalSocketIndex >= 0 && originalSocketIndex < currentRoomController.sockets.Length)
-        {
-            Vector3 originalPosition = currentRoomController.sockets[originalSocketIndex].position;
+        // Animate character back to original position
+        currentExpandedCharacter.transform.DOMove(originalCharacterPosition, characterMoveDuration)
+            .SetEase(characterMoveEase);
 
-            // Animate character back
-            currentExpandedCharacter.transform.DOMove(originalPosition, characterMoveDuration)
-                .SetEase(characterMoveEase);
-
-            // Scale back to normal
-            currentExpandedCharacter.transform.DOScale(1f, characterMoveDuration)
-                .SetEase(characterMoveEase)
-                .OnComplete(() =>
-                {
-                    ResetMenuState();
-                });
-        }
-        else
-        {
-            Debug.LogError($"Invalid original socket index: {originalSocketIndex}");
-            ResetMenuState();
-        }
+        // Scale back to normal
+        currentExpandedCharacter.transform.DOScale(originalCharacterScale, characterMoveDuration)
+            .SetEase(characterMoveEase)
+            .OnComplete(() =>
+            {
+                ResetMenuState();
+            });
     }
 
     /// <summary>
-    /// Resets the menu state after closing.
+    /// Resets the menu state after closing
     /// </summary>
     private void ResetMenuState()
     {
         currentExpandedCharacter = null;
         currentRoomController = null;
         originalSocketIndex = -1;
+        originalCharacterPosition = Vector3.zero;
+        originalCharacterScale = Vector3.one;
+        originalCharacterParent = null;
         isMenuOpen = false;
     }
 
     /// <summary>
-    /// Checks if the menu is currently open.
+    /// Checks if the menu is currently open
     /// </summary>
     public bool IsMenuOpen()
     {
@@ -305,26 +429,98 @@ public class CharacterMenuController : MonoBehaviour
     }
 
     /// <summary>
-    /// Gets the currently expanded character.
+    /// Gets the currently expanded character
     /// </summary>
     public CharacterObject GetCurrentExpandedCharacter()
     {
         return currentExpandedCharacter;
     }
 
+    // ============================================
+    // BUTTON ACTION HANDLERS
+    // ============================================
+
+    private void OnMoveToClicked()
+    {
+        Debug.Log($"Move To clicked for character: {currentExpandedCharacter?.GetCharacter()?.characterName ?? "None"}");
+
+        if (UIController_Game.Instance != null)
+        {
+            UIController_Game.Instance.OnCharacterAction_MoveTo(currentExpandedCharacter);
+        }
+
+        CloseMenu();
+    }
+
+    private void OnPracticeClicked()
+    {
+        Debug.Log($"Practice clicked for character: {currentExpandedCharacter?.GetCharacter()?.characterName ?? "None"}");
+
+        if (UIController_Game.Instance != null)
+        {
+            UIController_Game.Instance.OnCharacterAction_Practice(currentExpandedCharacter);
+        }
+
+        CloseMenu();
+    }
+
+    private void OnMusicClicked()
+    {
+        Debug.Log($"Music clicked for character: {currentExpandedCharacter?.GetCharacter()?.characterName ?? "None"}");
+
+        if (UIController_Game.Instance != null)
+        {
+            UIController_Game.Instance.OnCharacterAction_Music(currentExpandedCharacter);
+        }
+
+        CloseMenu();
+    }
+
+    private void OnActionClicked()
+    {
+        Debug.Log($"Action clicked for character: {currentExpandedCharacter?.GetCharacter()?.characterName ?? "None"}");
+
+        if (UIController_Game.Instance != null)
+        {
+            UIController_Game.Instance.OnCharacterAction_Action(currentExpandedCharacter);
+        }
+
+        CloseMenu();
+    }
+
     private void OnDestroy()
     {
         // Clean up listeners
-        if (closeButton != null)
+        if (closeButton != null && closeButton.onClick != null)
         {
             closeButton.onClick.RemoveListener(CloseMenu);
         }
 
+        if (moveToButton != null && moveToButton.onClick != null)
+        {
+            moveToButton.onClick.RemoveAllListeners();
+        }
+
+        if (practiceButton != null && practiceButton.onClick != null)
+        {
+            practiceButton.onClick.RemoveAllListeners();
+        }
+
+        if (musicButton != null && musicButton.onClick != null)
+        {
+            musicButton.onClick.RemoveAllListeners();
+        }
+
+        if (actionButton != null && actionButton.onClick != null)
+        {
+            actionButton.onClick.RemoveAllListeners();
+        }
+
         // Kill any ongoing tweens
         DOTween.Kill(transform);
-        if (menuButtonsContainer != null)
+        if (characterSelectPanel != null)
         {
-            DOTween.Kill(menuButtonsContainer);
+            DOTween.Kill(characterSelectPanel.transform);
         }
     }
 }
