@@ -5,6 +5,7 @@ using UnityEngine.UI;
 /// Singleton TimeManager - handles automatic quarter advancement
 /// Counts down in real-time, advances quarter when timer expires
 /// Can be paused by events or player
+/// FIXED: Uses AudioManager.Instance directly
 /// </summary>
 public class TimeManager : MonoBehaviour
 {
@@ -93,9 +94,10 @@ public class TimeManager : MonoBehaviour
         isPaused = true;
 
         // Why: Play pause sound (slow down effect)
-        if (GameManager.Instance?.audioManager != null)
+        // FIXED: Use AudioManager.Instance directly instead of GameManager.audioManager
+        if (AudioManager.Instance != null)
         {
-            GameManager.Instance.audioManager.PlayPause();
+            AudioManager.Instance.PlayPause();
         }
 
         Debug.Log("⏸️ Time PAUSED");
@@ -110,9 +112,10 @@ public class TimeManager : MonoBehaviour
         isPaused = false;
 
         // Why: Play unpause sound (speed back up effect)
-        if (GameManager.Instance?.audioManager != null)
+        // FIXED: Use AudioManager.Instance directly instead of GameManager.audioManager
+        if (AudioManager.Instance != null)
         {
-            GameManager.Instance.audioManager.PlayUnpause();
+            AudioManager.Instance.PlayUnpause();
         }
 
         Debug.Log("▶️ Time RESUMED");

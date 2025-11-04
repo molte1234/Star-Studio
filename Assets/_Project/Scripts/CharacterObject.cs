@@ -1,99 +1,91 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.EventSystems;
-using Sirenix.OdinInspector;
+using TMPro;
+using DG.Tweening;
 
 /// <summary>
-/// CharacterObject - Visual representation of a character in a room socket
+/// Visual representation of a character in a room
+/// Replaces CharacterDisplay for the room-based system
+/// Handles full-body sprites at socket positions
 /// 
-/// WHAT IT DOES:
-/// - Displays full-body character sprite with shadow
-/// - Handles mouse hover/click interaction (borrowed from CharacterDisplay pattern)
-/// - Applies VFX (HSV lighting, future effects)
-/// - Manages fade in/out transitions
-/// - Tracks which character this represents
-/// 
-/// HIERARCHY:
-/// CharacterObject (root with this script + CanvasGroup)
-///   â"œâ"€ CharacterImage (Image component)
-///   â""â"€ ShadowImage (Image component, offset below)
-/// 
-/// USAGE:
-/// - Attach to character prefab root
-/// - Assign character/shadow image references
-/// - Set myCharacter reference when spawning
-/// - applyVFX toggle for editor preview
+/// SETUP:
+/// 1. Create GameObject with Image component
+/// 2. Add this script
+/// 3. Wire up references
+/// 4. Save as prefab
 /// </summary>
-public class CharacterObject : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
+public class CharacterObject : MonoBehaviour
 {
     // ============================================
-    // INSPECTOR REFERENCES
+    // VISUAL COMPONENTS
     // ============================================
 
-    [Title("Character References", bold: true)]
-    [Tooltip("The character data this visual represents")]
-    [ShowInInspector, ReadOnly]
-    public CharacterSlotState myCharacter;
-
-    [FoldoutGroup("Visual Components")]
-    [Required, Tooltip("Full-body character sprite")]
+    [Header("Core Display")]
+    [Tooltip("Main character sprite (full-body)")]
     public Image characterImage;
 
-    [FoldoutGroup("Visual Components")]
-    [Required, Tooltip("Shadow sprite (positioned below character)")]
-    public Image shadowImage;
-
-    [FoldoutGroup("Visual Components")]
-    [Tooltip("CanvasGroup for fade in/out (auto-assigned if not set)")]
+    [Tooltip("Canvas group for fade effects")]
     public CanvasGroup canvasGroup;
 
-    // ============================================
-    // VFX SETTINGS
-    // ============================================
+    [Header("Optional UI Elements")]
+    [Tooltip("Character name display")]
+    public TextMeshProUGUI nameText;
 
-    [Title("Visual Effects", bold: true)]
-    [ToggleLeft, OnValueChanged("OnVFXToggled")]
-    [Tooltip("Apply VFX (color tint, future effects) - toggle for editor preview")]
-    public bool applyVFX = true;
+    [Tooltip("Shows when character is busy")]
+    public GameObject busyIndicator;
 
-    [FoldoutGroup("Room Lighting")]
-    [Tooltip("Color tint from room lighting (will be set by RoomData/Socket)")]
-    public Color roomLightingTint = Color.white;
+    [Tooltip("Shows action name when busy")]
+    public TextMeshProUGUI actionText;
 
-    // ============================================
-    // SHADOW SETTINGS
-    // ============================================
+    [Tooltip("Progress bar for actions")]
+    public Image progressBar;
 
-    [FoldoutGroup("Shadow")]
-    [Tooltip("Shadow offset from character position")]
-    public Vector2 shadowOffset = new Vector2(0f, -20f);
+    [Header("Speech Bubble")]
+    [Tooltip("Position where speech bubbles spawn from")]
+    public Transform mouthPosition;
 
     // ============================================
-    // INTERACTION SETTINGS (borrowed from CharacterDisplay)
+    // ANIMATION SETTINGS
     // ============================================
 
-    [Title("Mouse Interaction", bold: true)]
-    [Tooltip("Color multiplier when hovering")]
-    public Color hoverTintColor = new Color(1.2f, 1.2f, 1.2f, 1f);
+    [Header("Animation")]
+    [Tooltip("Fade in duration when spawning")]
+    public float fadeInDuration = 0.5f;
 
-    [Tooltip("Color tint when selected")]
-    public Color selectedTintColor = new Color(0.5f, 1f, 1f, 1f);
+    [Tooltip("Fade out duration when despawning")]
+    public float fadeOutDuration = 0.3f;
 
-    [Tooltip("Scale multiplier on hover")]
-    [Range(1.0f, 1.2f)]
-    public float hoverScaleMultiplier = 1.05f;
+    [Tooltip("Enable idle breathing animation")]
+    public bool enableBreathing = true;
+
+    [Tooltip("Breathing scale amount")]
+    public float breathingScale = 1.02f;
+
+    [Tooltip("Breathing cycle duration")]
+    public float breathingDuration = 2f;
 
     // ============================================
-    // PRIVATE STATE
+    // INTERACTION SETTINGS
     // ============================================
 
-    private Color originalCharacterColor = Color.white;
-    private Vector3 originalScale = Vector3.one;
+    [Header("Interaction")]
+    [Tooltip("Scale on hover")]
+    public float hoverScale = 1.05f;
 
-    // Interaction state
+    [Tooltip("Hover animation duration")]
+    public float hoverDuration = 0.2f;
+
+    [Tooltip("Click animation scale")]
+    public float clickScale = 0.95f;
+
+    // ============================================
+    // RUNTIME STATE
+    // ============================================
+
+    private CharacterSlotState characterState;
     private bool isHovered = false;
-    private bool isSelected = false;
-    private bool isBusy = false;
+    private Tween breathingTween;
+    private Tween currentTween;
 
     // ============================================
     // INITIALIZATION
@@ -101,7 +93,7 @@ public class CharacterObject : MonoBehaviour, IPointerEnterHandler, IPointerExit
 
     void Awake()
     {
-        // Auto-assign CanvasGroup if not set
+        // Ensure we have a canvas group for fading
         if (canvasGroup == null)
         {
             canvasGroup = GetComponent<CanvasGroup>();
@@ -111,250 +103,279 @@ public class CharacterObject : MonoBehaviour, IPointerEnterHandler, IPointerExit
             }
         }
 
-        // Store original values
-        originalScale = transform.localScale;
-        if (characterImage != null)
-        {
-            originalCharacterColor = characterImage.color;
-        }
-
-        // Position shadow
-        UpdateShadowPosition();
-    }
-
-    void Start()
-    {
-        // Apply initial VFX
-        if (applyVFX)
-        {
-            ApplyRoomLighting();
-        }
-    }
-
-    // ============================================
-    // PUBLIC API
-    // ============================================
-
-    /// <summary>
-    /// Set which character this visual represents
-    /// Called when spawning at a socket
-    /// </summary>
-    public void SetCharacter(CharacterSlotState character)
-    {
-        myCharacter = character;
-
-        // Update sprite
-        if (characterImage != null && character != null && character.slotData != null)
-        {
-            characterImage.sprite = character.slotData.sprite;
-            Debug.Log($"✅ CharacterObject set to display: {character.slotData.displayName}");
-        }
-    }
-
-    /// <summary>
-    /// Set room lighting tint from RoomData or Socket
-    /// </summary>
-    public void SetRoomLighting(Color lightingTint)
-    {
-        roomLightingTint = lightingTint;
-
-        if (applyVFX)
-        {
-            ApplyRoomLighting();
-        }
-    }
-
-    /// <summary>
-    /// Fade in (when entering room)
-    /// </summary>
-    public void FadeIn(float duration = 0.3f)
-    {
+        // Start invisible
         if (canvasGroup != null)
         {
-            // TODO: Use DOTween for smooth fade
-            // For now, instant
-            canvasGroup.alpha = 1f;
-        }
-    }
-
-    /// <summary>
-    /// Fade out (when leaving room)
-    /// </summary>
-    public void FadeOut(float duration = 0.3f)
-    {
-        if (canvasGroup != null)
-        {
-            // TODO: Use DOTween for smooth fade
-            // For now, instant
             canvasGroup.alpha = 0f;
         }
     }
 
-    /// <summary>
-    /// Set busy state (affects visual tint)
-    /// </summary>
-    public void SetBusyState(bool busy)
+    void OnDestroy()
     {
-        isBusy = busy;
-        UpdateCharacterColor();
-    }
-
-    /// <summary>
-    /// Set selection state (called by UIController or room manager)
-    /// </summary>
-    public void SetSelected(bool selected)
-    {
-        isSelected = selected;
-        UpdateCharacterColor();
+        // Clean up tweens
+        breathingTween?.Kill();
+        currentTween?.Kill();
     }
 
     // ============================================
-    // MOUSE INTERACTION (Pattern from CharacterDisplay)
-    // ============================================
-
-    public void OnPointerEnter(PointerEventData eventData)
-    {
-        isHovered = true;
-        UpdateCharacterColor();
-
-        // Scale up slightly
-        transform.localScale = originalScale * hoverScaleMultiplier;
-
-        // TODO: Notify UIController or RoomManager
-        // (Once we have room system hooked up)
-
-        Debug.Log($"🖱️ Hover: {(myCharacter != null ? myCharacter.slotData.displayName : "Unknown")}");
-    }
-
-    public void OnPointerExit(PointerEventData eventData)
-    {
-        isHovered = false;
-        UpdateCharacterColor();
-
-        // Scale back
-        transform.localScale = originalScale;
-    }
-
-    public void OnPointerClick(PointerEventData eventData)
-    {
-        // TODO: Notify UIController or RoomManager for selection
-        // For now, just log
-        Debug.Log($"🖱️ Click: {(myCharacter != null ? myCharacter.slotData.displayName : "Unknown")}");
-    }
-
-    // ============================================
-    // VISUAL UPDATES
+    // CHARACTER SETUP
     // ============================================
 
     /// <summary>
-    /// Update character image color based on state
-    /// Priority: Busy > Selected > Hover > Normal (with room lighting)
+    /// Set the character this object represents
+    /// Called by RoomController when spawning
     /// </summary>
-    private void UpdateCharacterColor()
+    public void SetCharacter(CharacterSlotState state)
     {
-        if (characterImage == null) return;
+        characterState = state;
 
-        // Priority 1: Busy state
-        if (isBusy)
+        if (state == null || state.slotData == null)
         {
-            Color busyColor = originalCharacterColor * new Color(0.7f, 0.7f, 0.7f, 1f);
-            characterImage.color = busyColor;
+            Debug.LogError("CharacterObject: Null character state!");
+            return;
         }
-        // Priority 2: Selected
-        else if (isSelected)
-        {
-            characterImage.color = selectedTintColor;
-        }
-        // Priority 3: Hover
-        else if (isHovered)
-        {
-            Color hoverColor = originalCharacterColor * hoverTintColor;
-            characterImage.color = hoverColor;
-        }
-        // Priority 4: Normal - apply room lighting
-        else
-        {
-            ApplyRoomLighting();
-        }
-    }
 
-    /// <summary>
-    /// Apply room lighting tint to character image
-    /// Only applies if character is not busy/selected/hovered
-    /// </summary>
-    private void ApplyRoomLighting()
-    {
-        if (characterImage == null || !applyVFX) return;
-
-        // Only apply room lighting if in neutral state
-        // (hover/select/busy states override this)
-        if (!isHovered && !isSelected && !isBusy)
+        // Set sprite
+        if (characterImage != null && state.slotData.sprite != null)
         {
-            Color tintedColor = originalCharacterColor * roomLightingTint;
-            characterImage.color = tintedColor;
+            characterImage.sprite = state.slotData.sprite;
+            characterImage.preserveAspect = true;
         }
-    }
 
-    /// <summary>
-    /// Update shadow position relative to character
-    /// </summary>
-    private void UpdateShadowPosition()
-    {
-        if (shadowImage == null) return;
+        // Set name
+        if (nameText != null)
+        {
+            nameText.text = state.slotData.displayName;
+        }
 
-        // Shadow is child of this GameObject, so position relative to parent
-        shadowImage.rectTransform.anchoredPosition = shadowOffset;
+        // Update busy state
+        UpdateBusyState();
+
+        // Start breathing animation
+        if (enableBreathing)
+        {
+            StartBreathing();
+        }
+
+        Debug.Log($"🎭 CharacterObject: Set to {state.slotData.displayName}");
     }
 
     // ============================================
-    // EDITOR HELPERS
+    // VISUAL STATES
     // ============================================
 
-#if UNITY_EDITOR
     /// <summary>
-    /// Called when applyVFX is toggled in editor (Odin OnValueChanged)
+    /// Update visual based on character's busy state
     /// </summary>
-    private void OnVFXToggled()
+    public void UpdateBusyState()
     {
-        if (characterImage != null)
+        if (characterState == null) return;
+
+        bool isBusy = characterState.isBusy;
+
+        // Show/hide busy indicator
+        if (busyIndicator != null)
         {
-            if (applyVFX)
+            busyIndicator.SetActive(isBusy);
+        }
+
+        // Update action text
+        if (actionText != null)
+        {
+            if (isBusy && characterState.currentAction != null)
             {
-                ApplyRoomLighting();
+                actionText.text = characterState.currentAction.actionName;
+                actionText.gameObject.SetActive(true);
             }
             else
             {
-                // Reset to original color when VFX disabled
-                characterImage.color = originalCharacterColor;
+                actionText.gameObject.SetActive(false);
+            }
+        }
+
+        // Update progress bar
+        if (progressBar != null)
+        {
+            if (isBusy && characterState.actionTotalDuration > 0)
+            {
+                float progress = 1f - (characterState.actionTimeRemaining / characterState.actionTotalDuration);
+                progressBar.fillAmount = progress;
+                progressBar.gameObject.SetActive(true);
+            }
+            else
+            {
+                progressBar.gameObject.SetActive(false);
+            }
+        }
+
+        // Darken sprite if busy
+        if (characterImage != null)
+        {
+            Color targetColor = isBusy
+                ? new Color(0.7f, 0.7f, 0.7f, 1f)  // Darker when busy
+                : Color.white;                      // Normal when idle
+
+            characterImage.DOColor(targetColor, 0.3f);
+        }
+    }
+
+    /// <summary>
+    /// Apply room-specific lighting/tint
+    /// </summary>
+    public void SetRoomLighting(Color tint)
+    {
+        if (characterImage != null)
+        {
+            // Multiply current color by tint
+            Color current = characterImage.color;
+            characterImage.color = new Color(
+                current.r * tint.r,
+                current.g * tint.g,
+                current.b * tint.b,
+                current.a * tint.a
+            );
+        }
+    }
+
+    // ============================================
+    // ANIMATIONS
+    // ============================================
+
+    /// <summary>
+    /// Fade in when spawning
+    /// </summary>
+    public void FadeIn()
+    {
+        if (canvasGroup == null) return;
+
+        canvasGroup.alpha = 0f;
+        transform.localScale = Vector3.one * 0.8f;
+
+        // Fade and scale in
+        DOTween.Sequence()
+            .Join(canvasGroup.DOFade(1f, fadeInDuration))
+            .Join(transform.DOScale(1f, fadeInDuration).SetEase(Ease.OutBack))
+            .OnComplete(() => {
+                Debug.Log($"✨ {characterState?.slotData?.displayName} appeared!");
+            });
+    }
+
+    /// <summary>
+    /// Fade out when despawning
+    /// </summary>
+    public void FadeOut()
+    {
+        if (canvasGroup == null) return;
+
+        DOTween.Sequence()
+            .Join(canvasGroup.DOFade(0f, fadeOutDuration))
+            .Join(transform.DOScale(0.8f, fadeOutDuration).SetEase(Ease.InBack))
+            .OnComplete(() => {
+                Destroy(gameObject);
+            });
+    }
+
+    /// <summary>
+    /// Start idle breathing animation
+    /// </summary>
+    private void StartBreathing()
+    {
+        if (!enableBreathing || characterImage == null) return;
+
+        // Kill existing breathing
+        breathingTween?.Kill();
+
+        // Create breathing loop
+        breathingTween = transform
+            .DOScale(Vector3.one * breathingScale, breathingDuration)
+            .SetEase(Ease.InOutSine)
+            .SetLoops(-1, LoopType.Yoyo);
+    }
+
+    // ============================================
+    // INTERACTION
+    // ============================================
+
+    void OnMouseEnter()
+    {
+        if (isHovered) return;
+        isHovered = true;
+
+        // Scale up
+        currentTween?.Kill();
+        currentTween = transform.DOScale(hoverScale, hoverDuration).SetEase(Ease.OutBack);
+
+        // Play hover sound
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayButtonHover();
+        }
+    }
+
+    void OnMouseExit()
+    {
+        if (!isHovered) return;
+        isHovered = false;
+
+        // Scale back
+        currentTween?.Kill();
+        currentTween = transform.DOScale(1f, hoverDuration).SetEase(Ease.OutBack);
+    }
+
+    void OnMouseDown()
+    {
+        // Click animation
+        currentTween?.Kill();
+        currentTween = transform.DOScale(clickScale, 0.1f)
+            .SetEase(Ease.OutQuad)
+            .OnComplete(() => {
+                transform.DOScale(isHovered ? hoverScale : 1f, 0.1f);
+            });
+
+        // Play click sound
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayButtonClick();
+        }
+
+        // Notify UI that this character was clicked
+        CharacterClicked();
+    }
+
+    /// <summary>
+    /// Handle character click - could open movement menu, show stats, etc.
+    /// </summary>
+    private void CharacterClicked()
+    {
+        Debug.Log($"👆 Clicked on {characterState?.slotData?.displayName}");
+
+        // TODO: Open character menu
+        // - Move to different room
+        // - View stats
+        // - Start action
+
+        // For now, just log
+        if (characterState != null && characterState.currentRoom != null)
+        {
+            Debug.Log($"   Currently in: {characterState.currentRoom.roomName}");
+            Debug.Log($"   Is Busy: {characterState.isBusy}");
+        }
+    }
+
+    // ============================================
+    // UPDATE
+    // ============================================
+
+    void Update()
+    {
+        // Update progress bar every frame if busy
+        if (characterState != null && characterState.isBusy && progressBar != null)
+        {
+            if (characterState.actionTotalDuration > 0)
+            {
+                float progress = 1f - (characterState.actionTimeRemaining / characterState.actionTotalDuration);
+                progressBar.fillAmount = progress;
             }
         }
     }
-
-    void OnValidate()
-    {
-        // Update shadow position
-        if (shadowImage != null)
-        {
-            UpdateShadowPosition();
-        }
-
-        // Update room lighting when color changes
-        if (applyVFX && characterImage != null)
-        {
-            ApplyRoomLighting();
-        }
-    }
-
-    [Button("Test Fade In"), FoldoutGroup("Editor Testing")]
-    private void TestFadeIn()
-    {
-        FadeIn();
-    }
-
-    [Button("Test Fade Out"), FoldoutGroup("Editor Testing")]
-    private void TestFadeOut()
-    {
-        FadeOut();
-    }
-#endif
 }
