@@ -55,6 +55,22 @@ public class UIButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     private Button buttonComponent;
     private ColorBlock originalColors;
 
+    /// <summary>
+    /// Provides access to the underlying Button's onClick event.
+    /// Returns null if this UIButton wraps a Toggle instead of a Button.
+    /// </summary>
+    public Button.ButtonClickedEvent onClick
+    {
+        get
+        {
+            if (buttonComponent == null)
+            {
+                buttonComponent = GetComponent<Button>();
+            }
+            return buttonComponent?.onClick;
+        }
+    }
+
     void Awake()
     {
         // Why: Store original scale and position to return to later
