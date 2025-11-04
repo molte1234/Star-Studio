@@ -66,6 +66,10 @@ public class RoomController : MonoBehaviour
     [InfoBox("Use this to make characters face different directions at different sockets")]
     public bool[] socketFlipX;
 
+    [Tooltip("Special socket for focused character view (when character menu is open)")]
+    [InfoBox("Assign a Transform where the character will move to when clicked")]
+    public Transform focusSocket;
+
     // ============================================
     // VISUAL SETUP
     // ============================================
@@ -254,6 +258,9 @@ public class RoomController : MonoBehaviour
         {
             // Set character data
             charObj.SetCharacter(character);
+
+            // Set room controller reference
+            charObj.SetRoomController(this);
 
             // Apply room lighting
             charObj.SetRoomLighting(roomLightingTint);
