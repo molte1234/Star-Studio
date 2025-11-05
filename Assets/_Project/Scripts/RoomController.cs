@@ -269,11 +269,19 @@ public class RoomController : MonoBehaviour
             // Apply room lighting
             charObj.SetRoomLighting(roomLightingTint);
 
-            // Calculate and apply socket-based scaling
-            if (character.slotData != null && character.slotData.sprite != null)
+            // Set transform values
+            instance.transform.localPosition = Vector3.zero;
+            instance.transform.localRotation = Quaternion.identity;
+            instance.transform.localScale = new Vector3(1.1f, 1f, 1f);
+
+            // Set RectTransform anchored position (right=0, bottom=0)
+            RectTransform rectTransform = instance.GetComponent<RectTransform>();
+            if (rectTransform != null)
             {
-                float socketScale = CalculateSocketScale(socketIndex, character.slotData.sprite);
-                instance.transform.localScale = Vector3.one * socketScale;
+                rectTransform.anchorMin = new Vector2(1f, 0f); // Right-bottom anchor
+                rectTransform.anchorMax = new Vector2(1f, 0f);
+                rectTransform.pivot = new Vector2(1f, 0f);
+                rectTransform.anchoredPosition = Vector2.zero; // Right=0, Bottom=0
             }
 
             // Store reference
@@ -517,11 +525,19 @@ public class RoomController : MonoBehaviour
                         charObj.SetCharacter(testState);
                         charObj.SetRoomLighting(roomLightingTint);
 
-                        // Calculate and apply socket-based scaling
-                        if (testState.slotData != null && testState.slotData.sprite != null)
+                        // Set transform values
+                        instance.transform.localPosition = Vector3.zero;
+                        instance.transform.localRotation = Quaternion.identity;
+                        instance.transform.localScale = new Vector3(1.1f, 1f, 1f);
+
+                        // Set RectTransform anchored position (right=0, bottom=0)
+                        RectTransform rectTransform = instance.GetComponent<RectTransform>();
+                        if (rectTransform != null)
                         {
-                            float socketScale = CalculateSocketScale(i, testState.slotData.sprite);
-                            instance.transform.localScale = Vector3.one * socketScale;
+                            rectTransform.anchorMin = new Vector2(1f, 0f); // Right-bottom anchor
+                            rectTransform.anchorMax = new Vector2(1f, 0f);
+                            rectTransform.pivot = new Vector2(1f, 0f);
+                            rectTransform.anchoredPosition = Vector2.zero; // Right=0, Bottom=0
                         }
 
                         populatedCount++;
