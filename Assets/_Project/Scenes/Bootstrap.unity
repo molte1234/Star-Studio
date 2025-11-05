@@ -832,13 +832,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7dd00797ad8421d40af5b853e8be62de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
-  isNewGame: 1
-  testingMode: 1
+  rules: {fileID: 11400000, guid: 561b47b11cf003f4e88fe2a63f0c97e5, type: 2}
   bandName: 
-  currentQuarter: 0
-  currentYear: 1
+  defaultRoom: {fileID: 11400000, guid: 4727eeabbb6a0a445aef3af8d8678dee, type: 2}
+  allRooms: []
+  roomControllers: []
+  characterPrefab: {fileID: 6036196631904538872, guid: ad3c55fa88567084198359452ba4fe66, type: 3}
+  spawnDelay: 0.5
   money: 500
   fans: 50
+  unity: 100
+  currentQuarter: 0
+  currentYear: 1
   charisma: 0
   stagePerformance: 0
   vocal: 0
@@ -847,12 +852,12 @@ MonoBehaviour:
   production: 0
   management: 0
   practical: 0
-  unity: 100
-  flags: []
-  rules: {fileID: 11400000, guid: 561b47b11cf003f4e88fe2a63f0c97e5, type: 2}
   eventManager: {fileID: 0}
   uiController: {fileID: 0}
-  audioManager: {fileID: 5676846021186701307}
+  skipWelcomeScreen: 0
+  testingMode: 1
+  flags: []
+  isNewGame: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
