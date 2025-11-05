@@ -57,7 +57,15 @@ public class CharacterMenuController : MonoBehaviour
         // Setup close button
         if (closeButton != null)
         {
-            closeButton.onClick.AddListener(CloseMenu);
+            Button buttonComponent = closeButton.GetComponent<Button>();
+            if (buttonComponent != null)
+            {
+                buttonComponent.onClick.AddListener(CloseMenu);
+            }
+            else
+            {
+                Debug.LogWarning("Close button doesn't have a Button component!");
+            }
         }
     }
 
@@ -317,7 +325,11 @@ public class CharacterMenuController : MonoBehaviour
         // Clean up listeners
         if (closeButton != null)
         {
-            closeButton.onClick.RemoveListener(CloseMenu);
+            Button buttonComponent = closeButton.GetComponent<Button>();
+            if (buttonComponent != null)
+            {
+                buttonComponent.onClick.RemoveListener(CloseMenu);
+            }
         }
 
         // Kill any ongoing tweens
