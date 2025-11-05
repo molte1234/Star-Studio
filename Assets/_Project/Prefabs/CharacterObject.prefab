@@ -682,7 +682,7 @@ MonoBehaviour:
   mouthPosition: {fileID: 1420114267842255376}
   fadeInDuration: 0.5
   fadeOutDuration: 0.3
-  enableBreathing: 1
+  enableBreathing: 0
   breathingScale: 1.02
   breathingDuration: 2
   hoverScale: 1.05
