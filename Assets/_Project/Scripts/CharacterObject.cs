@@ -87,6 +87,7 @@ public class CharacterObject : MonoBehaviour
     private bool isHovered = false;
     private Tween breathingTween;
     private Tween currentTween;
+    private Vector3 baseScale = Vector3.one; // Store the base scale set by socket sizing
 
     // ============================================
     // INITIALIZATION
@@ -178,6 +179,14 @@ public class CharacterObject : MonoBehaviour
         return characterState;
     }
 
+    /// <summary>
+    /// Get the base scale (set by socket sizing)
+    /// </summary>
+    public Vector3 GetBaseScale()
+    {
+        return baseScale;
+    }
+
     // ============================================
     // VISUAL STATES
     // ============================================
@@ -266,13 +275,16 @@ public class CharacterObject : MonoBehaviour
     {
         if (canvasGroup == null) return;
 
+        // Store the base scale (set by RoomController based on socket size)
+        baseScale = transform.localScale;
+
         canvasGroup.alpha = 0f;
-        transform.localScale = Vector3.one * 0.8f;
+        transform.localScale = baseScale * 0.8f;
 
         // Fade and scale in
         DOTween.Sequence()
             .Join(canvasGroup.DOFade(1f, fadeInDuration))
-            .Join(transform.DOScale(1f, fadeInDuration).SetEase(Ease.OutBack))
+            .Join(transform.DOScale(baseScale, fadeInDuration).SetEase(Ease.OutBack))
             .OnComplete(() => {
                 Debug.Log($"✨ {characterState?.slotData?.displayName} appeared!");
             });
@@ -287,7 +299,7 @@ public class CharacterObject : MonoBehaviour
 
         DOTween.Sequence()
             .Join(canvasGroup.DOFade(0f, fadeOutDuration))
-            .Join(transform.DOScale(0.8f, fadeOutDuration).SetEase(Ease.InBack))
+            .Join(transform.DOScale(baseScale * 0.8f, fadeOutDuration).SetEase(Ease.InBack))
             .OnComplete(() => {
                 Destroy(gameObject);
             });
@@ -305,7 +317,7 @@ public class CharacterObject : MonoBehaviour
 
         // Create breathing loop
         breathingTween = transform
-            .DOScale(Vector3.one * breathingScale, breathingDuration)
+            .DOScale(baseScale * breathingScale, breathingDuration)
             .SetEase(Ease.InOutSine)
             .SetLoops(-1, LoopType.Yoyo);
     }
@@ -321,7 +333,7 @@ public class CharacterObject : MonoBehaviour
 
         // Scale up
         currentTween?.Kill();
-        currentTween = transform.DOScale(hoverScale, hoverDuration).SetEase(Ease.OutBack);
+        currentTween = transform.DOScale(baseScale * hoverScale, hoverDuration).SetEase(Ease.OutBack);
 
         // Play hover sound
         if (AudioManager.Instance != null)
@@ -337,17 +349,17 @@ public class CharacterObject : MonoBehaviour
 
         // Scale back
         currentTween?.Kill();
-        currentTween = transform.DOScale(1f, hoverDuration).SetEase(Ease.OutBack);
+        currentTween = transform.DOScale(baseScale, hoverDuration).SetEase(Ease.OutBack);
     }
 
     void OnMouseDown()
     {
         // Click animation
         currentTween?.Kill();
-        currentTween = transform.DOScale(clickScale, 0.1f)
+        currentTween = transform.DOScale(baseScale * clickScale, 0.1f)
             .SetEase(Ease.OutQuad)
             .OnComplete(() => {
-                transform.DOScale(isHovered ? hoverScale : 1f, 0.1f);
+                transform.DOScale(isHovered ? baseScale * hoverScale : baseScale, 0.1f);
             });
 
         // Play click sound

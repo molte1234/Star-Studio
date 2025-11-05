@@ -62,9 +62,9 @@ public class RoomController : MonoBehaviour
     [InfoBox("Manually assign empty GameObjects as socket positions. Characters spawn here.")]
     public Transform[] sockets;
 
-    [Tooltip("Per-socket X flip settings - check box to flip character sprite at that socket")]
-    [InfoBox("Use this to make characters face different directions at different sockets")]
-    public bool[] socketFlipX;
+    [Tooltip("Per-socket size settings - defines the width and height each character should scale to")]
+    [InfoBox("Set X = width and Y = height for each socket. Characters will scale to fit these dimensions while maintaining aspect ratio.")]
+    public Vector2[] socketSizes;
 
     [Tooltip("Special socket for focused character view (when character menu is open)")]
     [InfoBox("Assign a Transform where the character will move to when clicked")]
@@ -108,10 +108,14 @@ public class RoomController : MonoBehaviour
             socketOccupants = new CharacterSlotState[sockets.Length];
             characterVisuals = new CharacterObject[sockets.Length];
 
-            // Initialize socketFlipX array if not set
-            if (socketFlipX == null || socketFlipX.Length != sockets.Length)
+            // Initialize socketSizes array if not set (default to 200x300)
+            if (socketSizes == null || socketSizes.Length != sockets.Length)
             {
-                socketFlipX = new bool[sockets.Length];
+                socketSizes = new Vector2[sockets.Length];
+                for (int i = 0; i < socketSizes.Length; i++)
+                {
+                    socketSizes[i] = new Vector2(200f, 300f); // Default size
+                }
             }
         }
         else
@@ -265,12 +269,17 @@ public class RoomController : MonoBehaviour
             // Apply room lighting
             charObj.SetRoomLighting(roomLightingTint);
 
-            // Apply socket flip if needed (using transform scale, not a method)
-            if (socketFlipX != null && socketIndex < socketFlipX.Length && socketFlipX[socketIndex])
+            // Set transform values (anchors/pivot are defined in prefab)
+            instance.transform.localPosition = Vector3.zero;
+            instance.transform.localRotation = Quaternion.identity;
+            instance.transform.localScale = new Vector3(1.1f, 1f, 1f);
+
+            // Match width and height to socket's RectTransform
+            RectTransform socketRect = socketTransform.GetComponent<RectTransform>();
+            RectTransform charRect = instance.GetComponent<RectTransform>();
+            if (socketRect != null && charRect != null)
             {
-                Vector3 flippedScale = instance.transform.localScale;
-                flippedScale.x *= -1f;
-                instance.transform.localScale = flippedScale;
+                charRect.sizeDelta = socketRect.sizeDelta;
             }
 
             // Store reference
@@ -321,6 +330,48 @@ public class RoomController : MonoBehaviour
             return false;
         }
         return true;
+    }
+
+    /// <summary>
+    /// Calculate the scale factor to fit a sprite within socket dimensions
+    /// Maintains aspect ratio and scales to fit both width and height
+    /// </summary>
+    private float CalculateSocketScale(int socketIndex, Sprite characterSprite)
+    {
+        if (!IsValidSocketIndex(socketIndex) || characterSprite == null)
+        {
+            return 1f;
+        }
+
+        // Get the socket target size
+        Vector2 targetSize = socketSizes[socketIndex];
+        if (targetSize.x <= 0 || targetSize.y <= 0)
+        {
+            Debug.LogWarning($"⚠️ Socket {socketIndex} has invalid size: {targetSize}. Using scale 1.0");
+            return 1f;
+        }
+
+        // Get the sprite's native size in pixels
+        Rect spriteRect = characterSprite.rect;
+        float spriteWidth = spriteRect.width;
+        float spriteHeight = spriteRect.height;
+
+        if (spriteWidth <= 0 || spriteHeight <= 0)
+        {
+            Debug.LogWarning($"⚠️ Character sprite has invalid dimensions: {spriteWidth}x{spriteHeight}");
+            return 1f;
+        }
+
+        // Calculate scale factors for width and height
+        float scaleX = targetSize.x / spriteWidth;
+        float scaleY = targetSize.y / spriteHeight;
+
+        // Use the smaller scale to ensure the sprite fits within both dimensions
+        float finalScale = Mathf.Min(scaleX, scaleY);
+
+        Debug.Log($"📏 Socket {socketIndex}: Target={targetSize}, Sprite={spriteWidth}x{spriteHeight}, Scale={finalScale:F3}");
+
+        return finalScale;
     }
 
     /// <summary>
@@ -472,12 +523,17 @@ public class RoomController : MonoBehaviour
                         charObj.SetCharacter(testState);
                         charObj.SetRoomLighting(roomLightingTint);
 
-                        // Apply flip if needed (using transform scale)
-                        if (socketFlipX != null && i < socketFlipX.Length && socketFlipX[i])
+                        // Set transform values (anchors/pivot are defined in prefab)
+                        instance.transform.localPosition = Vector3.zero;
+                        instance.transform.localRotation = Quaternion.identity;
+                        instance.transform.localScale = new Vector3(1.1f, 1f, 1f);
+
+                        // Match width and height to socket's RectTransform
+                        RectTransform socketRect = sockets[i].GetComponent<RectTransform>();
+                        RectTransform charRect = instance.GetComponent<RectTransform>();
+                        if (socketRect != null && charRect != null)
                         {
-                            Vector3 flippedScale = instance.transform.localScale;
-                            flippedScale.x *= -1f;
-                            instance.transform.localScale = flippedScale;
+                            charRect.sizeDelta = socketRect.sizeDelta;
                         }
 
                         populatedCount++;
