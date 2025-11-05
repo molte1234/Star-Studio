@@ -274,6 +274,14 @@ public class RoomController : MonoBehaviour
             instance.transform.localRotation = Quaternion.identity;
             instance.transform.localScale = new Vector3(1.1f, 1f, 1f);
 
+            // Match width and height to socket's RectTransform
+            RectTransform socketRect = socketTransform.GetComponent<RectTransform>();
+            RectTransform charRect = instance.GetComponent<RectTransform>();
+            if (socketRect != null && charRect != null)
+            {
+                charRect.sizeDelta = socketRect.sizeDelta;
+            }
+
             // Store reference
             characterVisuals[socketIndex] = charObj;
 
@@ -519,6 +527,14 @@ public class RoomController : MonoBehaviour
                         instance.transform.localPosition = Vector3.zero;
                         instance.transform.localRotation = Quaternion.identity;
                         instance.transform.localScale = new Vector3(1.1f, 1f, 1f);
+
+                        // Match width and height to socket's RectTransform
+                        RectTransform socketRect = sockets[i].GetComponent<RectTransform>();
+                        RectTransform charRect = instance.GetComponent<RectTransform>();
+                        if (socketRect != null && charRect != null)
+                        {
+                            charRect.sizeDelta = socketRect.sizeDelta;
+                        }
 
                         populatedCount++;
                     }
