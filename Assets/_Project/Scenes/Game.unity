@@ -272,7 +272,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &43582403
 RectTransform:
   m_ObjectHideFlags: 0
@@ -293,9 +293,9 @@ RectTransform:
   - {fileID: 443422745}
   - {fileID: 1850049169}
   - {fileID: 175309016}
+  - {fileID: 669431042}
   - {fileID: 351784021}
   - {fileID: 1825560856}
-  - {fileID: 669431042}
   m_Father: {fileID: 1941899356}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -808,6 +808,7 @@ GameObject:
   - component: {fileID: 175309019}
   - component: {fileID: 175309018}
   - component: {fileID: 175309017}
+  - component: {fileID: 175309021}
   m_Layer: 5
   m_Name: Button - Action
   m_TagString: Untagged
@@ -939,6 +940,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 175309015}
   m_CullTransparentMesh: 1
+--- !u!114 &175309021
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 175309015}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8aed378c01a1cdd4d8c10291f16c3b7e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AlphaRaycast
+  minimumAlpha: 0.1
 --- !u!1001 &202535200
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1766,7 +1780,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 0, g: 0, b: 0, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -2014,6 +2028,7 @@ GameObject:
   - component: {fileID: 443422748}
   - component: {fileID: 443422747}
   - component: {fileID: 443422746}
+  - component: {fileID: 443422750}
   m_Layer: 5
   m_Name: Button - Music
   m_TagString: Untagged
@@ -2145,6 +2160,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 443422744}
   m_CullTransparentMesh: 1
+--- !u!114 &443422750
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 443422744}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8aed378c01a1cdd4d8c10291f16c3b7e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AlphaRaycast
+  minimumAlpha: 0.1
 --- !u!1001 &463985984
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3199,7 +3227,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 0, g: 0, b: 0, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -5237,6 +5265,7 @@ GameObject:
   - component: {fileID: 1456828000}
   - component: {fileID: 1456827999}
   - component: {fileID: 1456827998}
+  - component: {fileID: 1456828002}
   m_Layer: 5
   m_Name: Button - MoveTo
   m_TagString: Untagged
@@ -5368,6 +5397,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1456827996}
   m_CullTransparentMesh: 1
+--- !u!114 &1456828002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1456827996}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8aed378c01a1cdd4d8c10291f16c3b7e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AlphaRaycast
+  minimumAlpha: 0.1
 --- !u!1 &1469179478
 GameObject:
   m_ObjectHideFlags: 0
@@ -5484,7 +5526,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 0, g: 0, b: 0, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -6532,6 +6574,7 @@ GameObject:
   - component: {fileID: 1695686849}
   - component: {fileID: 1695686851}
   - component: {fileID: 1695686850}
+  - component: {fileID: 1695686852}
   m_Layer: 5
   m_Name: Image
   m_TagString: Untagged
@@ -6596,6 +6639,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1695686848}
   m_CullTransparentMesh: 1
+--- !u!114 &1695686852
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1695686848}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8aed378c01a1cdd4d8c10291f16c3b7e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AlphaRaycast
+  minimumAlpha: 0.1
 --- !u!1001 &1698405686
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7017,7 +7073,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 0, g: 0, b: 0, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -7073,6 +7129,7 @@ GameObject:
   - component: {fileID: 1866659172}
   - component: {fileID: 1866659171}
   - component: {fileID: 1866659170}
+  - component: {fileID: 1866659174}
   m_Layer: 5
   m_Name: Button - Practice
   m_TagString: Untagged
@@ -7204,6 +7261,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1866659168}
   m_CullTransparentMesh: 1
+--- !u!114 &1866659174
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1866659168}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8aed378c01a1cdd4d8c10291f16c3b7e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AlphaRaycast
+  minimumAlpha: 0.1
 --- !u!1 &1884703454
 GameObject:
   m_ObjectHideFlags: 0
@@ -7553,7 +7623,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 0, g: 0, b: 0, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -8604,7 +8674,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterMenuController
   currentRoomController: {fileID: 0}
-  menuButtonsContainer: {fileID: 0}
+  menuButtonsContainer: {fileID: 43582403}
   actionButtons: []
   closeButton: {fileID: 1825560857}
   buttonAnimationDuration: 0.3
