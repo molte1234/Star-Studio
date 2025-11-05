@@ -269,18 +269,23 @@ public class RoomController : MonoBehaviour
             // Apply room lighting
             charObj.SetRoomLighting(roomLightingTint);
 
-            // Set transform values
+            // Set RectTransform to stretch-stretch FIRST
+            RectTransform rectTransform = instance.GetComponent<RectTransform>();
+            if (rectTransform != null)
+            {
+                rectTransform.anchorMin = new Vector2(0f, 0f); // Stretch-stretch
+                rectTransform.anchorMax = new Vector2(1f, 1f);
+                rectTransform.pivot = new Vector2(1f, 0f); // Right-bottom pivot
+            }
+
+            // THEN set transform values
             instance.transform.localPosition = Vector3.zero;
             instance.transform.localRotation = Quaternion.identity;
             instance.transform.localScale = new Vector3(1.1f, 1f, 1f);
 
-            // Set RectTransform anchored position (right=0, bottom=0)
-            RectTransform rectTransform = instance.GetComponent<RectTransform>();
+            // Set anchored position (right=0, bottom=0)
             if (rectTransform != null)
             {
-                rectTransform.anchorMin = new Vector2(1f, 0f); // Right-bottom anchor
-                rectTransform.anchorMax = new Vector2(1f, 0f);
-                rectTransform.pivot = new Vector2(1f, 0f);
                 rectTransform.anchoredPosition = Vector2.zero; // Right=0, Bottom=0
             }
 
@@ -525,18 +530,23 @@ public class RoomController : MonoBehaviour
                         charObj.SetCharacter(testState);
                         charObj.SetRoomLighting(roomLightingTint);
 
-                        // Set transform values
+                        // Set RectTransform to stretch-stretch FIRST
+                        RectTransform rectTransform = instance.GetComponent<RectTransform>();
+                        if (rectTransform != null)
+                        {
+                            rectTransform.anchorMin = new Vector2(0f, 0f); // Stretch-stretch
+                            rectTransform.anchorMax = new Vector2(1f, 1f);
+                            rectTransform.pivot = new Vector2(1f, 0f); // Right-bottom pivot
+                        }
+
+                        // THEN set transform values
                         instance.transform.localPosition = Vector3.zero;
                         instance.transform.localRotation = Quaternion.identity;
                         instance.transform.localScale = new Vector3(1.1f, 1f, 1f);
 
-                        // Set RectTransform anchored position (right=0, bottom=0)
-                        RectTransform rectTransform = instance.GetComponent<RectTransform>();
+                        // Set anchored position (right=0, bottom=0)
                         if (rectTransform != null)
                         {
-                            rectTransform.anchorMin = new Vector2(1f, 0f); // Right-bottom anchor
-                            rectTransform.anchorMax = new Vector2(1f, 0f);
-                            rectTransform.pivot = new Vector2(1f, 0f);
                             rectTransform.anchoredPosition = Vector2.zero; // Right=0, Bottom=0
                         }
 
