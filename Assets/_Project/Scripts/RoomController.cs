@@ -66,6 +66,10 @@ public class RoomController : MonoBehaviour
     [InfoBox("Use this to make characters face different directions at different sockets")]
     public bool[] socketFlipX;
 
+    [Tooltip("Per-socket size settings - defines the width and height each character should scale to")]
+    [InfoBox("Set X = width and Y = height for each socket. Characters will scale to fit these dimensions while maintaining aspect ratio.")]
+    public Vector2[] socketSizes;
+
     [Tooltip("Special socket for focused character view (when character menu is open)")]
     [InfoBox("Assign a Transform where the character will move to when clicked")]
     public Transform focusSocket;
@@ -112,6 +116,16 @@ public class RoomController : MonoBehaviour
             if (socketFlipX == null || socketFlipX.Length != sockets.Length)
             {
                 socketFlipX = new bool[sockets.Length];
+            }
+
+            // Initialize socketSizes array if not set (default to 200x300)
+            if (socketSizes == null || socketSizes.Length != sockets.Length)
+            {
+                socketSizes = new Vector2[sockets.Length];
+                for (int i = 0; i < socketSizes.Length; i++)
+                {
+                    socketSizes[i] = new Vector2(200f, 300f); // Default size
+                }
             }
         }
         else
@@ -265,6 +279,13 @@ public class RoomController : MonoBehaviour
             // Apply room lighting
             charObj.SetRoomLighting(roomLightingTint);
 
+            // Calculate and apply socket-based scaling
+            if (character.slotData != null && character.slotData.sprite != null)
+            {
+                float socketScale = CalculateSocketScale(socketIndex, character.slotData.sprite);
+                instance.transform.localScale = Vector3.one * socketScale;
+            }
+
             // Apply socket flip if needed (using transform scale, not a method)
             if (socketFlipX != null && socketIndex < socketFlipX.Length && socketFlipX[socketIndex])
             {
@@ -321,6 +342,48 @@ public class RoomController : MonoBehaviour
             return false;
         }
         return true;
+    }
+
+    /// <summary>
+    /// Calculate the scale factor to fit a sprite within socket dimensions
+    /// Maintains aspect ratio and scales to fit both width and height
+    /// </summary>
+    private float CalculateSocketScale(int socketIndex, Sprite characterSprite)
+    {
+        if (!IsValidSocketIndex(socketIndex) || characterSprite == null)
+        {
+            return 1f;
+        }
+
+        // Get the socket target size
+        Vector2 targetSize = socketSizes[socketIndex];
+        if (targetSize.x <= 0 || targetSize.y <= 0)
+        {
+            Debug.LogWarning($"⚠️ Socket {socketIndex} has invalid size: {targetSize}. Using scale 1.0");
+            return 1f;
+        }
+
+        // Get the sprite's native size in pixels
+        Rect spriteRect = characterSprite.rect;
+        float spriteWidth = spriteRect.width;
+        float spriteHeight = spriteRect.height;
+
+        if (spriteWidth <= 0 || spriteHeight <= 0)
+        {
+            Debug.LogWarning($"⚠️ Character sprite has invalid dimensions: {spriteWidth}x{spriteHeight}");
+            return 1f;
+        }
+
+        // Calculate scale factors for width and height
+        float scaleX = targetSize.x / spriteWidth;
+        float scaleY = targetSize.y / spriteHeight;
+
+        // Use the smaller scale to ensure the sprite fits within both dimensions
+        float finalScale = Mathf.Min(scaleX, scaleY);
+
+        Debug.Log($"📏 Socket {socketIndex}: Target={targetSize}, Sprite={spriteWidth}x{spriteHeight}, Scale={finalScale:F3}");
+
+        return finalScale;
     }
 
     /// <summary>
@@ -471,6 +534,13 @@ public class RoomController : MonoBehaviour
                     {
                         charObj.SetCharacter(testState);
                         charObj.SetRoomLighting(roomLightingTint);
+
+                        // Calculate and apply socket-based scaling
+                        if (testState.slotData != null && testState.slotData.sprite != null)
+                        {
+                            float socketScale = CalculateSocketScale(i, testState.slotData.sprite);
+                            instance.transform.localScale = Vector3.one * socketScale;
+                        }
 
                         // Apply flip if needed (using transform scale)
                         if (socketFlipX != null && i < socketFlipX.Length && socketFlipX[i])

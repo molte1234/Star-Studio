@@ -126,8 +126,9 @@ public class CharacterMenuController : MonoBehaviour
         character.transform.DOMove(focusPosition, characterMoveDuration)
             .SetEase(characterMoveEase);
 
-        // Optional: Scale up slightly for emphasis
-        character.transform.DOScale(1.1f, characterMoveDuration)
+        // Optional: Scale up slightly for emphasis (relative to base scale)
+        Vector3 emphasizedScale = character.GetBaseScale() * 1.1f;
+        character.transform.DOScale(emphasizedScale, characterMoveDuration)
             .SetEase(characterMoveEase);
     }
 
@@ -278,8 +279,9 @@ public class CharacterMenuController : MonoBehaviour
             currentExpandedCharacter.transform.DOMove(originalPosition, characterMoveDuration)
                 .SetEase(characterMoveEase);
 
-            // Scale back to normal
-            currentExpandedCharacter.transform.DOScale(1f, characterMoveDuration)
+            // Scale back to base scale (socket size)
+            Vector3 baseScale = currentExpandedCharacter.GetBaseScale();
+            currentExpandedCharacter.transform.DOScale(baseScale, characterMoveDuration)
                 .SetEase(characterMoveEase)
                 .OnComplete(() =>
                 {
