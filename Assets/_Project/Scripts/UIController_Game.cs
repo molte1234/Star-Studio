@@ -42,6 +42,18 @@ public class UIController_Game : MonoBehaviour
 
     void Start()
     {
+        // Why: Populate test band BEFORE registering with GameManager
+        // This fixes timing issue where testband wasn't populated at game start
+        TestBandHelper testBandHelper = FindObjectOfType<TestBandHelper>();
+        if (testBandHelper != null)
+        {
+            testBandHelper.PopulateTestBandIfEnabled();
+        }
+        else
+        {
+            Debug.Log("🔧 No TestBandHelper found in scene");
+        }
+
         // Why: Register with GameManager so it can call our RefreshUI()
         if (GameManager.Instance != null)
         {
