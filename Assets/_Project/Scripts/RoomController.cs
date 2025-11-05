@@ -62,10 +62,6 @@ public class RoomController : MonoBehaviour
     [InfoBox("Manually assign empty GameObjects as socket positions. Characters spawn here.")]
     public Transform[] sockets;
 
-    [Tooltip("Per-socket X flip settings - check box to flip character sprite at that socket")]
-    [InfoBox("Use this to make characters face different directions at different sockets")]
-    public bool[] socketFlipX;
-
     [Tooltip("Per-socket size settings - defines the width and height each character should scale to")]
     [InfoBox("Set X = width and Y = height for each socket. Characters will scale to fit these dimensions while maintaining aspect ratio.")]
     public Vector2[] socketSizes;
@@ -111,12 +107,6 @@ public class RoomController : MonoBehaviour
         {
             socketOccupants = new CharacterSlotState[sockets.Length];
             characterVisuals = new CharacterObject[sockets.Length];
-
-            // Initialize socketFlipX array if not set
-            if (socketFlipX == null || socketFlipX.Length != sockets.Length)
-            {
-                socketFlipX = new bool[sockets.Length];
-            }
 
             // Initialize socketSizes array if not set (default to 200x300)
             if (socketSizes == null || socketSizes.Length != sockets.Length)
@@ -284,14 +274,6 @@ public class RoomController : MonoBehaviour
             {
                 float socketScale = CalculateSocketScale(socketIndex, character.slotData.sprite);
                 instance.transform.localScale = Vector3.one * socketScale;
-            }
-
-            // Apply socket flip if needed (using transform scale, not a method)
-            if (socketFlipX != null && socketIndex < socketFlipX.Length && socketFlipX[socketIndex])
-            {
-                Vector3 flippedScale = instance.transform.localScale;
-                flippedScale.x *= -1f;
-                instance.transform.localScale = flippedScale;
             }
 
             // Store reference
@@ -540,14 +522,6 @@ public class RoomController : MonoBehaviour
                         {
                             float socketScale = CalculateSocketScale(i, testState.slotData.sprite);
                             instance.transform.localScale = Vector3.one * socketScale;
-                        }
-
-                        // Apply flip if needed (using transform scale)
-                        if (socketFlipX != null && i < socketFlipX.Length && socketFlipX[i])
-                        {
-                            Vector3 flippedScale = instance.transform.localScale;
-                            flippedScale.x *= -1f;
-                            instance.transform.localScale = flippedScale;
                         }
 
                         populatedCount++;
