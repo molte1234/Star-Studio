@@ -16,6 +16,7 @@ public class CharacterMenuController : MonoBehaviour
     [SerializeField] private Transform menuButtonsContainer;
     [SerializeField] private List<UIButton> actionButtons = new List<UIButton>(4);
     [SerializeField] private UIButton closeButton;
+    [SerializeField] private GameObject backgroundBlocker; // Optional: Click to close background
 
     [Header("Animation Settings")]
     [SerializeField] private float buttonAnimationDuration = 0.3f;
@@ -30,6 +31,7 @@ public class CharacterMenuController : MonoBehaviour
     private CharacterObject currentExpandedCharacter;
     private int originalSocketIndex = -1;
     private bool isMenuOpen = false;
+    private bool isClosing = false; // Prevent double-closing
 
     private void Awake()
     {
@@ -54,6 +56,25 @@ public class CharacterMenuController : MonoBehaviour
             menuButtonsContainer.gameObject.SetActive(false);
         }
 
+        // Hide background blocker initially
+        if (backgroundBlocker != null)
+        {
+            backgroundBlocker.SetActive(false);
+
+            // Setup background blocker to close menu when clicked
+            Button blockerButton = backgroundBlocker.GetComponent<Button>();
+            if (blockerButton != null)
+            {
+                blockerButton.onClick.AddListener(CloseMenu);
+            }
+            else
+            {
+                // Add button component if it doesn't exist
+                blockerButton = backgroundBlocker.AddComponent<Button>();
+                blockerButton.onClick.AddListener(CloseMenu);
+            }
+        }
+
         // Setup close button
         if (closeButton != null)
         {
@@ -66,6 +87,15 @@ public class CharacterMenuController : MonoBehaviour
             {
                 Debug.LogWarning("Close button doesn't have a Button component!");
             }
+        }
+    }
+
+    private void Update()
+    {
+        // Press ESC to close menu
+        if (isMenuOpen && Input.GetKeyDown(KeyCode.Escape))
+        {
+            CloseMenu();
         }
     }
 
@@ -101,11 +131,19 @@ public class CharacterMenuController : MonoBehaviour
             return;
         }
 
+        // Show background blocker
+        if (backgroundBlocker != null)
+        {
+            backgroundBlocker.SetActive(true);
+        }
+
         // Move character to focus socket
         MoveCharacterToFocusSocket(character);
 
         // Animate in buttons
         AnimateButtonsIn();
+
+        Debug.Log($"📋 Opened character menu for {character.GetCharacter()?.slotData?.displayName}");
     }
 
     /// <summary>
@@ -199,10 +237,13 @@ public class CharacterMenuController : MonoBehaviour
     /// </summary>
     public void CloseMenu()
     {
-        if (!isMenuOpen)
+        if (!isMenuOpen || isClosing)
         {
             return;
         }
+
+        isClosing = true;
+        Debug.Log("🚪 Closing character menu...");
 
         // Animate buttons out
         AnimateButtonsOut(() =>
@@ -300,10 +341,19 @@ public class CharacterMenuController : MonoBehaviour
     /// </summary>
     private void ResetMenuState()
     {
+        // Hide background blocker
+        if (backgroundBlocker != null)
+        {
+            backgroundBlocker.SetActive(false);
+        }
+
         currentExpandedCharacter = null;
         currentRoomController = null;
         originalSocketIndex = -1;
         isMenuOpen = false;
+        isClosing = false;
+
+        Debug.Log("❌ Character menu closed");
     }
 
     /// <summary>
@@ -331,6 +381,15 @@ public class CharacterMenuController : MonoBehaviour
             if (buttonComponent != null)
             {
                 buttonComponent.onClick.RemoveListener(CloseMenu);
+            }
+        }
+
+        if (backgroundBlocker != null)
+        {
+            Button blockerButton = backgroundBlocker.GetComponent<Button>();
+            if (blockerButton != null)
+            {
+                blockerButton.onClick.RemoveListener(CloseMenu);
             }
         }
 
