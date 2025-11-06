@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using TMPro;
 using DG.Tweening;
 
@@ -7,14 +8,14 @@ using DG.Tweening;
 /// Visual representation of a character in a room
 /// Replaces CharacterDisplay for the room-based system
 /// Handles full-body sprites at socket positions
-/// 
+///
 /// SETUP:
 /// 1. Create GameObject with Image component
 /// 2. Add this script
 /// 3. Wire up references
 /// 4. Save as prefab
 /// </summary>
-public class CharacterObject : MonoBehaviour
+public class CharacterObject : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
 {
     // ============================================
     // VISUAL COMPONENTS
@@ -323,10 +324,10 @@ public class CharacterObject : MonoBehaviour
     }
 
     // ============================================
-    // INTERACTION
+    // INTERACTION (UI Event System)
     // ============================================
 
-    void OnMouseEnter()
+    public void OnPointerEnter(PointerEventData eventData)
     {
         if (isHovered) return;
         isHovered = true;
@@ -342,7 +343,7 @@ public class CharacterObject : MonoBehaviour
         }
     }
 
-    void OnMouseExit()
+    public void OnPointerExit(PointerEventData eventData)
     {
         if (!isHovered) return;
         isHovered = false;
@@ -352,7 +353,7 @@ public class CharacterObject : MonoBehaviour
         currentTween = transform.DOScale(baseScale, hoverDuration).SetEase(Ease.OutBack);
     }
 
-    void OnMouseDown()
+    public void OnPointerClick(PointerEventData eventData)
     {
         // Click animation
         currentTween?.Kill();
